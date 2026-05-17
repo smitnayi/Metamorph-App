@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '../components/ui/Card';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, LineChart, Line } from 'recharts';
-import { Droplet, Flame, Zap, TrendingDown, ArrowUpRight, ArrowDownRight, DownloadCloud } from 'lucide-react';
+import { Droplet, Flame, Zap, TrendingDown, ArrowUpRight, ArrowDownRight, DownloadCloud, Plus } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { mockOrders } from '../store/mockData';
 import { toast } from 'sonner';
+import Modal from '../components/ui/Modal';
 
-const hourlyData = Array.from({ length: 24 }).map((_, i) => ({
+const initialHourlyData = Array.from({ length: 24 }).map((_, i) => ({
   time: `${i}:00`,
   water: Math.floor(Math.random() * 50) + 10,
   gas: Math.floor(Math.random() * 80) + 20,
 }));
 
+// ... rest remains same until weeklyData
 const weeklyData = [
   { name: 'Mon', water: 400, gas: 240, orderVolume: 45 },
   { name: 'Tue', water: 300, gas: 139, orderVolume: 50 },
@@ -30,6 +32,35 @@ const linesData = [
 
 export default function ResourceAnalytics() {
   const [timeframe, setTimeframe] = useState<'Daily' | 'Weekly' | 'Monthly'>('Daily');
+  const [hourlyData, setHourlyData] = useState(initialHourlyData);
+  const [isAddMetricOpen, setIsAddMetricOpen] = useState(false);
+  
+  const [newMetric, setNewMetric] = useState({ hour: '12', type: 'gas', value: 0 });
+
+  const handleExport = () => {
+    const dataStr = JSON.stringify({ summary: weeklyData, detailed: hourlyData }, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `resource-report-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success('Report successfully exported as JSON.');
+  };
+
+  const handleAddMetric = (e: React.FormEvent) => {
+    e.preventDefault();
+    const timeLabel = `${newMetric.hour}:00`;
+    setHourlyData(prev => 
+      prev.map(item => item.time === timeLabel ? {
+        ...item,
+        [newMetric.type]: item[newMetric.type as 'gas' | 'water'] + Number(newMetric.value)
+      } : item)
+    );
+    toast.success(`Added ${newMetric.value} units to ${newMetric.type} at ${timeLabel}.`);
+    setIsAddMetricOpen(false);
+  };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-8">
@@ -54,13 +85,22 @@ export default function ResourceAnalytics() {
               </button>
             ))}
           </div>
-          <button 
-            onClick={() => toast.success('Report specific data exported successfully.')}
-            className="inline-flex items-center justify-center bg-[#111] border border-white/20 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-zinc-300 hover:text-white hover:bg-white/5 transition-colors"
-          >
-            <DownloadCloud className="h-4 w-4 mr-2" />
-            Export Report
-          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => setIsAddMetricOpen(true)}
+              className="inline-flex items-center justify-center bg-orange-500 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-black hover:bg-orange-600 transition-colors"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Metric
+            </button>
+            <button 
+              onClick={handleExport}
+              className="inline-flex items-center justify-center bg-[#111] border border-white/20 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-zinc-300 hover:text-white hover:bg-white/5 transition-colors"
+            >
+              <DownloadCloud className="h-4 w-4 mr-2" />
+              Export Report
+            </button>
+          </div>
         </div>
       </div>
 
@@ -221,6 +261,57 @@ export default function ResourceAnalytics() {
         </CardContent>
       </Card>
 
+      <Modal isOpen={isAddMetricOpen} onClose={() => setIsAddMetricOpen(false)} title="Log Resource Metric">
+        <form onSubmit={handleAddMetric} className="space-y-4">
+          <div>
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Hour of Day</label>
+            <select 
+              value={newMetric.hour}
+              onChange={e => setNewMetric({...newMetric, hour: e.target.value})}
+              className="w-full px-4 py-3 border border-white/20 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors appearance-none"
+            >
+              {Array.from({length: 24}).map((_, i) => (
+                <option key={i} value={i}>{`${i}:00 - ${i+1}:00`}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Resource Type</label>
+            <div className="grid grid-cols-2 gap-4">
+              <button 
+                type="button"
+                onClick={() => setNewMetric({...newMetric, type: 'water'})}
+                className={cn("py-3 text-[10px] font-bold uppercase tracking-widest border transition-colors", newMetric.type === 'water' ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' : 'bg-black text-zinc-500 border-white/20 hover:border-white/50')}
+              >
+                Water
+              </button>
+              <button 
+                type="button"
+                onClick={() => setNewMetric({...newMetric, type: 'gas'})}
+                className={cn("py-3 text-[10px] font-bold uppercase tracking-widest border transition-colors", newMetric.type === 'gas' ? 'bg-amber-500/20 text-amber-400 border-amber-500/50' : 'bg-black text-zinc-500 border-white/20 hover:border-white/50')}
+              >
+                Gas
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Amount</label>
+            <input 
+              type="number"
+              required min="1"
+              value={newMetric.value}
+              onChange={e => setNewMetric({...newMetric, value: Number(e.target.value)})}
+              className="w-full px-4 py-3 border border-white/20 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors"
+            />
+          </div>
+          <button 
+            type="submit"
+            className="w-full bg-orange-500 text-black font-black uppercase tracking-widest py-4 mt-6 hover:bg-orange-600 transition-colors"
+          >
+            Log Metric
+          </button>
+        </form>
+      </Modal>
     </div>
   );
 }

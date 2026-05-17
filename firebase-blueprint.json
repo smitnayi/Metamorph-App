@@ -1,0 +1,41 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "System operator with a role",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["Admin", "Manager", "Operator"] }
+      },
+      "required": ["uid", "name", "email", "role"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "A job order in the workflow",
+      "type": "object",
+      "properties": {
+        "orderNumber": { "type": "string" },
+        "customerName": { "type": "string" },
+        "items": { "type": "number" },
+        "status": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "totalValue": { "type": "number" },
+        "originalOwnerId": { "type": "string" }
+      },
+      "required": ["orderNumber", "customerName", "items", "status", "dueDate", "totalValue", "originalOwnerId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and roles"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Job orders tracking"
+    }
+  }
+}

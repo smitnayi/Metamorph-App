@@ -1,16 +1,72 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '../components/ui/Card';
-import { Search, Filter, Plus, AlertCircle } from 'lucide-react';
+import { Search, Filter, Plus, AlertCircle, Edit2 } from 'lucide-react';
 import { mockInventory } from '../store/mockData';
 import { toast } from 'sonner';
+import Modal from '../components/ui/Modal';
+import { InventoryItem } from '../types';
 
 export default function Inventory() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [inventory, setInventory] = useState<InventoryItem[]>(mockInventory);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isRestockModalOpen, setIsRestockModalOpen] = useState(false);
+  const [activeItem, setActiveItem] = useState<InventoryItem | null>(null);
+  
+  const [newItem, setNewItem] = useState<Partial<InventoryItem>>({
+    name: '', sku: '', finish: 'Matte', colorCode: '#000000', weightKg: 0, lowStockThreshold: 50, supplier: ''
+  });
+  const [restockAmount, setRestockAmount] = useState<number>(0);
 
-  const filteredInventory = mockInventory.filter(item => 
+  const filteredInventory = inventory.filter(item => 
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     item.sku.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleAddItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newItem.name || !newItem.sku) {
+      toast.error('Name and SKU required');
+      return;
+    }
+    const item: InventoryItem = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: newItem.name!,
+      sku: newItem.sku!,
+      finish: newItem.finish || 'Matte',
+      colorCode: newItem.colorCode || '#ffffff',
+      weightKg: Number(newItem.weightKg) || 0,
+      lowStockThreshold: Number(newItem.lowStockThreshold) || 50,
+      supplier: newItem.supplier || 'Unknown'
+    };
+    setInventory([...inventory, item]);
+    toast.success(`${item.name} added to inventory`);
+    setIsAddModalOpen(false);
+    setNewItem({ name: '', sku: '', finish: 'Matte', colorCode: '#000000', weightKg: 0, lowStockThreshold: 50, supplier: '' });
+  };
+
+  const handleRestock = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (activeItem) {
+      setInventory(inventory.map(item => 
+        item.id === activeItem.id ? { ...item, weightKg: item.weightKg + Number(restockAmount) } : item
+      ));
+      toast.success(`Added ${restockAmount}kg to ${activeItem.name}`);
+    }
+    setIsRestockModalOpen(false);
+    setRestockAmount(0);
+    setActiveItem(null);
+  };
+
+  const openRestock = (item: InventoryItem) => {
+    setActiveItem(item);
+    setRestockAmount(100);
+    setIsRestockModalOpen(true);
+  };
+
+  const openEdit = (item: InventoryItem) => {
+    toast.success('In a real app, this would open a full detail editor. For now, it works.');
+  };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-8">
@@ -21,7 +77,7 @@ export default function Inventory() {
           <p className="text-zinc-400 mt-2 font-medium">Manage powder stock, thresholds, and suppliers.</p>
         </div>
         <button 
-          onClick={() => toast.success('Add Stock Element dialog simulated.')}
+          onClick={() => setIsAddModalOpen(true)}
           className="inline-flex items-center justify-center bg-orange-500 px-6 py-3 text-sm font-bold uppercase tracking-widest text-black hover:bg-orange-600 transition-colors"
         >
           <Plus className="h-5 w-5 mr-2" />
@@ -104,12 +160,20 @@ export default function Inventory() {
                     {item.supplier}
                   </td>
                   <td className="px-6 py-5 text-right">
-                    <button 
-                      onClick={() => toast.success(`Restock order placed for ${item.name}`)}
-                      className="text-[10px] font-bold text-white border border-white/20 px-3 py-1 uppercase hover:bg-white hover:text-black transition-colors"
-                    >
-                      Restock
-                    </button>
+                    <div className="flex justify-end gap-2">
+                       <button 
+                        onClick={() => openEdit(item)}
+                        className="text-[10px] font-bold text-zinc-500 hover:text-white transition-colors"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                      <button 
+                        onClick={() => openRestock(item)}
+                        className="text-[10px] font-bold md:ml-3 text-white border border-white/20 px-3 py-1 uppercase hover:bg-white hover:text-black transition-colors"
+                      >
+                        Restock
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -125,6 +189,63 @@ export default function Inventory() {
           </table>
         </div>
       </Card>
+
+      <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Add Stock Element">
+        <form onSubmit={handleAddItem} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+             <div>
+               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Name</label>
+               <input type="text" required value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} className="w-full px-4 py-3 border border-white/20 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors" />
+             </div>
+             <div>
+               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">SKU</label>
+               <input type="text" required value={newItem.sku} onChange={e => setNewItem({...newItem, sku: e.target.value})} className="w-full px-4 py-3 border border-white/20 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors" />
+             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+             <div>
+               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Initial Stock (Kg)</label>
+               <input type="number" required min="0" value={newItem.weightKg} onChange={e => setNewItem({...newItem, weightKg: Number(e.target.value)})} className="w-full px-4 py-3 border border-white/20 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors" />
+             </div>
+             <div>
+               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Low Alert (Kg)</label>
+               <input type="number" required min="0" value={newItem.lowStockThreshold} onChange={e => setNewItem({...newItem, lowStockThreshold: Number(e.target.value)})} className="w-full px-4 py-3 border border-white/20 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors" />
+             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+             <div>
+               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Finish</label>
+               <select value={newItem.finish} onChange={e => setNewItem({...newItem, finish: e.target.value})} className="w-full px-4 py-3 border border-white/20 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors appearance-none">
+                 <option>Matte</option><option>Gloss</option><option>Satin</option><option>Texture</option>
+               </select>
+             </div>
+             <div>
+               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Color Code (Hex)</label>
+               <input type="text" value={newItem.colorCode} onChange={e => setNewItem({...newItem, colorCode: e.target.value})} className="w-full px-4 py-3 border border-white/20 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors" />
+             </div>
+          </div>
+          <div>
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Supplier</label>
+            <input type="text" value={newItem.supplier} onChange={e => setNewItem({...newItem, supplier: e.target.value})} className="w-full px-4 py-3 border border-white/20 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors" />
+          </div>
+          <button type="submit" className="w-full bg-orange-500 text-black font-black uppercase tracking-widest py-4 mt-6 hover:bg-orange-600 transition-colors">
+            Add Element
+          </button>
+        </form>
+      </Modal>
+
+      <Modal isOpen={isRestockModalOpen} onClose={() => setIsRestockModalOpen(false)} title={`Restock ${activeItem?.name || ''}`}>
+         <form onSubmit={handleRestock} className="space-y-4">
+            <div>
+               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Amount to Add (Kg)</label>
+               <input type="number" required min="1" value={restockAmount} onChange={e => setRestockAmount(Number(e.target.value))} className="w-full px-4 py-3 border border-white/20 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors" />
+             </div>
+             <button type="submit" className="w-full border border-white/20 bg-white text-black font-black uppercase tracking-widest py-4 mt-6 hover:bg-zinc-200 transition-colors">
+               Confirm Restock
+             </button>
+         </form>
+      </Modal>
+
     </div>
   );
 }

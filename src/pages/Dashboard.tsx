@@ -34,38 +34,38 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col lg:flex-row h-full">
-      <section className="flex-1 lg:w-7/12 border-b lg:border-b-0 lg:border-r border-white/10 p-6 md:p-8 flex flex-col justify-between">
+      <section className="flex-1 lg:w-7/12 border-b lg:border-b-0 lg:border-r border-white/10 p-4 sm:p-6 md:p-8 flex flex-col justify-between">
         <div>
-          <label className="text-[11px] font-black uppercase tracking-[0.2em] text-orange-500">Operational Pulse</label>
-          <div className="text-[80px] md:text-[140px] font-black leading-none tracking-tighter -ml-1 md:-ml-2 mt-2 text-white">94.8%</div>
-          <p className="text-zinc-400 text-lg font-medium max-w-md mt-4">Line performance is optimal. Oven 2 stable at 405°F. 12 orders dispatched today.</p>
+          <label className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] text-orange-500">Operational Pulse</label>
+          <div className="text-[60px] sm:text-[80px] lg:text-[140px] font-black leading-none tracking-tighter -ml-1 mt-2 text-white">94.8%</div>
+          <p className="text-zinc-400 text-sm md:text-base font-medium max-w-md mt-4">Line performance is optimal. Oven 2 stable at 405°F. 12 orders dispatched today.</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-8 mt-12 mb-8">
-          <div className="border-t border-white/20 pt-4">
-            <label className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest">Active Orders</label>
-            <div className="text-4xl font-black mt-1 text-white">{activeOrders} <span className="text-sm font-normal text-emerald-400">+12%</span></div>
+        <div className="grid grid-cols-2 gap-3 sm:gap-6 md:gap-8 mt-8 md:mt-12 mb-4 md:mb-8">
+          <div className="bg-[#111] p-4 sm:p-5 rounded-2xl border border-white/5">
+            <label className="text-[9px] sm:text-[10px] font-bold uppercase text-zinc-500 tracking-widest">Active Orders</label>
+            <div className="text-3xl sm:text-4xl font-black mt-2 text-white">{activeOrders} <span className="text-xs sm:text-sm font-normal text-emerald-400">+12%</span></div>
           </div>
-          <div className="border-t border-white/20 pt-4">
-            <label className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest">Pending Tasks</label>
-            <div className="text-4xl font-black mt-1 text-white">{pendingTasks} <span className="text-sm font-normal text-zinc-400">High: {mockTasks.filter(t => t.priority === 'High').length}</span></div>
+          <div className="bg-[#111] p-4 sm:p-5 rounded-2xl border border-white/5">
+            <label className="text-[9px] sm:text-[10px] font-bold uppercase text-zinc-500 tracking-widest">Pending Tasks</label>
+            <div className="text-3xl sm:text-4xl font-black mt-2 text-white">{pendingTasks} <span className="text-xs sm:text-sm font-normal text-zinc-400">Hi: {mockTasks.filter(t => t.priority === 'High').length}</span></div>
           </div>
-          <div className="border-t border-white/20 pt-4">
-            <label className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest">Quality Pass Rate</label>
-            <div className="text-4xl font-black mt-1 text-white">96.8% <span className="text-sm font-normal text-emerald-400">Target &gt;95%</span></div>
+          <div className="bg-[#111] p-4 sm:p-5 rounded-2xl border border-white/5">
+            <label className="text-[9px] sm:text-[10px] font-bold uppercase text-zinc-500 tracking-widest">Pass Rate</label>
+            <div className="text-3xl sm:text-4xl font-black mt-2 text-white">96.8% <span className="text-xs sm:text-sm font-normal text-emerald-400">&gt;95%</span></div>
           </div>
-          <div className="border-t border-white/20 pt-4">
-            <label className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest">Low Stock Alerts</label>
-            <div className="text-4xl font-black mt-1 text-white">3 <span className="text-sm font-normal text-rose-500">Crit</span></div>
+          <div className="bg-[#111] p-4 sm:p-5 rounded-2xl border border-white/5">
+            <label className="text-[9px] sm:text-[10px] font-bold uppercase text-zinc-500 tracking-widest">Stock Alerts</label>
+            <div className="text-3xl sm:text-4xl font-black mt-2 text-white">3 <span className="text-xs sm:text-sm font-normal text-rose-500">Crit</span></div>
           </div>
         </div>
       </section>
 
-      <section className="flex-1 lg:w-5/12 flex flex-col bg-zinc-900/50">
-        <div className="p-6 md:p-8 border-b border-white/10">
+      <section className="flex-1 lg:w-5/12 flex flex-col bg-[#0a0a0a]">
+        <div className="p-4 sm:p-6 md:p-8 border-b border-white/5">
           <div className="flex justify-between items-end mb-6">
-            <h2 className="text-4xl font-black uppercase tracking-tight text-white">Resource Flow</h2>
-            <div className="text-[10px] font-bold border border-white/20 px-3 py-1 uppercase text-zinc-400">Last 7 Days</div>
+            <h2 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-white">Resource Flow</h2>
+            <div className="text-[9px] sm:text-[10px] font-bold border border-white/10 rounded-lg px-2 sm:px-3 py-1 uppercase text-zinc-400 bg-white/5">Last 7 Days</div>
           </div>
           <div className="h-[240px] w-full">
             <ResponsiveContainer width="100%" height="100%">

@@ -109,10 +109,49 @@ export default function Layout() {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 h-[72px] bg-black border-t border-white/10 flex items-center justify-around px-1 pb-safe z-50 overflow-x-auto scrollbar-hide pt-1 shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
-        {navItems.map(item => (
+      <div className="md:hidden fixed bottom-1 left-1/2 -translate-x-1/2 w-[calc(100%-8px)] rounded-2xl bg-black border border-white/10 flex items-center justify-between px-2 h-16 pb-safe z-50 shadow-[0_10px_40px_rgba(0,0,0,0.8)] backdrop-blur-xl">
+        {navItems.slice(0, 4).map(item => (
           <NavItemLink key={item.path} item={item} mobile />
         ))}
+        <button
+          onClick={() => {
+            const el = document.getElementById('mobile-more-menu');
+            if (el) el.classList.toggle('hidden');
+          }}
+          className="flex flex-col items-center justify-center min-w-[56px] px-1 py-1 transition-colors rounded-xl text-zinc-500 hover:text-zinc-300 active:bg-white/5"
+        >
+          <div className="flex items-center justify-center h-8 w-8 rounded-full mb-1 transition-all bg-transparent">
+            <LayoutList className="h-5 w-5" />
+          </div>
+          <span className="text-[9px] font-bold tracking-wide">Menu</span>
+        </button>
+      </div>
+
+      {/* Mobile More Menu */}
+      <div id="mobile-more-menu" className="md:hidden fixed inset-0 z-[60] bg-black/90 backdrop-blur top-0 hidden flex-col">
+        <div className="flex-1 p-6 flex flex-col justify-end">
+          <div className="bg-[#111] border border-white/10 rounded-3xl p-4 mb-20 space-y-2">
+            <div className="flex justify-between items-center mb-4 px-2">
+               <h3 className="text-sm font-black uppercase text-white tracking-widest">More Options</h3>
+               <button onClick={() => document.getElementById('mobile-more-menu')?.classList.add('hidden')} className="h-8 w-8 bg-white/10 rounded-full flex items-center justify-center text-white">X</button>
+            </div>
+            {navItems.slice(4).map(item => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onClick={() => document.getElementById('mobile-more-menu')?.classList.add('hidden')}
+                className="flex items-center gap-4 p-4 rounded-2xl border border-white/5 hover:border-orange-500 hover:bg-orange-500/10 transition-colors"
+              >
+                <item.icon className="h-6 w-6 text-orange-500" />
+                <span className="font-bold uppercase tracking-widest text-sm text-zinc-300 hover:text-white">{item.label}</span>
+              </NavLink>
+            ))}
+             <button onClick={handleLogout} className="w-full flex items-center gap-4 p-4 rounded-2xl border border-rose-500/20 text-rose-500 hover:bg-rose-500/10 transition-colors mt-4">
+                <LogOut className="h-6 w-6" />
+                <span className="font-bold uppercase tracking-widest text-sm">Logout</span>
+              </button>
+          </div>
+        </div>
       </div>
 
       <footer className="hidden md:flex h-8 bg-black border-t border-white/10 items-center justify-between px-4 shrink-0">

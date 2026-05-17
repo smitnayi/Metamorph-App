@@ -18,18 +18,18 @@ function DroppableStage({ id, stageOrders, orders, setOrders }: { id: Stage, sta
   return (
     <div 
       ref={setNodeRef}
-      className={`flex-shrink-0 w-80 flex flex-col bg-[#111] border transition-colors snap-center ${isOver ? 'border-orange-500 bg-black' : 'border-white/10'}`}
+      className={`flex-shrink-0 w-[85vw] sm:w-80 max-w-[400px] flex flex-col bg-[#111] border rounded-2xl transition-colors snap-center ${isOver ? 'border-orange-500 bg-black' : 'border-white/10'}`}
     >
-      <div className="p-4 border-b border-white/10 flex justify-between items-center bg-black">
-        <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-400">{id}</h3>
-        <span className="text-[10px] font-black bg-white/10 px-2 py-0.5 text-white">{stageOrders.length}</span>
+      <div className="p-4 border-b border-white/5 flex justify-between items-center bg-black/50 rounded-t-2xl">
+        <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-300">{id}</h3>
+        <span className="text-[10px] font-black bg-white/10 px-2 py-1 rounded-full text-white">{stageOrders.length}</span>
       </div>
-      <div className="p-4 flex-1 overflow-y-auto space-y-4">
+      <div className="p-3 sm:p-4 flex-1 overflow-y-auto space-y-3">
           {stageOrders.map(order => (
              <DraggableOrder key={order.id} order={order} setOrders={setOrders} orders={orders} />
           ))}
           {stageOrders.length === 0 && (
-            <div className="text-center p-8 border border-dashed border-white/10 text-zinc-600 text-xs font-bold uppercase tracking-widest">
+            <div className="text-center p-8 border border-dashed border-white/5 rounded-xl text-zinc-600 text-xs font-bold uppercase tracking-widest">
               Drop Here
             </div>
           )}
@@ -54,34 +54,35 @@ function DraggableOrder({ order, setOrders, orders }: { order: Order, setOrders:
     <div 
       ref={setNodeRef} 
       style={style}
-      className={`bg-black border p-4 hover:border-orange-500/50 transition-colors ${isDragging ? 'border-orange-500 shadow-2xl scale-105' : 'border-white/20'}`}
+      className={`bg-zinc-950 border rounded-xl p-4 hover:border-orange-500/50 transition-colors ${isDragging ? 'border-orange-500 shadow-[0_20px_40px_rgba(0,0,0,0.5)] scale-[1.02]' : 'border-white/5'}`}
     >
       <div 
         {...listeners} 
         {...attributes}
         className="cursor-grab active:cursor-grabbing mb-3"
       >
-        <div className="flex justify-between items-start mb-1">
-          <div className="text-[10px] font-bold text-orange-500">{order.orderNumber}</div>
-          <div className="text-[10px] font-mono text-zinc-500">{order.items} pcs</div>
+        <div className="flex justify-between items-start mb-2">
+          <div className="text-[10px] font-bold tracking-widest bg-orange-500/10 text-orange-400 px-2 py-0.5 rounded-sm">{order.orderNumber}</div>
+          <div className="text-[10px] font-mono font-bold text-zinc-500 bg-white/5 px-2 py-0.5 rounded-sm">{order.items} pcs</div>
         </div>
-        <div className="font-bold text-white uppercase text-sm mb-1 line-clamp-1">{order.customerName}</div>
+        <div className="font-bold text-white uppercase text-base sm:text-sm mb-1 leading-tight">{order.customerName}</div>
       </div>
       <div className="flex justify-between items-end mt-4 mb-3">
-        <div className="text-xs font-bold text-zinc-400 border border-white/10 px-2 py-0.5 uppercase tracking-wider">
-          Due: {new Date(order.dueDate).toLocaleDateString(undefined, {month:'short', day:'numeric'})}
+        <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
+          {new Date(order.dueDate).toLocaleDateString(undefined, {month:'short', day:'numeric'})}
         </div>
         <div className="text-sm font-black text-emerald-400">
             ${order.totalValue.toLocaleString()}
         </div>
       </div>
       
-      <div className="pt-3 border-t border-white/10">
+      <div className="pt-3 border-t border-white/5">
         <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block mb-1">Move to Stage</label>
         <select 
           value={order.status}
           onChange={(e) => setOrders(orders.map(o => o.id === order.id ? {...o, status: e.target.value as Stage} : o))}
-          className="w-full bg-[#111] border border-white/20 text-white text-xs font-medium p-2 focus:outline-none focus:border-orange-500"
+          className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg text-white text-xs font-bold p-2.5 focus:outline-none focus:border-orange-500 appearance-none"
         >
           {STAGES.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
@@ -165,36 +166,36 @@ export default function Orders() {
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={closestCorners}>
-      <div className="h-full flex flex-col space-y-6 max-w-7xl mx-auto p-4 md:p-8">
+      <div className="h-full flex flex-col space-y-4 md:space-y-6 max-w-7xl mx-auto px-4 py-8 md:p-8">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 flex-shrink-0">
           <div>
-            <label className="text-[11px] font-black uppercase tracking-[0.2em] text-orange-500">Workflow</label>
-            <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight mt-1 text-white">Job Orders</h1>
-            <p className="text-zinc-400 mt-2 font-medium">Drag and drop or use the dropdown to manage production stages.</p>
+            <label className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] text-orange-500">Workflow</label>
+            <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight mt-1 text-white">Job Orders</h1>
+            <p className="text-zinc-400 mt-2 font-medium text-sm">Drag and drop or use the dropdown to manage production stages.</p>
           </div>
           <button 
             onClick={() => setIsCreateModalOpen(true)}
-            className="inline-flex items-center justify-center bg-orange-500 px-6 py-3 text-sm font-bold uppercase tracking-widest text-black hover:bg-orange-600 transition-colors"
+            className="inline-flex items-center justify-center bg-orange-500 px-6 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-black hover:bg-orange-600 transition-colors shadow-lg active:scale-95"
           >
             <Plus className="h-5 w-5 mr-2" />
-            Create Order
+            Create
           </button>
         </div>
 
         <div className="flex-shrink-0 flex items-center mb-4">
            <div className="relative w-full max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-500" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-500" />
               <input
                 type="text"
                 placeholder="Search by ID or Customer..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-white/20 bg-black text-white focus:outline-none focus:border-white transition-colors"
+                className="w-full pl-12 pr-4 py-4 rounded-xl border border-white/10 bg-[#111] text-white focus:outline-none focus:border-orange-500 transition-colors placeholder:text-zinc-600 font-medium"
               />
             </div>
         </div>
 
-        <div className="flex-1 flex gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x">
+        <div className="flex-1 flex gap-4 md:gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x">
           {STAGES.map(stage => {
             const stageOrders = filteredOrders.filter(o => o.status === stage);
             return (
@@ -217,59 +218,59 @@ export default function Orders() {
       </DragOverlay>
 
       <Modal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} title="Create New Order">
-        <form onSubmit={handleCreateOrder} className="space-y-4">
+        <form onSubmit={handleCreateOrder} className="space-y-5">
           <div>
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Customer Name</label>
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Customer Name</label>
             <input 
               type="text" 
               required
               value={newOrder.customerName}
               onChange={e => setNewOrder({...newOrder, customerName: e.target.value})}
-              className="w-full px-4 py-3 border border-white/20 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors"
+              className="w-full px-4 py-4 rounded-xl border border-white/10 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors font-medium placeholder:text-zinc-600"
               placeholder="e.g. Acme Corp"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Items (Pcs)</label>
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Items (Pcs)</label>
               <input 
                 type="number" 
                 required
                 min="1"
                 value={newOrder.items}
                 onChange={e => setNewOrder({...newOrder, items: Number(e.target.value)})}
-                className="w-full px-4 py-3 border border-white/20 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors"
+                className="w-full px-4 py-4 rounded-xl border border-white/10 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors font-medium"
               />
             </div>
             <div>
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Total Value ($)</label>
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Total Value ($)</label>
               <input 
                 type="number" 
                 required
                 min="0"
                 value={newOrder.totalValue}
                 onChange={e => setNewOrder({...newOrder, totalValue: Number(e.target.value)})}
-                className="w-full px-4 py-3 border border-white/20 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors"
+                className="w-full px-4 py-4 rounded-xl border border-white/10 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors font-medium"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Due Date</label>
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Due Date</label>
               <input 
                 type="date"
                 required
                 value={newOrder.dueDate}
                 onChange={e => setNewOrder({...newOrder, dueDate: e.target.value})}
-                className="w-full px-4 py-3 border border-white/20 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors"
+                className="w-full px-4 py-4 rounded-xl border border-white/10 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors font-medium"
               />
             </div>
             <div>
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Initial Stage</label>
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Initial Stage</label>
               <select 
                 value={newOrder.status}
                 onChange={e => setNewOrder({...newOrder, status: e.target.value as Stage})}
-                className="w-full px-4 py-3 border border-white/20 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors appearance-none"
+                className="w-full px-4 py-4 rounded-xl border border-white/10 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors appearance-none font-medium"
               >
                 {STAGES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -277,7 +278,7 @@ export default function Orders() {
           </div>
           <button 
             type="submit"
-            className="w-full bg-orange-500 text-black font-black uppercase tracking-widest py-4 mt-6 hover:bg-orange-600 transition-colors"
+            className="w-full bg-orange-500 text-black font-black uppercase tracking-widest py-4 rounded-xl mt-4 hover:bg-orange-600 transition-colors shadow-lg active:scale-[0.98]"
           >
             Create Order
           </button>

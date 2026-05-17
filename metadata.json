@@ -1,0 +1,6 @@
+{
+  "name": "PowderCoat OS",
+  "description": "Internal management system for powder coating businesses including inventory, orders, HR, CRM, and QA metrics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

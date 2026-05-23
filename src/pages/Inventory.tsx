@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '../components/ui/Card';
 import { Search, Filter, Plus, AlertCircle, Edit2 } from 'lucide-react';
-import { mockInventory } from '../store/mockData';
+import { useDataStore } from '../store/data';
 import { toast } from 'sonner';
 import Modal from '../components/ui/Modal';
 import { InventoryItem } from '../types';
 
 export default function Inventory() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [inventory, setInventory] = useState<InventoryItem[]>(mockInventory);
+  const { inventory, setInventory } = useDataStore();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isRestockModalOpen, setIsRestockModalOpen] = useState(false);
   const [activeItem, setActiveItem] = useState<InventoryItem | null>(null);

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '../components/ui/Card';
 import { Search, Plus } from 'lucide-react';
-import { mockOrders } from '../store/mockData';
+import { useDataStore } from '../store/data';
 import { Order } from '../types';
 import { toast } from 'sonner';
 import { DndContext, useDraggable, useDroppable, DragEndEvent, DragOverlay, closestCorners, useSensor, useSensors, PointerSensor, TouchSensor } from '@dnd-kit/core';
@@ -93,7 +93,7 @@ function DraggableOrder({ order, setOrders, orders }: { order: Order, setOrders:
 
 export default function Orders() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
+  const { orders, setOrders } = useDataStore();
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 

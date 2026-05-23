@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '../components/ui/Card';
-import { mockCustomers } from '../store/mockData';
+import { useDataStore } from '../store/data';
 import { Building2, Phone, Mail, ChevronRight, Plus, Search } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';
@@ -9,7 +9,7 @@ import { Customer } from '../types';
 
 export default function CRM() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
+  const { customers, setCustomers } = useDataStore();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newCustomer, setNewCustomer] = useState<Partial<Customer>>({
     companyName: '', email: '', phone: '', status: 'Active', lifetimeValue: 0, totalOrders: 0

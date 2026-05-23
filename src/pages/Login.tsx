@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
+import { MetamorphLogo } from '../components/ui/MetamorphLogo';
 
 export default function Login() {
   const { login } = useAuth();
@@ -27,7 +27,7 @@ export default function Login() {
     <div className="h-[100dvh] w-full bg-[#111] text-white flex flex-col items-center justify-center font-sans p-4">
       <div className="w-full max-w-sm sm:max-w-md bg-black border border-white/10 p-6 sm:p-10 shadow-2xl rounded-2xl md:rounded-none">
         <div className="flex items-center justify-center gap-2 mb-8 border-b border-white/10 pb-6">
-          <ShieldCheck className="h-8 w-8 text-orange-500" />
+          <MetamorphLogo className="h-8 w-8 text-orange-500" />
           <h1 className="text-xl sm:text-2xl font-black tracking-tighter uppercase italic whitespace-nowrap">METAMORPH</h1>
         </div>
 

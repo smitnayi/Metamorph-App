@@ -1,16 +1,157 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '../components/ui/Card';
-import { mockQualityChecks, mockOrders } from '../store/mockData';
-import { ShieldAlert, CheckCircle, XCircle, Search, ClipboardSignature, ArrowLeft, Image as ImageIcon } from 'lucide-react';
+import { useDataStore } from '../store/data';
+import { ShieldAlert, CheckCircle, XCircle, Search, ClipboardSignature, ArrowLeft, Image as ImageIcon, Printer, Tag } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { QualityCheck } from '../types';
+import { QualityCheck, Order } from '../types';
+import Modal from '../components/ui/Modal';
 
 export default function Quality() {
   const [isAddingMode, setIsAddingMode] = useState(false);
-  const [checks, setChecks] = useState<QualityCheck[]>(mockQualityChecks);
+  const { qualityChecks: checks, setQualityChecks: setChecks, orders } = useDataStore();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isStickerModalOpen, setIsStickerModalOpen] = useState(false);
+  
+  const [stickerData, setStickerData] = useState({
+    customer: '',
+    model: '',
+    size: '',
+    shade: '',
+    pieces: '',
+    bundles: '',
+  });
+
+  const generateStickerPrint = () => {
+    const totalBundles = parseInt(stickerData.bundles) || 1;
+    const winPrint = window.open('', '', 'left=0,top=0,width=800,height=600,toolbar=0,scrollbars=0,status=0');
+    if (winPrint) {
+      winPrint.document.write('<!DOCTYPE html><html><head><title>Print Stickers</title>');
+      winPrint.document.write(`
+        <style>
+          @page { 
+            size: A4 portrait; 
+            margin: 0; 
+          }
+          body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background: #fff;
+            color: #000;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .page-table {
+            width: 210mm;
+            height: 297mm;
+            table-layout: fixed;
+            border-collapse: collapse;
+            page-break-after: always;
+            box-sizing: border-box;
+            margin: 0 auto;
+          }
+          .page-table:last-child {
+             page-break-after: auto;
+          }
+          .page-table td {
+            border: 1px solid #000;
+            width: 25%;
+            height: 16.666%;
+            box-sizing: border-box;
+            padding: 4mm;
+            vertical-align: top;
+            overflow: hidden;
+          }
+          .sticker-inner {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+          }
+          .logo-container {
+             display: flex;
+             justify-content: center;
+             align-items: center;
+             height: 20mm;
+             margin-bottom: 2mm;
+          }
+          .logo-container img {
+             max-width: 90%;
+             max-height: 100%;
+             object-fit: contain;
+          }
+          .data-table {
+             width: 100%;
+             font-size: 13px;
+             font-family: monospace, sans-serif;
+             border-collapse: collapse;
+          }
+          .data-table td {
+             padding: 1.5px 0;
+             vertical-align: top;
+             border: none;
+             height: auto;
+          }
+          .data-label { 
+            width: 55px;
+            text-transform: uppercase;
+            white-space: nowrap;
+          }
+          .data-colon {
+             width: 10px;
+             text-align: center;
+          }
+          .data-val { 
+            word-break: break-word;
+          }
+        </style>
+      `);
+      winPrint.document.write('</head><body>');
+      
+      let currentBundle = 1;
+
+      while (currentBundle <= totalBundles) {
+        winPrint.document.write('<table class="page-table">');
+        
+        for (let row = 0; row < 6; row++) {
+          winPrint.document.write('<tr>');
+          for (let col = 0; col < 4; col++) {
+             winPrint.document.write('<td><div class="sticker-inner">');
+             if (currentBundle <= totalBundles) {
+                winPrint.document.write(`
+                  <div class="logo-container">
+                    <img src="${window.location.origin}/logo.png" alt="METAMORPH logo" />
+                  </div>
+                  <table class="data-table">
+                    <tr><td class="data-label">MODEL</td><td class="data-colon">:</td><td class="data-val">${stickerData.model || ''}</td></tr>
+                    <tr><td class="data-label">SIZE</td><td class="data-colon">:</td><td class="data-val">${stickerData.size || ''}</td></tr>
+                    <tr><td class="data-label">OWNER</td><td class="data-colon">:</td><td class="data-val">${stickerData.customer || ''}</td></tr>
+                    <tr><td class="data-label">SHADE</td><td class="data-colon">:</td><td class="data-val">${stickerData.shade || ''}</td></tr>
+                    <tr><td class="data-label">PCS</td><td class="data-colon">:</td><td class="data-val">${stickerData.pieces || ''}</td></tr>
+                    <tr><td class="data-label">BUNDLE</td><td class="data-colon">:</td><td class="data-val">${currentBundle}/${totalBundles}</td></tr>
+                  </table>
+                `);
+                currentBundle++;
+             }
+             winPrint.document.write('</div></td>');
+          }
+          winPrint.document.write('</tr>');
+        }
+
+        winPrint.document.write('</table>');
+      }
+
+      winPrint.document.write('</body></html>');
+      winPrint.document.close();
+      winPrint.focus();
+      setTimeout(() => {
+        winPrint.print();
+        winPrint.close();
+      }, 500); // Give the logo a bit more time to load before printing
+    }
+  };
 
   const [newCheck, setNewCheck] = useState<Partial<QualityCheck>>({
-    orderId: mockOrders[0]?.id || '',
+    orderId: orders.length > 0 ? orders[0].id : '',
     adhesionScore: 10,
     thicknessMils: 2.0,
     cureStatus: 'Pass',
@@ -36,6 +177,12 @@ export default function Quality() {
   };
 
   const defectTypes = ['Pinholing', 'Orange Peel', 'Blistering', 'Outgassing', 'Fish Eyes', 'Thin Coverage'];
+
+  const filteredChecks = checks.filter(qa => {
+    const order = orders.find(o => o.id === qa.orderId);
+    const searchString = `${qa.id} ${order?.orderNumber} ${order?.customerName} ${qa.overallResult}`.toLowerCase();
+    return searchString.includes(searchTerm.toLowerCase());
+  });
 
   if (reportGeneratedId) {
     const report = checks.find(c => c.id === reportGeneratedId);
@@ -69,7 +216,7 @@ export default function Quality() {
           <div className="grid grid-cols-2 gap-4 sm:gap-8 mb-8 sm:mb-12">
             <div className="bg-black/50 p-4 rounded-xl border border-white/5">
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Order Ref</label>
-              <div className="text-lg sm:text-xl font-bold text-white">{mockOrders.find(o => o.id === report?.orderId)?.orderNumber}</div>
+              <div className="text-lg sm:text-xl font-bold text-white">{orders.find(o => o.id === report?.orderId)?.orderNumber}</div>
             </div>
             <div className="bg-black/50 p-4 rounded-xl border border-white/5">
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Inspector</label>
@@ -123,13 +270,22 @@ export default function Quality() {
           <p className="text-zinc-400 mt-2 font-medium text-sm">Log and monitor coating adhesion, thickness, and cure metrics.</p>
         </div>
         {!isAddingMode ? (
-          <button 
-            onClick={() => setIsAddingMode(true)}
-            className="inline-flex items-center justify-center bg-orange-500 px-6 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-black hover:bg-orange-600 transition-colors shadow-lg active:scale-95"
-          >
-            <ClipboardSignature className="h-5 w-5 mr-2" />
-            Log QA Check
-          </button>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button 
+              onClick={() => setIsStickerModalOpen(true)}
+              className="inline-flex items-center justify-center border border-white/20 bg-black px-6 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-white hover:bg-white hover:text-black transition-colors shadow-lg active:scale-95"
+            >
+              <Tag className="h-5 w-5 mr-2" />
+              Generator
+            </button>
+            <button 
+              onClick={() => setIsAddingMode(true)}
+              className="inline-flex items-center justify-center bg-orange-500 px-6 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-black hover:bg-orange-600 transition-colors shadow-lg active:scale-95"
+            >
+              <ClipboardSignature className="h-5 w-5 mr-2" />
+              Log QA Check
+            </button>
+          </div>
         ) : (
           <button 
             onClick={() => setIsAddingMode(false)}
@@ -154,7 +310,7 @@ export default function Quality() {
                     className="w-full p-4 bg-black border border-white/10 text-white focus:outline-none focus:border-orange-500 appearance-none rounded-xl font-medium"
                     required
                   >
-                    {mockOrders.map(o => (
+                    {orders.map(o => (
                       <option key={o.id} value={o.id}>{o.orderNumber} - {o.customerName}</option>
                     ))}
                   </select>
@@ -260,6 +416,17 @@ export default function Quality() {
         </Card>
       ) : (
         <div className="space-y-6">
+          <div className="flex items-center bg-[#111] border border-white/10 rounded-xl px-4 py-1 max-w-xl">
+            <Search className="h-5 w-5 text-zinc-500" />
+            <input 
+              type="text" 
+              placeholder="Search by ID, Order Ref, Customer, or Result..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-transparent text-white focus:outline-none p-3 font-medium placeholder:text-zinc-600"
+            />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
              <Card className="bg-emerald-500/10 border-emerald-500/20 rounded-2xl">
                <CardContent className="p-6">
@@ -304,8 +471,8 @@ export default function Quality() {
      
            {/* Mobile view */}
            <div className="md:hidden space-y-4">
-             {checks.map((qa) => {
-               const order = mockOrders.find(o => o.id === qa.orderId);
+             {filteredChecks.map((qa) => {
+               const order = orders.find(o => o.id === qa.orderId);
                return (
                  <div key={qa.id} className="bg-[#111] border border-white/5 rounded-2xl p-4 flex flex-col gap-4">
                    <div className="flex justify-between items-start">
@@ -371,8 +538,8 @@ export default function Quality() {
                    </tr>
                  </thead>
                  <tbody className="divide-y divide-white/10 text-white w-full table">
-                   {checks.map((qa) => {
-                     const order = mockOrders.find(o => o.id === qa.orderId);
+                   {filteredChecks.map((qa) => {
+                     const order = orders.find(o => o.id === qa.orderId);
                      
                      return (
                        <tr key={qa.id} className="hover:bg-white/5 transition-colors group">
@@ -433,6 +600,96 @@ export default function Quality() {
            </Card>
         </div>
       )}
+
+      <Modal isOpen={isStickerModalOpen} onClose={() => setIsStickerModalOpen(false)} title="Generate Packing Sticker">
+        <div className="space-y-4">
+          <div>
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Target Order (Optional)</label>
+            <select 
+              onChange={(e) => {
+                const o = orders.find(order => order.id === e.target.value);
+                if (o) setStickerData({...stickerData, customer: o.customerName});
+              }}
+              className="w-full px-4 py-4 rounded-xl border border-white/10 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors appearance-none font-medium mb-4"
+            >
+              <option value="">Select an order to autofill customer...</option>
+              {orders.map(o => (
+                <option key={o.id} value={o.id}>{o.orderNumber} - {o.customerName}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Owner (Customer)</label>
+            <input 
+              type="text" 
+              value={stickerData.customer}
+              onChange={e => setStickerData({...stickerData, customer: e.target.value})}
+              className="w-full px-4 py-4 rounded-xl border border-white/10 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors font-medium placeholder:text-zinc-600"
+              placeholder="e.g. Telesia"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Model (Material)</label>
+              <input 
+                type="text" 
+                value={stickerData.model}
+                onChange={e => setStickerData({...stickerData, model: e.target.value})}
+                className="w-full px-4 py-4 rounded-xl border border-white/10 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors font-medium placeholder:text-zinc-600"
+                placeholder="e.g. D Frame"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Size</label>
+              <input 
+                type="text" 
+                value={stickerData.size}
+                onChange={e => setStickerData({...stickerData, size: e.target.value})}
+                className="w-full px-4 py-4 rounded-xl border border-white/10 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors font-medium placeholder:text-zinc-600"
+                placeholder="e.g. 4800"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Shade</label>
+              <input 
+                type="text" 
+                value={stickerData.shade}
+                onChange={e => setStickerData({...stickerData, shade: e.target.value})}
+                className="w-full px-4 py-4 rounded-xl border border-white/10 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors font-medium placeholder:text-zinc-600"
+                placeholder="e.g. 8040"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Pieces / Bundle</label>
+              <input 
+                type="number" 
+                value={stickerData.pieces}
+                onChange={e => setStickerData({...stickerData, pieces: e.target.value})}
+                className="w-full px-4 py-4 rounded-xl border border-white/10 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors font-medium placeholder:text-zinc-600"
+                placeholder="6"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Total Bundles</label>
+              <input 
+                type="number" 
+                value={stickerData.bundles}
+                onChange={e => setStickerData({...stickerData, bundles: e.target.value})}
+                className="w-full px-4 py-4 rounded-xl border border-white/10 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors font-medium placeholder:text-zinc-600"
+                placeholder="24"
+              />
+            </div>
+          </div>
+          <button 
+            onClick={generateStickerPrint}
+            className="w-full inline-flex items-center justify-center bg-orange-500 text-black font-black uppercase tracking-widest py-4 rounded-xl mt-4 hover:bg-orange-600 transition-colors shadow-lg active:scale-[0.98]"
+          >
+            <Printer className="w-5 h-5 mr-3" />
+            Print Stickers
+          </button>
+        </div>
+      </Modal>
+
     </div>
   );
 }

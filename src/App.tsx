@@ -39,6 +39,7 @@ export default function App() {
             <Route path="analytics" element={<ResourceAnalytics />} />
             <Route path="inventory" element={<Inventory />} />
             <Route path="orders" element={<Orders />} />
+            <Route path="tasks" element={<Tasks />} />
             <Route path="quality" element={<Quality />} />
             <Route path="customers" element={<CRM />} />
             <Route path="employees" element={<Employees />} />

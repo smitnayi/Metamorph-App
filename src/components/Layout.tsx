@@ -1,14 +1,16 @@
 import React from "react";
 import { NavLink, Outlet, useLocation, useNavigate, useResolvedPath, useMatch } from "react-router-dom";
-import { ShieldCheck, LogOut, Home, BarChart2, Package, LayoutList, Shield, Users, Briefcase } from "lucide-react";
+import { ShieldCheck, LogOut, Home, BarChart2, Package, LayoutList, Shield, Users, Briefcase, CheckSquare } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "../contexts/AuthContext";
+import { MetamorphLogo } from "./ui/MetamorphLogo";
 
 const navItems = [
   { path: "/", label: "Home", icon: Home },
   { path: "/analytics", label: "Stats", icon: BarChart2 },
   { path: "/inventory", label: "Stock", icon: Package },
   { path: "/orders", label: "Jobs", icon: LayoutList },
+  { path: "/tasks", label: "Tasks", icon: CheckSquare },
   { path: "/quality", label: "QA", icon: Shield },
   { path: "/customers", label: "CRM", icon: Users },
   { path: "/employees", label: "Staff", icon: Briefcase },
@@ -71,7 +73,7 @@ export default function Layout() {
       <nav className="h-16 md:h-20 border-b border-white/10 flex items-center px-4 md:px-8 bg-black shrink-0 relative z-50">
         <div className="flex items-center gap-4 md:gap-12 w-full justify-between md:justify-start">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="h-6 w-6 text-orange-500" />
+            <MetamorphLogo className="h-6 w-6 text-orange-500" />
             <h1 className="text-xl sm:text-2xl font-black tracking-tighter uppercase italic whitespace-nowrap">
               METAMORPH
             </h1>

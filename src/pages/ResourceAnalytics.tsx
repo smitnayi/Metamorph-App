@@ -3,7 +3,6 @@ import { Card, CardContent } from '../components/ui/Card';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, LineChart, Line, Brush } from 'recharts';
 import { Droplet, Flame, Zap, TrendingDown, ArrowUpRight, ArrowDownRight, DownloadCloud, Plus } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { mockOrders } from '../store/mockData';
 import { toast } from 'sonner';
 import Modal from '../components/ui/Modal';
 

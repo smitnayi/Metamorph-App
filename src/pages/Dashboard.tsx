@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
-import { mockOrders, mockTasks } from '../store/mockData';
+import { useDataStore } from '../store/data';
 
 const usageData = [
   { name: 'Mon', water: 4000, gas: 2400 },
@@ -20,6 +20,8 @@ export default function Dashboard() {
     return () => clearTimeout(timer);
   }, []);
 
+  const { orders, tasks } = useDataStore();
+
   if (loading) {
     return <div className="animate-pulse space-y-6 max-w-7xl mx-auto p-4 md:p-8">
       <div className="h-12 bg-white/10 w-64 mb-8"></div>
@@ -29,8 +31,8 @@ export default function Dashboard() {
     </div>;
   }
 
-  const activeOrders = mockOrders.filter(o => o.status !== 'Delivered').length;
-  const pendingTasks = mockTasks.filter(t => t.status !== 'Done').length;
+  const activeOrders = orders.filter(o => o.status !== 'Delivered').length;
+  const pendingTasks = tasks.filter(t => t.status !== 'Done').length;
 
   return (
     <div className="flex flex-col lg:flex-row h-full">
@@ -48,7 +50,7 @@ export default function Dashboard() {
           </div>
           <div className="bg-[#111] p-4 sm:p-5 rounded-2xl border border-white/5">
             <label className="text-[9px] sm:text-[10px] font-bold uppercase text-zinc-500 tracking-widest">Pending Tasks</label>
-            <div className="text-3xl sm:text-4xl font-black mt-2 text-white">{pendingTasks} <span className="text-xs sm:text-sm font-normal text-zinc-400">Hi: {mockTasks.filter(t => t.priority === 'High').length}</span></div>
+            <div className="text-3xl sm:text-4xl font-black mt-2 text-white">{pendingTasks} <span className="text-xs sm:text-sm font-normal text-zinc-400">Hi: {tasks.filter(t => t.priority === 'High').length}</span></div>
           </div>
           <div className="bg-[#111] p-4 sm:p-5 rounded-2xl border border-white/5">
             <label className="text-[9px] sm:text-[10px] font-bold uppercase text-zinc-500 tracking-widest">Pass Rate</label>

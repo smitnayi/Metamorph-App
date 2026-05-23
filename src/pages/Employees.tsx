@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '../components/ui/Card';
-import { mockUsers } from '../store/mockData';
+import { useDataStore } from '../store/data';
 import { Shield, ShieldAlert, ShieldCheck, UserPlus, MoreVertical, Edit2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';
@@ -15,7 +15,7 @@ const roleConfig = {
 };
 
 export default function Employees() {
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const { users, setUsers } = useDataStore();
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [newUser, setNewUser] = useState<Partial<User>>({
     name: '', email: '', role: 'Operator', department: 'Production', status: 'Active'

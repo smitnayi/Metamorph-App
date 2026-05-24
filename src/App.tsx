@@ -9,6 +9,8 @@ import Tasks from "./pages/Tasks";
 import Quality from "./pages/Quality";
 import CRM from "./pages/CRM";
 import Employees from "./pages/Employees";
+import Roles from "./pages/Roles";
+import AdminDashboard from "./pages/AdminDashboard";
 import Login from "./pages/Login";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
@@ -43,6 +45,8 @@ export default function App() {
             <Route path="quality" element={<Quality />} />
             <Route path="customers" element={<CRM />} />
             <Route path="employees" element={<Employees />} />
+            <Route path="roles" element={<Roles />} />
+            <Route path="admin" element={<AdminDashboard />} />
           </Route>
         </Routes>
       </BrowserRouter>

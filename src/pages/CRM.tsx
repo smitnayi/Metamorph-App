@@ -34,7 +34,8 @@ export default function CRM() {
       status: newCustomer.status as 'Active' | 'Inactive' | 'Lead' || 'Active',
       lifetimeValue: Number(newCustomer.lifetimeValue) || 0,
       totalOrders: Number(newCustomer.totalOrders) || 0,
-      lastOrderDate: new Date().toISOString()
+      lastOrderDate: new Date().toISOString(),
+      contactName: newCustomer.contactName || 'Primary Contact'
     };
     
     setCustomers([customer, ...customers]);

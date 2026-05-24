@@ -37,7 +37,9 @@ export default function Inventory() {
       colorCode: newItem.colorCode || '#ffffff',
       weightKg: Number(newItem.weightKg) || 0,
       lowStockThreshold: Number(newItem.lowStockThreshold) || 50,
-      supplier: newItem.supplier || 'Unknown'
+      supplier: newItem.supplier || 'Unknown',
+      location: newItem.location || 'Warehouse',
+      lastUpdated: new Date().toISOString()
     };
     setInventory([...inventory, item]);
     toast.success(`${item.name} added to inventory`);

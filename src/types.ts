@@ -1,10 +1,24 @@
-export type Role = 'Admin' | 'Manager' | 'Worker';
+export type Action = 'create' | 'read' | 'update' | 'delete' | 'manage';
+export type Subject = 'inventory' | 'orders' | 'reports' | 'employees' | 'crm' | 'quality' | 'tasks' | 'settings' | 'all';
+
+export interface Permission {
+  action: Action;
+  subject: Subject;
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  description: string;
+  permissions: Permission[];
+  isSystem?: boolean; // System roles cannot be deleted
+}
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: Role;
+  roleId: string;
   avatarUrl?: string;
   department: string;
   status: 'Active' | 'Inactive';
@@ -32,6 +46,7 @@ export interface Order {
   items: number;
   dueDate: string;
   totalValue: number;
+  priority?: 'High' | 'Medium' | 'Low';
 }
 
 export interface Customer {
@@ -43,6 +58,7 @@ export interface Customer {
   totalOrders: number;
   lifetimeValue: number;
   status: 'Active' | 'Lead' | 'Inactive';
+  lastOrderDate?: string;
 }
 
 export interface Task {

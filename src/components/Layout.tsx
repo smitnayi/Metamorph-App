@@ -1,22 +1,39 @@
 import React from "react";
 import { NavLink, Outlet, useLocation, useNavigate, useResolvedPath, useMatch } from "react-router-dom";
-import { ShieldCheck, LogOut, Home, BarChart2, Package, LayoutList, Shield, Users, Briefcase, CheckSquare } from "lucide-react";
+import { ShieldCheck, LogOut, Home, BarChart2, Package, LayoutList, Shield, Users, Briefcase, CheckSquare, Key, LucideIcon, ShieldAlert } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "../contexts/AuthContext";
 import { MetamorphLogo } from "./ui/MetamorphLogo";
+import { useDataStore } from "../store/data";
+import { useRoleAccess } from "../hooks/useRoleAccess";
+import { Subject } from "../types";
 
-const navItems = [
-  { path: "/", label: "Home", icon: Home },
-  { path: "/analytics", label: "Stats", icon: BarChart2 },
-  { path: "/inventory", label: "Stock", icon: Package },
-  { path: "/orders", label: "Jobs", icon: LayoutList },
-  { path: "/tasks", label: "Tasks", icon: CheckSquare },
-  { path: "/quality", label: "QA", icon: Shield },
-  { path: "/customers", label: "CRM", icon: Users },
-  { path: "/employees", label: "Staff", icon: Briefcase },
+export interface NavItem {
+  path: string;
+  label: string;
+  icon: LucideIcon;
+  subject: Subject | 'all';
+}
+
+const ALL_NAV_ITEMS: NavItem[] = [
+  { path: "/", label: "Home", icon: Home, subject: "all" },
+  { path: "/admin", label: "Admin", icon: ShieldAlert, subject: "all" },
+  { path: "/analytics", label: "Stats", icon: BarChart2, subject: "reports" },
+  { path: "/inventory", label: "Stock", icon: Package, subject: "inventory" },
+  { path: "/orders", label: "Jobs", icon: LayoutList, subject: "orders" },
+  { path: "/tasks", label: "Tasks", icon: CheckSquare, subject: "tasks" },
+  { path: "/quality", label: "QA", icon: Shield, subject: "quality" },
+  { path: "/customers", label: "CRM", icon: Users, subject: "crm" },
+  { path: "/employees", label: "Staff", icon: Briefcase, subject: "employees" },
+  { path: "/roles", label: "Roles", icon: Key, subject: "settings" },
 ];
 
-function NavItemLink({ item, mobile = false }: { item: any; mobile?: boolean }) {
+interface NavItemLinkProps {
+  item: NavItem;
+  mobile?: boolean;
+}
+
+const NavItemLink: React.FC<NavItemLinkProps> = ({ item, mobile = false }) => {
   const resolved = useResolvedPath(item.path);
   const match = useMatch({ path: resolved.pathname, end: item.path === "/" });
   const isActive = match !== null;
@@ -60,13 +77,23 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
+  const { hasPermission } = useRoleAccess();
+  const { roles } = useDataStore();
 
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
+  const navItems = ALL_NAV_ITEMS.filter(item => {
+    if (item.path === '/admin') return hasPermission(currentUser as any, 'manage', 'all');
+    if (item.subject === 'all') return true;
+    return hasPermission(currentUser as any, 'read', item.subject as Subject) || hasPermission(currentUser as any, 'manage', item.subject as Subject);
+  });
+
   if (!currentUser) return null;
+
+  const currentRoleName = roles.find(r => r.id === currentUser.roleId)?.name || 'Unknown Role';
 
   return (
     <div className="h-[100dvh] w-full bg-[#111] text-white flex flex-col font-sans overflow-hidden">
@@ -87,18 +114,20 @@ export default function Layout() {
 
           <div className="flex items-center gap-4 shrink-0 md:ml-auto group relative">
             <div className="text-right hidden sm:block">
-              <div className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">{currentUser.role}</div>
+              <div className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">{currentRoleName}</div>
               <div className="text-sm font-bold uppercase truncate max-w-[150px]">{currentUser.name.replace(" ", "_")}</div>
             </div>
             <div className="h-8 w-8 md:h-10 md:w-10 bg-white flex items-center justify-center text-black font-black cursor-pointer peer rounded-full md:rounded-none">
               {currentUser.name.charAt(0)}
             </div>
             
-            <div className="absolute top-12 right-0 bg-black border border-white/10 p-2 hidden group-hover:block peer-hover:block hover:block w-48 shadow-2xl rounded-lg md:rounded-none z-50">
-               <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 px-2 pt-1 truncate">{currentUser.email}</div>
-               <button onClick={handleLogout} className="w-full text-left px-2 py-2 flex items-center text-sm font-bold text-white hover:bg-orange-500 hover:text-black transition-colors uppercase tracking-widest rounded md:rounded-none">
-                 <LogOut className="h-4 w-4 mr-2" /> Logout
-               </button>
+            <div className="absolute top-full right-0 pt-2 hidden group-hover:block hover:block w-48 z-50">
+              <div className="bg-black border border-white/10 p-2 shadow-2xl rounded-lg md:rounded-none">
+                <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 px-2 pt-1 truncate">{currentUser.email}</div>
+                <button onClick={handleLogout} className="w-full text-left px-2 py-2 flex items-center text-sm font-bold text-white hover:bg-orange-500 hover:text-black transition-colors uppercase tracking-widest rounded md:rounded-none">
+                  <LogOut className="h-4 w-4 mr-2" /> Logout
+                </button>
+              </div>
             </div>
           </div>
         </div>

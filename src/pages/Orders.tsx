@@ -10,7 +10,14 @@ import Modal from '../components/ui/Modal';
 const STAGES = ['Quoted', 'In Progress', 'Quality Check', 'Shipped', 'Completed'] as const;
 type Stage = typeof STAGES[number];
 
-function DroppableStage({ id, stageOrders, orders, setOrders }: { id: Stage, stageOrders: Order[], orders: Order[], setOrders: any }) {
+interface DroppableStageProps {
+  id: Stage;
+  stageOrders: Order[];
+  orders: Order[];
+  setOrders: any;
+}
+
+const DroppableStage: React.FC<DroppableStageProps> = ({ id, stageOrders, orders, setOrders }) => {
   const { setNodeRef, isOver } = useDroppable({
     id,
   });
@@ -38,7 +45,13 @@ function DroppableStage({ id, stageOrders, orders, setOrders }: { id: Stage, sta
   );
 }
 
-function DraggableOrder({ order, setOrders, orders }: { order: Order, setOrders: any, orders: Order[] }) {
+interface DraggableOrderProps {
+  order: Order;
+  setOrders: any;
+  orders: Order[];
+}
+
+const DraggableOrder: React.FC<DraggableOrderProps> = ({ order, setOrders, orders }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: order.id,
     data: { order }
@@ -121,8 +134,7 @@ export default function Orders() {
       dueDate: new Date(newOrder.dueDate || new Date()).toISOString(),
       totalValue: Number(newOrder.totalValue) || 0,
       priority: 'Medium',
-      machineAssignment: 'Unassigned',
-      originalOwnerId: 'uid'
+      customerId: `c${Math.floor(Math.random() * 1000)}`
     };
 
     setOrders([...orders, order]);

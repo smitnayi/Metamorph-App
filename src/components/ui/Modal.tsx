@@ -8,15 +8,24 @@ interface ModalProps {
   title: string;
   children: React.ReactNode;
   className?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
 }
 
-export default function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
+const sizeClasses = {
+  sm: 'max-w-sm',
+  md: 'max-w-md',
+  lg: 'max-w-lg',
+  xl: 'max-w-2xl',
+  full: 'max-w-[90vw]'
+};
+
+export default function Modal({ isOpen, onClose, title, children, className, size = 'md' }: ModalProps) {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4 overflow-hidden pt-12 sm:pt-4">
       <div 
-        className={cn("bg-[#111] border border-white/10 w-full max-w-md shadow-2xl flex flex-col rounded-t-3xl sm:rounded-2xl max-h-full transition-transform", className)}
+        className={cn("bg-[#111] border border-white/10 w-full shadow-2xl flex flex-col rounded-t-3xl sm:rounded-2xl max-h-full transition-transform", sizeClasses[size], className)}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-6 sm:p-5 border-b border-white/5 shrink-0">

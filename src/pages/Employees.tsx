@@ -7,18 +7,11 @@ import { toast } from 'sonner';
 import Modal from '../components/ui/Modal';
 import { User } from '../types';
 
-const roleConfig = {
-  'Admin': { icon: ShieldAlert, color: 'text-rose-600 bg-rose-50' },
-  'Manager': { icon: ShieldCheck, color: 'text-orange-500 bg-orange-500/10' },
-  'Worker': { icon: Shield, color: 'text-emerald-600 bg-emerald-50' },
-  'Operator': { icon: Shield, color: 'text-emerald-600 bg-emerald-50' },
-};
-
 export default function Employees() {
-  const { users, setUsers } = useDataStore();
+  const { users, setUsers, roles } = useDataStore();
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [newUser, setNewUser] = useState<Partial<User>>({
-    name: '', email: '', role: 'Operator', department: 'Production', status: 'Active'
+    name: '', email: '', roleId: roles[0]?.id || '', department: 'Production', status: 'Active'
   });
 
   const handleInvite = (e: React.FormEvent) => {
@@ -28,19 +21,23 @@ export default function Employees() {
       id: Math.random().toString(),
       name: newUser.name,
       email: newUser.email,
-      role: newUser.role as any,
+      roleId: newUser.roleId || roles[0]?.id || '',
       department: newUser.department!,
       status: newUser.status as any
     };
     setUsers([...users, user]);
     toast.success(`Invitation sent to ${user.email}`);
     setIsInviteModalOpen(false);
-    setNewUser({ name: '', email: '', role: 'Operator', department: 'Production', status: 'Active' });
+    setNewUser({ name: '', email: '', roleId: roles[0]?.id || '', department: 'Production', status: 'Active' });
   };
 
   const toggleStatus = (id: string, currentStatus: string) => {
     setUsers(users.map(u => u.id === id ? { ...u, status: currentStatus === 'Active' ? 'Offline' : 'Active' } : u));
     toast.success('User status updated');
+  };
+
+  const getRoleName = (roleId: string) => {
+    return roles.find(r => r.id === roleId)?.name || 'Unknown Role';
   };
 
   return (
@@ -63,10 +60,6 @@ export default function Employees() {
       {/* Mobile Card Layout */}
       <div className="md:hidden space-y-4">
         {users.map((user) => {
-          const configItem = roleConfig[user.role as keyof typeof roleConfig] || roleConfig['Operator'];
-          const RoleIcon = configItem.icon;
-          const roleColor = configItem.color;
-
           return (
             <div key={user.id} className="bg-[#111] border border-white/5 rounded-2xl p-4 flex flex-col gap-4">
               <div className="flex justify-between items-start">
@@ -91,9 +84,9 @@ export default function Employees() {
               </div>
 
               <div className="flex justify-between items-center bg-black/50 p-3 rounded-xl border border-white/5">
-                <span className={cn("inline-flex items-center px-2.5 py-1.5 rounded-[6px] text-[10px] font-bold uppercase tracking-widest gap-1.5", roleColor)}>
-                  <RoleIcon className="h-4 w-4" />
-                  {user.role}
+                <span className="inline-flex items-center px-2.5 py-1.5 rounded-[6px] text-[10px] font-bold uppercase tracking-widest gap-1.5 text-emerald-600 bg-emerald-50">
+                  <Shield className="h-4 w-4" />
+                  {getRoleName(user.roleId)}
                 </span>
                 <span className="text-zinc-300 font-bold uppercase text-[10px] tracking-wider">
                   {user.department}
@@ -119,10 +112,6 @@ export default function Employees() {
             </thead>
             <tbody className="divide-y divide-white/10">
               {users.map((user) => {
-                const configItem = roleConfig[user.role as keyof typeof roleConfig] || roleConfig['Operator'];
-                const RoleIcon = configItem.icon;
-                const roleColor = configItem.color;
-
                 return (
                   <tr key={user.id} className="hover:bg-white/5 transition-colors">
                     <td className="px-6 py-4">
@@ -137,9 +126,9 @@ export default function Employees() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={cn("inline-flex items-center px-2.5 py-1 rounded-[6px] text-[10px] font-bold uppercase tracking-widest gap-1.5", roleColor)}>
-                        <RoleIcon className="h-3.5 w-3.5" />
-                        {user.role}
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-[6px] text-[10px] font-bold uppercase tracking-widest gap-1.5 text-emerald-600 bg-emerald-50">
+                        <Shield className="h-3.5 w-3.5" />
+                        {getRoleName(user.roleId)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-zinc-300 font-bold uppercase text-[11px] tracking-wider">
@@ -173,7 +162,7 @@ export default function Employees() {
         <ShieldAlert className="h-8 w-8 text-orange-500 flex-shrink-0" />
         <div>
           <p className="font-bold tracking-widest text-[11px] uppercase text-orange-500 mb-1">Security & Permissions Notice</p>
-          <p className="text-zinc-400 font-medium">Admins have full access to system configuration and metrics. Managers can adjust inventory and assign tasks. Operators have restricted access to task boards and QA logging only.</p>
+          <p className="text-zinc-400 font-medium">Access is determined dynamically based on the role assigned to the employee. Admins can configure these roles in the System Roles page.</p>
         </div>
       </div>
 
@@ -190,10 +179,10 @@ export default function Employees() {
            <div className="grid grid-cols-2 gap-4">
              <div>
                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Role</label>
-               <select value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value as any})} className="w-full px-4 py-4 rounded-xl border border-white/10 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors appearance-none font-medium">
-                 <option value="Operator">Operator</option>
-                 <option value="Manager">Manager</option>
-                 <option value="Admin">Admin</option>
+               <select value={newUser.roleId} onChange={e => setNewUser({...newUser, roleId: e.target.value as any})} className="w-full px-4 py-4 rounded-xl border border-white/10 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors appearance-none font-medium">
+                 {roles.map(r => (
+                   <option key={r.id} value={r.id}>{r.name}</option>
+                 ))}
                </select>
              </div>
              <div>

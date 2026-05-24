@@ -3,14 +3,12 @@ import { auth, loginWithGoogle, logoutUser, db } from "../lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
-export type Role = "Admin" | "Manager" | "Operator";
-
 export interface AuthUser {
   id: string; // matches uid
   uid: string;
   name: string;
   email: string;
-  role: Role;
+  roleId: string;
 }
 
 interface AuthContextType {
@@ -35,20 +33,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           if (userSnap.exists()) {
             const data = userSnap.data();
+            let fetchedRoleId = data.roleId || "role-employee";
+            const isAdminEmail = data.email === "nayismit3140@gmail.com" || firebaseUser.email === "nayismit3140@gmail.com" || 
+                                 data.email === "smitlearnsfigma@gmail.com" || firebaseUser.email === "smitlearnsfigma@gmail.com";
+            if (isAdminEmail) {
+              fetchedRoleId = "role-admin";
+            }
+            
             setCurrentUser({
               id: firebaseUser.uid,
               uid: firebaseUser.uid,
-              name: data.name,
-              email: data.email,
-              role: data.role as Role
+              name: data.name || firebaseUser.displayName || "Unknown",
+              email: data.email || firebaseUser.email || "",
+              roleId: fetchedRoleId
             });
           } else {
+             let defaultRole = "role-employee";
+             if (firebaseUser.email === "nayismit3140@gmail.com" || firebaseUser.email === "smitlearnsfigma@gmail.com") {
+                defaultRole = "role-admin";
+             }
              setCurrentUser({
                 id: firebaseUser.uid,
                 uid: firebaseUser.uid,
                 name: firebaseUser.displayName || "Unknown",
                 email: firebaseUser.email || "",
-                role: "Operator"
+                roleId: defaultRole
              });
           }
         } catch (e) {

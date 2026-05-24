@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 export default function Tasks() {
   const [searchTerm, setSearchTerm] = useState('');
   const [priorityFilter, setPriorityFilter] = useState<'All' | 'High' | 'Medium' | 'Low'>('All');
-  const { tasks, setTasks, users } = useDataStore();
+  const { tasks, setTasks, users, roles } = useDataStore();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // default user ID fallback if users list is empty
@@ -225,9 +225,12 @@ export default function Tasks() {
               onChange={e => setNewTask({...newTask, assigneeId: e.target.value})}
               className="w-full px-4 py-4 rounded-xl border border-white/10 bg-black text-white focus:outline-none focus:border-orange-500 transition-colors appearance-none font-medium"
             >
-              {users.map(user => (
-                <option key={user.id} value={user.id}>{user.name} ({user.role})</option>
-              ))}
+              {users.map(user => {
+                const roleName = roles.find(r => r.id === user.roleId)?.name || 'Unknown Role';
+                return (
+                  <option key={user.id} value={user.id}>{user.name} ({roleName})</option>
+                );
+              })}
             </select>
           </div>
           <button 

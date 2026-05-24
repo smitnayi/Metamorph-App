@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { toast } from 'sonner';
@@ -19,14 +19,24 @@ export async function loginWithGoogle() {
     const userRef = doc(db, 'users', user.uid);
     const userSnap = await getDoc(userRef);
     
+    let roleId = 'role-employee';
+    if (user.email === 'nayismit3140@gmail.com' || user.email === 'smitlearnsfigma@gmail.com') {
+      roleId = 'role-admin';
+    }
+
     if (!userSnap.exists()) {
-      // Create new user defaulted to Operator
+      // Create new user defaulted to Employee
       await setDoc(userRef, {
         uid: user.uid,
         name: user.displayName || 'Unknown Operator',
         email: user.email || '',
-        role: 'Operator'
+        roleId: roleId
       });
+    } else {
+      // If user exists and is the admin email, ensure they have the admin role
+      if (userSnap.data().roleId !== roleId && (user.email === 'nayismit3140@gmail.com' || user.email === 'smitlearnsfigma@gmail.com')) {
+         await setDoc(userRef, { ...userSnap.data(), roleId: roleId });
+      }
     }
     
     return user;

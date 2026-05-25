@@ -2,9 +2,9 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Default Deny
+    // Default Allow for Authenticated Users for MVP
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if request.auth != null;
     }
 
     // Common Helpers
@@ -26,17 +26,17 @@ service cloud.firestore {
 
     // Check if the user document exists and has admin role
     function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roleId == 'role-admin';
     }
 
     // User Model
     function isValidUser(data) {
-      return data.keys().hasAll(['uid', 'name', 'email', 'role']) &&
-             data.keys().size() == 4 &&
+      return data.keys().hasAll(['uid', 'name', 'email', 'roleId']) &&
+             data.keys().size() >= 4 &&
              data.uid is string && data.uid == request.auth.uid &&
              data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
              data.email is string && data.email.size() > 0 && data.email.size() <= 200 &&
-             data.role is string && (data.role == 'Admin' || data.role == 'Manager' || data.role == 'Operator');
+             data.roleId is string;
     }
 
     match /users/{userId} {

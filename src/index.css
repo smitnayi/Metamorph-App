@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -8,11 +10,16 @@
 
 @layer base {
   body {
-    @apply bg-[#111] text-white font-sans antialiased;
+    @apply bg-[#f7f7f8] dark:bg-[#0a0a0a] text-zinc-900 dark:text-white font-sans antialiased transition-colors duration-500;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply tracking-tighter text-white uppercase;
+    @apply tracking-tighter text-zinc-900 dark:text-white uppercase transition-colors duration-500;
   }
+}
+
+::selection {
+  background: rgba(234, 88, 12, 0.2);
+  color: inherit;
 }
 
 @layer utilities {

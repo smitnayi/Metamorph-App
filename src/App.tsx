@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
@@ -13,11 +13,25 @@ import Roles from "./pages/Roles";
 import AdminDashboard from "./pages/AdminDashboard";
 import Login from "./pages/Login";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { initStoreSync, cleanupStoreSync } from "./store/data";
 
 import { Toaster } from "sonner";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { currentUser } = useAuth();
+  
+  useEffect(() => {
+    if (currentUser) {
+      initStoreSync();
+    } else {
+      cleanupStoreSync();
+    }
+    
+    return () => {
+       cleanupStoreSync();
+    }
+  }, [currentUser]);
+
   if (!currentUser) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }

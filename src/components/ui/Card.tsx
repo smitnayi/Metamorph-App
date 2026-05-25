@@ -8,15 +8,15 @@ export interface CustomCardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export function Card({ className, ...props }: CustomCardProps) {
-  return <div className={cn("bg-black border border-white/10 overflow-hidden", className)} {...props} />;
+  return <div className={cn("bg-white dark:bg-black border border-black/5 dark:border-white/10 overflow-hidden", className)} {...props} />;
 }
 
 export function CardHeader({ className, ...props }: CustomCardProps) {
-  return <div className={cn("p-6 flex flex-col space-y-1.5 border-b border-white/10", className)} {...props} />;
+  return <div className={cn("p-6 flex flex-col space-y-1.5 border-b border-black/5 dark:border-white/10", className)} {...props} />;
 }
 
 export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn("text-xl font-black uppercase tracking-tight text-white", className)} {...props} />;
+  return <h3 className={cn("text-xl font-black uppercase tracking-tight text-zinc-900 dark:text-white", className)} {...props} />;
 }
 
 export function CardDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
@@ -28,5 +28,5 @@ export function CardContent({ className, ...props }: CustomCardProps) {
 }
 
 export function CardFooter({ className, ...props }: CustomCardProps) {
-  return <div className={cn("p-6 pt-0 border-t border-white/10 flex items-center", className)} {...props} />;
+  return <div className={cn("p-6 pt-0 border-t border-black/5 dark:border-white/10 flex items-center", className)} {...props} />;
 }

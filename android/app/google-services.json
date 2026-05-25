@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "974773878904",
+    "project_id": "metamorph-c9588",
+    "storage_bucket": "metamorph-c9588.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:974773878904:android:eb0d8692b1b52c2570ad8d",
+        "android_client_info": {
+          "package_name": "com.metamorph.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "974773878904-7r14mndm02s59rbta4ms9sghbp44bgo9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD4NqcEfuyJxc15cvzaJxTvWhnHbLdAkzY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "974773878904-7r14mndm02s59rbta4ms9sghbp44bgo9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

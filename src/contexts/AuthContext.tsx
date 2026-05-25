@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { auth, loginWithGoogle, logoutUser, db } from "../lib/firebase";
+import { auth, loginWithGoogle, logoutUser, loginWithEmail, signupWithEmail, db } from "../lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
@@ -14,6 +14,8 @@ export interface AuthUser {
 interface AuthContextType {
   currentUser: AuthUser | null;
   login: () => Promise<void>;
+  loginEmail: (email: string, pass: string) => Promise<void>;
+  signupEmail: (email: string, pass: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -31,33 +33,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const userRef = doc(db, "users", firebaseUser.uid);
           const userSnap = await getDoc(userRef);
           
+          let finalRoleId = "role-employee";
+
+          if (userSnap.exists()) {
+            finalRoleId = userSnap.data().roleId || finalRoleId;
+          }
+
           if (userSnap.exists()) {
             const data = userSnap.data();
-            let fetchedRoleId = data.roleId || "role-employee";
-            const isAdminEmail = data.email === "nayismit3140@gmail.com" || firebaseUser.email === "nayismit3140@gmail.com" || 
-                                 data.email === "smitlearnsfigma@gmail.com" || firebaseUser.email === "smitlearnsfigma@gmail.com";
-            if (isAdminEmail) {
-              fetchedRoleId = "role-admin";
-            }
-            
             setCurrentUser({
               id: firebaseUser.uid,
               uid: firebaseUser.uid,
               name: data.name || firebaseUser.displayName || "Unknown",
               email: data.email || firebaseUser.email || "",
-              roleId: fetchedRoleId
+              roleId: finalRoleId
             });
           } else {
-             let defaultRole = "role-employee";
-             if (firebaseUser.email === "nayismit3140@gmail.com" || firebaseUser.email === "smitlearnsfigma@gmail.com") {
-                defaultRole = "role-admin";
-             }
              setCurrentUser({
                 id: firebaseUser.uid,
                 uid: firebaseUser.uid,
                 name: firebaseUser.displayName || "Unknown",
                 email: firebaseUser.email || "",
-                roleId: defaultRole
+                roleId: finalRoleId
              });
           }
         } catch (e) {
@@ -73,8 +70,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async () => {
-    setIsLoading(true);
-    await loginWithGoogle();
+    try {
+      await loginWithGoogle();
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  };
+
+  const loginEmail = async (email: string, pass: string) => {
+    try {
+      await loginWithEmail(email, pass);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  };
+
+  const signupEmail = async (email: string, pass: string) => {
+    try {
+      await signupWithEmail(email, pass);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   };
 
   const logout = async () => {
@@ -82,7 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ currentUser, login, loginEmail, signupEmail, logout, isLoading }}>
       {!isLoading && children}
     </AuthContext.Provider>
   );

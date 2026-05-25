@@ -18,8 +18,8 @@ export default function AdminDashboard() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center space-y-4">
           <ShieldAlert className="w-16 h-16 text-red-500 mx-auto" />
-          <h2 className="text-2xl font-bold text-white">Admin Access Required</h2>
-          <p className="text-zinc-400">You must be a system administrator to view this page.</p>
+          <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">Admin Access Required</h2>
+          <p className="text-zinc-600 dark:text-zinc-400">You must be a system administrator to view this page.</p>
         </div>
       </div>
     );
@@ -38,45 +38,45 @@ export default function AdminDashboard() {
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-white mb-2">System Administration</h1>
-        <p className="text-zinc-400">Comprehensive overview of system data and user metrics.</p>
+        <h1 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">System Administration</h1>
+        <p className="text-zinc-600 dark:text-zinc-400">Comprehensive overview of system data and user metrics.</p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {statCards.map((stat, i) => (
-          <Card key={i} className="bg-[#111] border-white/5">
-            <CardContent className="p-6">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${stat.bg}`}>
-                <stat.icon className={`w-6 h-6 ${stat.color}`} />
+          <Card key={i} className="bg-[#f4f4f5] dark:bg-[#111] border-black/5 dark:border-white/5">
+            <CardContent className="p-4 md:p-6 flex flex-col items-center sm:items-start text-center sm:text-left">
+              <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center mb-3 md:mb-4 shrink-0 ${stat.bg}`}>
+                <stat.icon className={`w-5 h-5 md:w-6 md:h-6 ${stat.color}`} />
               </div>
-              <div className="text-3xl font-black text-white mb-1">{stat.value}</div>
-              <div className="text-sm font-bold text-zinc-500 uppercase tracking-widest">{stat.title}</div>
+              <div className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white mb-1"><span className="tabular-nums">{stat.value}</span></div>
+              <div className="text-[10px] md:text-sm font-bold text-zinc-500 uppercase tracking-widest leading-tight">{stat.title}</div>
             </CardContent>
           </Card>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="bg-[#111] border-white/5 relative overflow-hidden">
+        <Card className="bg-[#f4f4f5] dark:bg-[#111] border-black/5 dark:border-white/5 relative overflow-hidden">
           <CardContent className="p-6">
-            <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-              <Users className="w-5 h-5 text-zinc-400" />
+            <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-6 flex items-center gap-2">
+              <Users className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
               Registered Users
             </h2>
             <div className="space-y-4">
               {users.slice(0, 5).map(user => {
                 const role = roles.find(r => r.id === user.roleId)?.name || 'Unknown';
                 return (
-                  <div key={user.id} className="flex items-center justify-between p-4 bg-black/50 rounded-xl border border-white/5">
-                    <div>
-                      <div className="font-bold text-white">{user.name}</div>
-                      <div className="text-sm text-zinc-400">{user.email}</div>
+                  <div key={user.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white dark:bg-black/50 rounded-xl border border-black/5 dark:border-white/5 gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-bold text-zinc-900 dark:text-white truncate">{user.name}</div>
+                      <div className="text-sm text-zinc-600 dark:text-zinc-400 truncate">{user.email}</div>
                     </div>
-                    <div className="text-right">
-                      <span className="inline-block px-3 py-1 bg-white/5 rounded-lg text-xs font-bold text-emerald-400 uppercase tracking-wider">
+                    <div className="flex flex-row sm:flex-col sm:text-right items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-0 shrink-0">
+                      <span className="inline-block px-3 py-1 bg-black/5 dark:bg-white/5 rounded-lg text-xs font-bold text-emerald-400 uppercase tracking-wider">
                         {role}
                       </span>
-                      <div className="text-xs text-zinc-500 mt-1 uppercase tracking-wider">{user.department}</div>
+                      <div className="text-xs text-zinc-500 sm:mt-1 uppercase tracking-wider">{user.department}</div>
                     </div>
                   </div>
                 );
@@ -90,10 +90,10 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-[#111] border-white/5">
+        <Card className="bg-[#f4f4f5] dark:bg-[#111] border-black/5 dark:border-white/5">
           <CardContent className="p-6">
-            <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-              <Shield className="w-5 h-5 text-zinc-400" />
+            <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-6 flex items-center gap-2">
+              <Shield className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
               Role Distribution
             </h2>
             <div className="space-y-4">
@@ -103,10 +103,10 @@ export default function AdminDashboard() {
                 return (
                   <div key={role.id}>
                     <div className="flex justify-between text-sm mb-2">
-                      <span className="font-medium text-zinc-300">{role.name}</span>
+                      <span className="font-medium text-zinc-700 dark:text-zinc-300">{role.name}</span>
                       <span className="text-zinc-500">{userCount} users</span>
                     </div>
-                    <div className="h-2 w-full bg-black rounded-full overflow-hidden">
+                    <div className="h-2 w-full bg-white dark:bg-black rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-emerald-500 rounded-full" 
                         style={{ width: `${percentage}%` }}

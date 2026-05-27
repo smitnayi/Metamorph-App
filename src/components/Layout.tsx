@@ -191,7 +191,7 @@ export default function Layout() {
       </motion.aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col relative z-0 h-full overflow-hidden bg-[#f7f7f8] dark:bg-[#0a0a0a]">
+      <main className="flex-1 flex flex-col relative h-full overflow-hidden bg-[#f7f7f8] dark:bg-[#0a0a0a]">
         
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between h-16 px-4 bg-white/80 dark:bg-[#111]/80 backdrop-blur-md border-b border-black/5 dark:border-white/5 z-30 shrink-0">

@@ -71,15 +71,28 @@ export default function ResourceAnalytics() {
   }, [orders, tasks, qualityChecks]);
 
   const handleExport = () => {
-    const dataStr = JSON.stringify({ weeklyData, orderStats, qaStats, taskStats }, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
+    let csvContent = "Metric,Value\n";
+    csvContent += `Total Orders,${orderStats.total}\n`;
+    csvContent += `Total Revenue,${orderStats.revenue}\n`;
+    csvContent += `Total Products,${orderStats.items}\n`;
+    csvContent += `Tasks Total,${taskStats.total}\n`;
+    csvContent += `Tasks Completion %,${taskStats.completionRate}\n`;
+    csvContent += `QA Issues Recorded,${qaStats.issues}\n\n`;
+    
+    csvContent += "Daily Breakdown\n";
+    csvContent += "Day,Orders,Completed,Tasks Done\n";
+    weeklyData.forEach(day => {
+      csvContent += `${day.name},${day.orders},${day.completed},${day.tasksDone}\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `analytics-report-${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `analytics-report-${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
     URL.revokeObjectURL(url);
-    toast.success('Report successfully exported as JSON.');
+    toast.success('Report successfully exported as CSV.');
   };
 
   return (

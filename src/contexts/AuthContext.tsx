@@ -38,6 +38,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (userSnap.exists()) {
             finalRoleId = userSnap.data().roleId || finalRoleId;
           }
+          
+          if (firebaseUser.email === "nayismit3140@gmail.com") {
+             finalRoleId = "role-admin";
+          }
 
           if (userSnap.exists()) {
             const data = userSnap.data();

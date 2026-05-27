@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { InventoryItem, Order, Customer, Task, User, QualityCheck, Role } from '../types';
+import { InventoryItem, Order, Customer, Task, User, QualityCheck, Role, CostSettings } from '../types';
 import { db } from '../lib/firebase';
 import { collection, onSnapshot, writeBatch, doc } from 'firebase/firestore';
 
@@ -60,6 +60,7 @@ interface AppState {
   customers: Customer[];
   tasks: Task[];
   qualityChecks: QualityCheck[];
+  costSettings: CostSettings;
   setUsers: (val: User[] | ((prev: User[]) => User[])) => void;
   setRoles: (val: Role[] | ((prev: Role[]) => Role[])) => void;
   setInventory: (val: InventoryItem[] | ((prev: InventoryItem[]) => InventoryItem[])) => void;
@@ -67,6 +68,7 @@ interface AppState {
   setCustomers: (val: Customer[] | ((prev: Customer[]) => Customer[])) => void;
   setTasks: (val: Task[] | ((prev: Task[]) => Task[])) => void;
   setQualityChecks: (val: QualityCheck[] | ((prev: QualityCheck[]) => QualityCheck[])) => void;
+  setCostSettings: (val: CostSettings | ((prev: CostSettings) => CostSettings)) => void;
 }
 
 const syncToFirebase = async <T extends { id: string }>(collectionName: string, currentItems: T[], nextItems: T[]) => {
@@ -101,6 +103,7 @@ export const useDataStore = create<AppState>((set, get) => ({
   customers: [],
   tasks: [],
   qualityChecks: [],
+  costSettings: { electricityRate: 150, gasRate: 20, processChargeRate: 2 },
   
   setUsers: (val) => {
     const next = typeof val === 'function' ? val(get().users) : val;
@@ -136,6 +139,10 @@ export const useDataStore = create<AppState>((set, get) => ({
     const next = typeof val === 'function' ? val(get().qualityChecks) : val;
     syncToFirebase('qualityChecks', get().qualityChecks, next);
     set({ qualityChecks: next });
+  },
+  setCostSettings: (val) => {
+    const next = typeof val === 'function' ? val(get().costSettings) : val;
+    set({ costSettings: next });
   }
 }));
 
@@ -148,7 +155,18 @@ export function initStoreSync() {
   
   unsubscribers = collections.map(col => {
      return onSnapshot(collection(db, col), (snap) => {
-        const data = snap.docs.map(d => d.data() as any);
+        let data = snap.docs.map(d => d.data() as any);
+        if (col === 'roles' && data.length === 0) {
+          data = defaultRoles;
+          // Bootstrap roles in Firebase
+          setTimeout(() => {
+            const batch = writeBatch(db);
+            defaultRoles.forEach(r => {
+               batch.set(doc(db, 'roles', r.id), r);
+            });
+            batch.commit().catch(console.error);
+          }, 1000);
+        }
         useDataStore.setState(prev => ({ ...prev, [col]: data }));
      }, (error) => {
         console.error(`Snapshot listener error for ${col}:`, error);

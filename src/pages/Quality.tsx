@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '../components/ui/Card';
 import { useDataStore } from '../store/data';
-import { ShieldAlert, CheckCircle, XCircle, Search, ClipboardSignature, ArrowLeft, Image as ImageIcon, Printer, Tag } from 'lucide-react';
+import { ShieldAlert, CheckCircle, XCircle, Search, ClipboardSignature, ArrowLeft, Image as ImageIcon, Printer, Tag, Plus, Camera } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { QualityCheck, Order } from '../types';
 import Modal from '../components/ui/Modal';
@@ -12,6 +12,14 @@ export default function Quality() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isStickerModalOpen, setIsStickerModalOpen] = useState(false);
   
+  const passChecks = checks.filter((c: QualityCheck) => c.overallResult === 'Pass');
+  const passRate = checks.length > 0 ? ((passChecks.length / checks.length) * 100).toFixed(1) + '%' : 'N/A';
+  
+  const recentFailures = checks.filter((c: QualityCheck) => c.overallResult === 'Fail').length;
+  
+  const sumAdhesion = checks.reduce((acc: number, curr: QualityCheck) => acc + curr.adhesionScore, 0);
+  const avgAdhesion = checks.length > 0 ? (sumAdhesion / checks.length).toFixed(1) + '/10' : 'N/A';
+
   const [stickerData, setStickerData] = useState({
     customer: '',
     model: '',
@@ -150,6 +158,9 @@ export default function Quality() {
     }
   };
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
   const [newCheck, setNewCheck] = useState<Partial<QualityCheck>>({
     orderId: orders.length > 0 ? orders[0].id : '',
     adhesionScore: 10,
@@ -157,8 +168,19 @@ export default function Quality() {
     cureStatus: 'Pass',
     visualDefects: [],
     overallResult: 'Pass',
-    notes: ''
+    notes: '',
+    photos: []
   });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newPhotos = Array.from(e.target.files).map(file => URL.createObjectURL(file as Blob));
+      setNewCheck(prev => ({
+        ...prev,
+        photos: [...(prev.photos || []), ...newPhotos]
+      }));
+    }
+  };
 
   const [defectInput, setDefectInput] = useState('');
   const [reportGeneratedId, setReportGeneratedId] = useState<string | null>(null);
@@ -250,6 +272,17 @@ export default function Quality() {
                  ))}
                </div>
             </div>
+          )}
+
+          {report?.photos && report.photos.length > 0 && (
+             <div className="mb-8">
+               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4 block">Job Sheet & Evidence</label>
+               <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                 {report.photos.map((src, i) => (
+                   <img key={i} src={src} alt="Defect evidence" className="w-48 h-48 rounded-xl object-cover border border-black/5 dark:border-white/5 shadow-md flex-shrink-0" />
+                 ))}
+               </div>
+             </div>
           )}
 
           <div className="bg-white dark:bg-black/50 p-4 sm:p-6 rounded-xl border border-black/5 dark:border-white/5">
@@ -368,10 +401,65 @@ export default function Quality() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 border-t border-black/5 dark:border-white/10 pt-6 sm:pt-8">
                 <div>
-                   <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Evidence Upload</label>
-                   <div className="border-2 border-dashed border-black/5 dark:border-white/10 bg-white dark:bg-black rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-orange-500 transition-colors h-32 active:scale-[0.98]">
-                     <ImageIcon className="h-6 w-6 text-zinc-500 mb-2" />
-                     <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest mt-2">Tap to select images</span>
+                   <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Job Sheet & Evidence</label>
+                   <input 
+                     type="file" 
+                     className="hidden" 
+                     ref={cameraInputRef} 
+                     multiple 
+                     accept="image/*" 
+                     capture="environment"
+                     onChange={handleFileChange}
+                   />
+                   <input 
+                     type="file" 
+                     className="hidden" 
+                     ref={fileInputRef} 
+                     multiple 
+                     accept="image/*" 
+                     onChange={handleFileChange}
+                   />
+                   <div 
+                     className="border-2 border-dashed border-black/5 dark:border-white/10 bg-white dark:bg-black rounded-xl p-4 flex flex-col items-center justify-center text-center min-h-[8rem]"
+                   >
+                     {newCheck.photos && newCheck.photos.length > 0 ? (
+                       <div className="flex flex-wrap gap-2 justify-center w-full">
+                         {newCheck.photos.map((src, i) => (
+                           <div key={i} className="relative w-16 h-16 rounded-lg overflow-hidden border border-black/10">
+                              <img src={src} className="w-full h-full object-cover" />
+                              <button 
+                                type="button"
+                                onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  setNewCheck({...newCheck, photos: newCheck.photos?.filter((_, index) => index !== i)});
+                                }}
+                                className="absolute top-1 right-1 bg-black/90 text-white rounded-full p-0.5"
+                              >
+                                <XCircle className="w-3 h-3"/>
+                              </button>
+                           </div>
+                         ))}
+                         <div className="flex gap-2 isolate">
+                           <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); cameraInputRef.current?.click(); }} className="w-16 h-16 rounded-lg border border-dashed border-black/10 dark:border-white/10 flex items-center justify-center hover:border-orange-500 transition-colors">
+                             <Camera className="w-5 h-5 text-zinc-400" />
+                           </button>
+                           <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); fileInputRef.current?.click(); }} className="w-16 h-16 rounded-lg border border-dashed border-black/10 dark:border-white/10 flex items-center justify-center hover:border-orange-500 transition-colors">
+                             <Plus className="w-5 h-5 text-zinc-400" />
+                           </button>
+                         </div>
+                       </div>
+                     ) : (
+                       <div className="flex gap-4 w-full isolate">
+                         <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); cameraInputRef.current?.click(); }} className="flex-1 flex flex-col items-center justify-center py-4 bg-black/5 dark:bg-white/5 rounded-lg hover:border-orange-500 border border-transparent transition-colors active:scale-95">
+                           <Camera className="h-6 w-6 text-zinc-500 mb-2" />
+                           <span className="text-[10px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest mt-2">Take Photo</span>
+                         </button>
+                         <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); fileInputRef.current?.click(); }} className="flex-1 flex flex-col items-center justify-center py-4 bg-black/5 dark:bg-white/5 rounded-lg hover:border-orange-500 border border-transparent transition-colors active:scale-95">
+                           <ImageIcon className="h-6 w-6 text-zinc-500 mb-2" />
+                           <span className="text-[10px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest mt-2">Library</span>
+                         </button>
+                       </div>
+                     )}
                    </div>
                 </div>
                 <div>
@@ -436,7 +524,7 @@ export default function Quality() {
                    </div>
                    <div>
                      <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-500">First-Time Pass Rate</div>
-                     <div className="text-4xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mt-1">94.2%</div>
+                     <div className="text-4xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mt-1">{passRate}</div>
                    </div>
                  </div>
                </CardContent>
@@ -449,7 +537,7 @@ export default function Quality() {
                    </div>
                    <div>
                      <div className="text-[10px] font-bold uppercase tracking-widest text-rose-500">Recent Failures</div>
-                     <div className="text-4xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mt-1">2</div>
+                     <div className="text-4xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mt-1">{recentFailures}</div>
                    </div>
                  </div>
                </CardContent>
@@ -462,7 +550,7 @@ export default function Quality() {
                    </div>
                    <div>
                      <div className="text-[10px] font-bold uppercase tracking-widest text-orange-500">Avg Adhesion Score</div>
-                     <div className="text-4xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mt-1">9.4/10</div>
+                     <div className="text-4xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mt-1">{avgAdhesion}</div>
                    </div>
                  </div>
                </CardContent>

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '../components/ui/Card';
-import { Search, Filter, Plus, AlertCircle, Edit2 } from 'lucide-react';
+import { Search, Filter, Plus, AlertCircle, Edit2, DownloadCloud } from 'lucide-react';
 import { useDataStore } from '../store/data';
 import { toast } from 'sonner';
 import Modal from '../components/ui/Modal';
 import { InventoryItem } from '../types';
+import { motion } from 'motion/react';
 
 export default function Inventory() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -70,6 +71,22 @@ export default function Inventory() {
     toast.success('In a real app, this would open a full detail editor. For now, it works.');
   };
 
+  const handleExportStock = () => {
+    let csvContent = "SKU,Name,Finish,Color Code,Stock (Kg),Low Alert (Kg),Supplier\n";
+    filteredInventory.forEach(item => {
+      csvContent += `${item.sku},${item.name},${item.finish},${item.colorCode},${item.weightKg},${item.lowStockThreshold},${item.supplier}\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `inventory-report-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success('Inventory stock successfully exported as CSV.');
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 py-8 md:p-8">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
@@ -78,13 +95,22 @@ export default function Inventory() {
           <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight mt-1 text-zinc-900 dark:text-white">Powder Inventory</h1>
           <p className="text-zinc-600 dark:text-zinc-400 mt-2 font-medium text-sm">Manage powder stock, thresholds, and suppliers.</p>
         </div>
-        <button 
-          onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex items-center justify-center bg-orange-500 px-6 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-black hover:bg-orange-600 transition-colors shadow-lg active:scale-95"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Add Stock
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={handleExportStock}
+            className="inline-flex items-center justify-center bg-white dark:bg-[#111] border border-black/5 dark:border-white/10 px-4 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-white hover:border-orange-500 transition-colors shadow-lg active:scale-95"
+          >
+            <DownloadCloud className="h-5 w-5 md:mr-2" />
+            <span className="hidden md:inline">Export</span>
+          </button>
+          <button 
+            onClick={() => setIsAddModalOpen(true)}
+            className="inline-flex items-center justify-center bg-orange-500 px-6 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-black hover:bg-orange-600 transition-colors shadow-lg active:scale-95"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Add Stock
+          </button>
+        </div>
       </div>
 
       <div className="bg-[#f4f4f5] dark:bg-[#111] rounded-2xl border border-black/5 dark:border-white/5 p-4 sm:p-6 mb-6">
@@ -112,7 +138,19 @@ export default function Inventory() {
       {/* Mobile Card Layout */}
       <div className="md:hidden space-y-4">
         {filteredInventory.map((item) => (
-          <div key={item.id} className="bg-[#f4f4f5] dark:bg-[#111] border border-black/5 dark:border-white/5 rounded-2xl p-4 flex flex-col gap-4">
+          <div key={item.id} className="relative overflow-hidden rounded-2xl bg-orange-500">
+             <div className="absolute inset-y-0 left-0 flex items-center pl-6 z-0">
+               <span className="text-black font-black text-xs uppercase tracking-widest flex items-center"><Edit2 className="h-4 w-4 mr-2"/> Edit Item</span>
+             </div>
+             <motion.div 
+               drag="x"
+               dragConstraints={{ left: 0, right: 0 }}
+               dragElastic={0.4}
+               onDragEnd={(e, { offset }) => {
+                 if (offset.x > 80) openEdit(item);
+               }}
+               className="bg-[#f4f4f5] dark:bg-[#111] border border-black/5 dark:border-white/5 rounded-2xl p-4 flex flex-col gap-4 relative z-10 w-full"
+             >
             <div className="flex justify-between items-start">
               <div>
                 <div className="font-bold text-base uppercase text-zinc-900 dark:text-white leading-tight">{item.name}</div>
@@ -144,14 +182,15 @@ export default function Inventory() {
             <div className="flex justify-between items-center gap-2 pt-2 border-t border-black/5 dark:border-white/5">
               <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest line-clamp-1">{item.supplier}</div>
               <div className="flex gap-2">
-                <button onClick={() => openEdit(item)} className="p-2 lg:p-3 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:text-white bg-black/5 dark:bg-white/5 rounded-lg">
+                <button onClick={() => openEdit(item)} className="p-2 lg:p-3 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:text-white bg-black/5 dark:bg-white/5 rounded-lg active:scale-95 transition-transform">
                   <Edit2 className="h-4 w-4" />
                 </button>
-                <button onClick={() => openRestock(item)} className="px-4 py-2 bg-black/10 dark:bg-white/10 hover:bg-white text-zinc-900 dark:text-white hover:text-black rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors">
+                <button onClick={() => openRestock(item)} className="px-4 py-2 bg-black/10 dark:bg-white/10 hover:bg-white text-zinc-900 dark:text-white hover:text-black rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors active:scale-95">
                   Restock
                 </button>
               </div>
             </div>
+           </motion.div>
           </div>
         ))}
         {filteredInventory.length === 0 && (

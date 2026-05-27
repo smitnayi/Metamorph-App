@@ -12,6 +12,7 @@ import Employees from "./pages/Employees";
 import Roles from "./pages/Roles";
 import AdminDashboard from "./pages/AdminDashboard";
 import Login from "./pages/Login";
+import ExportInvoice from "./pages/ExportInvoice";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { initStoreSync, cleanupStoreSync } from "./store/data";
 
@@ -43,6 +44,7 @@ export default function App() {
         <Toaster theme="dark" position="top-right" />
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/export/:orderId" element={<ProtectedRoute><ExportInvoice /></ProtectedRoute>} />
           <Route
             path="/"
             element={

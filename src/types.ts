@@ -45,8 +45,37 @@ export interface Order {
   status: 'Quoted' | 'In Progress' | 'Quality Check' | 'Shipped' | 'Completed';
   items: number;
   dueDate: string;
-  totalValue: number;
+  totalValue: number; // This is the Revenue
   priority?: 'High' | 'Medium' | 'Low';
+  costEstimation?: OrderCostEstimation;
+}
+
+export interface OrderCostEstimation {
+  powderKg: number;
+  materialKg: number;
+
+  labourAllocation: number;
+  officeStaffAllocation: number;
+  rentAllocation: number;
+  
+  electricityUsage: number; 
+  gasUsage: number;
+  
+  transportCost: number;
+  miscCost: number;
+
+  calculatedPowderRate?: number;
+  calculatedElectricityCost?: number;
+  calculatedGasCost?: number;
+  calculatedProcessCharge?: number;
+  calculatedTotalCost?: number;
+  calculatedProfit?: number;
+}
+
+export interface CostSettings {
+  electricityRate: number; 
+  gasRate: number; 
+  processChargeRate: number; 
 }
 
 export interface Customer {
@@ -59,6 +88,8 @@ export interface Customer {
   lifetimeValue: number;
   status: 'Active' | 'Lead' | 'Inactive';
   lastOrderDate?: string;
+  notes?: string;
+  communicationHistory?: { date: string, type: 'Call' | 'Email' | 'Meeting', summary: string }[];
 }
 
 export interface Task {
@@ -82,4 +113,5 @@ export interface QualityCheck {
   visualDefects: string[];
   overallResult: 'Pass' | 'Fail' | 'Rework';
   notes: string;
+  photos?: string[];
 }

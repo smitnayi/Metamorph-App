@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface ModalProps {
   isOpen: boolean;
@@ -20,27 +22,78 @@ const sizeClasses = {
 };
 
 export default function Modal({ isOpen, onClose, title, children, className, size = 'md' }: ModalProps) {
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
 
-  return (
-    <div className="fixed inset-0 z-50 bg-white dark:bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4 overflow-hidden pt-12 sm:pt-4">
-      <div 
-        className={cn("bg-[#f4f4f5] dark:bg-[#111] border border-black/5 dark:border-white/10 w-full shadow-2xl flex flex-col rounded-t-3xl sm:rounded-2xl max-h-full transition-transform", sizeClasses[size], className)}
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between p-6 sm:p-5 border-b border-black/5 dark:border-white/5 shrink-0">
-          <h2 className="text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-white">{title}</h2>
-          <button 
-            onClick={onClose} 
-            className="text-zinc-500 hover:text-zinc-900 dark:text-white transition-colors p-2 -mr-2 bg-black/5 dark:bg-white/5 rounded-full"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="p-6 sm:p-5 flex-1 w-full overflow-y-auto overscroll-contain">
-          {children}
-        </div>
-      </div>
-    </div>
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  const modalContent = (
+    <AnimatePresence>
+      {isOpen && (
+        <React.Fragment>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 z-[100] bg-white/50 dark:bg-black/60 backdrop-blur-sm"
+          />
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+            <motion.div 
+              style={{ maxHeight: '90vh' }}
+              initial={{ y: "100%", opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: "100%", opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              drag="y"
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={0.5}
+              onDragEnd={(_, info) => {
+                if (info.offset.y > 100 || info.velocity.y > 500) {
+                  onClose();
+                }
+              }}
+              className={cn("bg-[#f4f4f5] dark:bg-[#111] border border-black/5 dark:border-white/10 w-full shadow-2xl flex flex-col rounded-t-[32px] sm:rounded-2xl pointer-events-auto", sizeClasses[size], className)}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="w-full flex justify-center pt-3 pb-2 sm:hidden cursor-grab active:cursor-grabbing">
+                 <div className="w-12 h-1.5 bg-black/10 dark:bg-white/10 rounded-full shrink-0" />
+              </div>
+              <div className="flex items-center justify-between px-5 pb-3 pt-1 sm:pt-5 border-b border-black/5 dark:border-white/5 shrink-0">
+                <h2 className="text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-white">{title}</h2>
+                <button 
+                  onClick={onClose} 
+                  className="text-zinc-500 hover:text-zinc-900 dark:text-white transition-colors p-2 -mr-2 bg-black/5 dark:bg-white/5 rounded-full"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div 
+                className="p-4 sm:p-5 flex-1 w-full overflow-y-auto overscroll-contain pb-12"
+                onPointerDownCapture={e => e.stopPropagation()}
+              >
+                {children}
+              </div>
+            </motion.div>
+          </div>
+        </React.Fragment>
+      )}
+    </AnimatePresence>
   );
+
+  if (!mounted) return null;
+
+  return createPortal(modalContent, document.body);
 }

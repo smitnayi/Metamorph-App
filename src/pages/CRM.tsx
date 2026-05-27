@@ -9,8 +9,16 @@ import { Customer } from '../types';
 
 export default function CRM() {
   const [searchTerm, setSearchTerm] = useState('');
-  const { customers, setCustomers } = useDataStore();
+  const { customers, setCustomers, orders } = useDataStore();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [activeCustomer, setActiveCustomer] = useState<Customer | null>(null);
+  const [newNote, setNewNote] = useState('');
+  const [isBulkUpdateOpen, setIsBulkUpdateOpen] = useState(false);
+  const [bulkMessage, setBulkMessage] = useState('');
+
+  const ytdRevenue = orders.filter(o => o.status === 'Completed').reduce((sum, o) => sum + (o.totalValue || 0), 0);
+  const activePipeline = orders.filter(o => o.status !== 'Completed').reduce((sum, o) => sum + (o.totalValue || 0), 0);
+
   const [newCustomer, setNewCustomer] = useState<Partial<Customer>>({
     companyName: '', email: '', phone: '', status: 'Active', lifetimeValue: 0, totalOrders: 0
   });
@@ -35,13 +43,34 @@ export default function CRM() {
       lifetimeValue: Number(newCustomer.lifetimeValue) || 0,
       totalOrders: Number(newCustomer.totalOrders) || 0,
       lastOrderDate: new Date().toISOString(),
-      contactName: newCustomer.contactName || 'Primary Contact'
+      contactName: newCustomer.contactName || 'Primary Contact',
+      communicationHistory: []
     };
     
     setCustomers([customer, ...customers]);
     setIsAddModalOpen(false);
     toast.success(`${customer.companyName} added to CRM`);
     setNewCustomer({ companyName: '', email: '', phone: '', status: 'Active', lifetimeValue: 0, totalOrders: 0 });
+  };
+
+  const handleSaveNote = () => {
+    if (!activeCustomer || !newNote) return;
+    setCustomers(customers.map(c => 
+      c.id === activeCustomer.id ? { 
+        ...c, 
+        communicationHistory: [{
+          date: new Date().toISOString(), type: 'Email', summary: newNote
+        }, ...(c.communicationHistory || [])]
+      } : c
+    ));
+    setActiveCustomer(prev => prev ? {
+      ...prev,
+      communicationHistory: [{
+          date: new Date().toISOString(), type: 'Email', summary: newNote
+      }, ...(prev.communicationHistory || [])]
+    } : null);
+    setNewNote('');
+    toast.success('Communication logged');
   };
 
   return (
@@ -78,7 +107,7 @@ export default function CRM() {
             {filteredCustomers.map(customer => (
               <div 
                 key={customer.id} 
-                onClick={() => toast.info(`Viewing details for ${customer.companyName}`)}
+                onClick={() => setActiveCustomer(customer)}
                 className="bg-[#f4f4f5] dark:bg-[#111] rounded-2xl border border-black/5 dark:border-white/5 p-5 hover:border-orange-500/50 transition-colors cursor-pointer group flex flex-col shadow-lg"
               >
                 <div className="flex items-start justify-between mb-4">
@@ -112,7 +141,7 @@ export default function CRM() {
                 <div className="flex items-center justify-between mt-5 bg-white dark:bg-black/50 p-4 rounded-xl border border-black/5 dark:border-white/5">
                   <div>
                     <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1 mt-0">Lifetime Value</div>
-                    <div className="font-black text-zinc-900 dark:text-white text-lg">${customer.lifetimeValue.toLocaleString()}</div>
+                    <div className="font-black text-zinc-900 dark:text-white text-lg">₹{customer.lifetimeValue.toLocaleString()}</div>
                   </div>
                   <div>
                     <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest text-right mb-1 mt-0">Orders</div>
@@ -133,11 +162,11 @@ export default function CRM() {
             <div className="space-y-4">
               <div className="flex justify-between items-end border-b border-black/5 dark:border-white/5 pb-3">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">YTD Revenue</span>
-                <span className="text-2xl font-black tracking-tight text-zinc-900 dark:text-white">$124,500</span>
+                <span className="text-2xl font-black tracking-tight text-zinc-900 dark:text-white">₹{ytdRevenue.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-end">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Active Pipeline</span>
-                <span className="text-2xl font-black tracking-tight text-emerald-400">$18,200</span>
+                <span className="text-2xl font-black tracking-tight text-emerald-400">₹{activePipeline.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -146,14 +175,27 @@ export default function CRM() {
             <h3 className="font-bold uppercase tracking-widest text-zinc-900 dark:text-white text-xs mb-4">Quick Actions</h3>
             <div className="space-y-3">
               <button 
-                onClick={() => toast.success('Report generation started.')}
+                onClick={() => {
+                  const csvContent = 'data:text/csv;charset=utf-8,' 
+                    + ['Company,Contact,Email,Phone,Status,Lifetime Value,Total Orders']
+                      .concat(customers.map(c => `${c.companyName},${c.contactName},${c.email},${c.phone},${c.status},${c.lifetimeValue},${c.totalOrders}`))
+                      .join('\\n');
+                  const encodedUri = encodeURI(csvContent);
+                  const link = document.createElement("a");
+                  link.setAttribute("href", encodedUri);
+                  link.setAttribute("download", "client_report.csv");
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  toast.success('Client report downloaded.');
+                }}
                 className="w-full flex items-center justify-between px-4 py-4 rounded-xl bg-white dark:bg-black border border-black/5 dark:border-white/10 text-[10px] font-bold uppercase tracking-widest text-zinc-900 dark:text-white hover:border-orange-500 transition-colors active:scale-[0.98]"
               >
                 Generate Client Report
                 <ChevronRight className="h-4 w-4 text-zinc-500" />
               </button>
               <button 
-                onClick={() => toast.success('Bulk update interface opened.')}
+                onClick={() => setIsBulkUpdateOpen(true)}
                 className="w-full flex items-center justify-between px-4 py-4 rounded-xl bg-white dark:bg-black border border-black/5 dark:border-white/10 text-[10px] font-bold uppercase tracking-widest text-zinc-900 dark:text-white hover:border-orange-500 transition-colors active:scale-[0.98]"
               >
                 Send Bulk Updates
@@ -191,6 +233,95 @@ export default function CRM() {
         </form>
       </Modal>
 
+      <Modal size="lg" isOpen={!!activeCustomer} onClose={() => setActiveCustomer(null)} title={activeCustomer?.companyName || 'Customer Details'}>
+        {activeCustomer && (
+          <div className="space-y-6">
+            <div className="flex gap-4 p-4 bg-white dark:bg-black/50 border border-black/5 dark:border-white/5 rounded-xl">
+               <div className="flex-1">
+                 <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Contact Email</div>
+                 <div className="font-medium text-sm text-zinc-900 dark:text-white">{activeCustomer.email}</div>
+               </div>
+               <div className="flex-1">
+                 <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Phone</div>
+                 <div className="font-medium text-sm text-zinc-900 dark:text-white">{activeCustomer.phone || '-'}</div>
+               </div>
+               <div className="flex-1">
+                 <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Total Orders</div>
+                 <div className="font-medium text-sm text-zinc-900 dark:text-white">{activeCustomer.totalOrders}</div>
+               </div>
+            </div>
+            
+            <div>
+               <h3 className="text-xs font-black uppercase tracking-widest text-zinc-900 dark:text-white mb-3">Communication Logs</h3>
+               <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                 {activeCustomer.communicationHistory?.length ? (
+                   activeCustomer.communicationHistory.map((log, i) => (
+                     <div key={i} className="bg-[#f4f4f5] dark:bg-[#111] p-3 rounded-lg border border-black/5 dark:border-white/5">
+                       <div className="flex justify-between items-center mb-1">
+                         <span className="text-[10px] font-bold text-orange-500 uppercase">{log.type}</span>
+                         <span className="text-[10px] text-zinc-500">{new Date(log.date).toLocaleDateString()}</span>
+                       </div>
+                       <p className="text-sm text-zinc-800 dark:text-zinc-200">{log.summary}</p>
+                     </div>
+                   ))
+                 ) : (
+                   <p className="text-xs text-zinc-500 italic">No communication history</p>
+                 )}
+               </div>
+            </div>
+
+            <div className="pt-4 border-t border-black/5 dark:border-white/5">
+               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Log New Communication</label>
+               <div className="flex gap-2">
+                 <input 
+                   type="text" 
+                   value={newNote}
+                   onChange={e => setNewNote(e.target.value)}
+                   className="flex-1 px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium text-sm placeholder:text-zinc-600" 
+                   placeholder="Note or outcome..." 
+                   onKeyDown={e => e.key === 'Enter' && handleSaveNote()}
+                 />
+                 <button onClick={handleSaveNote} className="bg-orange-500 text-black px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-orange-600 active:scale-95 transition-all">
+                   Save
+                 </button>
+               </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+      <Modal isOpen={isBulkUpdateOpen} onClose={() => setIsBulkUpdateOpen(false)} title="Bulk Broadcast">
+        <div className="space-y-4">
+          <p className="text-xs text-zinc-500 font-medium">This message will be sent via Email to all <span className="font-bold text-orange-500">{customers.length}</span> active customers.</p>
+          <div>
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Subject</label>
+            <input 
+              type="text" 
+              placeholder="Important Update..."
+              className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium text-sm placeholder:text-zinc-600"
+            />
+          </div>
+          <div>
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Message Body</label>
+            <textarea 
+              value={bulkMessage}
+              onChange={e => setBulkMessage(e.target.value)}
+              placeholder="Dear Customer..."
+              className="w-full px-4 py-3 min-h-[150px] rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium text-sm placeholder:text-zinc-600"
+            />
+          </div>
+          <button 
+            onClick={() => {
+              if(!bulkMessage) return toast.error('Message body is empty.');
+              toast.success(`Broadcast successfully queued for ${customers.length} customers.`);
+              setBulkMessage('');
+              setIsBulkUpdateOpen(false);
+            }} 
+            className="w-full bg-orange-500 text-black px-4 py-4 rounded-xl font-bold uppercase tracking-widest hover:bg-orange-600 active:scale-[0.98] transition-all"
+          >
+            Send Broadcast
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

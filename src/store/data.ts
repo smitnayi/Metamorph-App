@@ -154,8 +154,10 @@ export function initStoreSync() {
   const collections = ['users', 'roles', 'inventory', 'orders', 'customers', 'tasks', 'qualityChecks'];
   
   unsubscribers = collections.map(col => {
-     return onSnapshot(collection(db, col), (snap) => {
-        let data = snap.docs.map(d => d.data() as any);
+     return onSnapshot(collection(db, col), { includeMetadataChanges: true }, (snap) => {
+        let data = snap.docs.map(d => {
+           return { ...d.data(), _hasPendingWrites: d.metadata.hasPendingWrites } as any;
+        });
         if (col === 'roles' && data.length === 0) {
           data = defaultRoles;
           // Bootstrap roles in Firebase

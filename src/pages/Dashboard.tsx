@@ -29,14 +29,14 @@ const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
-  const { orders, tasks, qualityChecks, inventory } = useDataStore();
+  const { orders, tasks, qualityChecks, inventory, users } = useDataStore();
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 800);
     return () => clearTimeout(timer);
   }, []);
 
-  const { activeOrders, pendingTasks, passRate, stockAlerts, pipelineData, activityData, overallEfficiency } = useMemo(() => {
+  const { activeOrders, pendingTasks, passRate, stockAlerts, pipelineData, activityData, overallEfficiency, firstPassYieldData, qaPerEmployee } = useMemo(() => {
     const activeOrders = orders.filter(o => o.status !== 'Completed' && o.status !== 'Shipped').length;
     const pendingTasks = tasks.filter(t => t.status !== 'Done').length;
     
@@ -46,17 +46,52 @@ export default function Dashboard() {
     });
     const passRate = qualityChecks.length > 0 ? ((passed / qualityChecks.length) * 100).toFixed(1) + '%' : 'N/A';
     
-    // threshold logic based on lowStockThreshold vs weightKg (mocking actual quantity vs threshold)
     const stockAlerts = inventory.filter(i => i.weightKg <= i.lowStockThreshold).length;
 
-    // Pipeline Data
     const stages = ['Quoted', 'In Progress', 'Quality Check', 'Shipped', 'Completed'];
     const pipelineData = stages.map(stage => ({
       stage,
       count: orders.filter(o => o.status === stage).length
     }));
 
-    // Activity Data for AreaChart (last 7 days based on dueDate simply distributed over days of week for demo)
+    // Generate last 30 days for First-Pass Yield
+    const fpyMap = new Map<string, { date: string; passed: number; failed: number }>();
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dayStr = `${d.getMonth() + 1}/${d.getDate()}`;
+      fpyMap.set(dayStr, { date: dayStr, passed: 0, failed: 0 });
+    }
+
+    qualityChecks.forEach(q => {
+      if (q.date) {
+         const d = new Date(q.date);
+         const dayStr = `${d.getMonth() + 1}/${d.getDate()}`;
+         if (fpyMap.has(dayStr)) {
+            if (q.overallResult === 'Pass') fpyMap.get(dayStr)!.passed++;
+            else fpyMap.get(dayStr)!.failed++;
+         }
+      }
+    });
+
+    const firstPassYieldData = Array.from(fpyMap.values());
+
+    // Completed vs Rejected per employee
+    const employeeQaMap = new Map<string, { name: string; completed: number; rejected: number }>();
+    qualityChecks.forEach(q => {
+      if (q.inspectorId) {
+        const inspectorUser = users.find(u => u.id === q.inspectorId);
+        const inspectorName = inspectorUser?.name || 'Unknown';
+        if (!employeeQaMap.has(q.inspectorId)) {
+           employeeQaMap.set(q.inspectorId, { name: inspectorName, completed: 0, rejected: 0 });
+        }
+        if (q.overallResult === 'Pass') employeeQaMap.get(q.inspectorId)!.completed++;
+        else employeeQaMap.get(q.inspectorId)!.rejected++;
+      }
+    });
+
+    const qaPerEmployee = Array.from(employeeQaMap.values()).slice(0, 10); // top 10
+
     const activityMap = new Map<string, { name: string, orders: number, tasks: number }>();
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
@@ -93,7 +128,7 @@ export default function Dashboard() {
     const eff = orders.length === 0 ? 0 : Math.round((completedOrders / totalCurrentOrders) * 100);
 
     return {
-      activeOrders, pendingTasks, passRate, stockAlerts, pipelineData, activityData, overallEfficiency: eff + '%'
+      activeOrders, pendingTasks, passRate, stockAlerts, pipelineData, activityData, overallEfficiency: eff + '%', firstPassYieldData, qaPerEmployee
     };
   }, [orders, tasks, qualityChecks, inventory]);
 
@@ -147,7 +182,7 @@ export default function Dashboard() {
               key={i}
               variants={itemVariants}
               whileHover={{ scale: 1.02, y: -4 }}
-              className="bg-white dark:bg-[#111] p-4 sm:p-5 rounded-[24px] border border-black/5 dark:border-white/5 shadow-sm hover:shadow-xl transition-all cursor-default"
+              className="bg-white/60 dark:bg-black/40 backdrop-blur-2xl p-4 sm:p-5 rounded-[24px] border border-black/[0.04] dark:border-white/[0.06] shadow-[0_8px_40px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_40px_rgba(0,0,0,0.08)] transition-all cursor-default"
             >
               <label className="text-[9px] sm:text-[10px] font-bold uppercase text-zinc-500 tracking-widest">{stat.label}</label>
               <div className="text-3xl sm:text-4xl font-black mt-2 text-zinc-900 dark:text-white">
@@ -157,9 +192,52 @@ export default function Dashboard() {
             </motion.div>
           ))}
         </motion.div>
+
+        {/* --- New QA Metrics Area --- */}
+        <motion.div variants={itemVariants} className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-8">
+          
+          <div className="bg-white/40 dark:bg-black/20 backdrop-blur-xl p-4 sm:p-6 rounded-[24px] border border-black/[0.04] dark:border-white/[0.06] shadow-sm flex flex-col">
+            <div className="flex justify-between items-end mb-4">
+              <h3 className="text-sm font-black uppercase text-zinc-900 dark:text-white">First-Pass Yield</h3>
+              <div className="text-[9px] font-bold border border-black/5 dark:border-white/10 rounded-lg px-2 py-1 uppercase text-zinc-500">30 Days</div>
+            </div>
+            <div className="h-[140px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={firstPassYieldData} margin={{ top: 5, right: 0, left: -25, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(150,150,150,0.1)" />
+                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: '#a1a1aa', fontSize: 9, fontWeight: 'bold'}} dy={5} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#a1a1aa', fontSize: 9, fontWeight: 'bold'}} />
+                  <Tooltip contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', border: 'none', borderRadius: '12px', color: '#fff', fontSize: '12px' }} />
+                  <Area type="monotone" name="Passed" dataKey="passed" stroke="#10b981" strokeWidth={2} fillOpacity={0.1} fill="#10b981" />
+                  <Area type="monotone" name="Failed" dataKey="failed" stroke="#f43f5e" strokeWidth={2} fillOpacity={0.1} fill="#f43f5e" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="bg-white/40 dark:bg-black/20 backdrop-blur-xl p-4 sm:p-6 rounded-[24px] border border-black/[0.04] dark:border-white/[0.06] shadow-sm flex flex-col">
+            <div className="flex justify-between items-end mb-4">
+              <h3 className="text-sm font-black uppercase text-zinc-900 dark:text-white">Inspector QA</h3>
+              <div className="text-[9px] font-bold border border-black/5 dark:border-white/10 rounded-lg px-2 py-1 uppercase text-zinc-500">Top 10</div>
+            </div>
+            <div className="h-[140px] w-full mt-auto">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={qaPerEmployee} margin={{ top: 5, right: 0, left: -25, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(150,150,150,0.1)" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#a1a1aa', fontSize: 9, fontWeight: 'bold'}} dy={5} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#a1a1aa', fontSize: 9, fontWeight: 'bold'}} />
+                  <Tooltip contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', border: 'none', borderRadius: '12px', color: '#fff', fontSize: '12px' }} cursor={{ fill: 'rgba(150,150,150,0.05)' }} />
+                  <Bar dataKey="completed" name="Pass" stackId="a" fill="#10b981" radius={[0, 0, 4, 4]} barSize={16} />
+                  <Bar dataKey="rejected" name="Fail" stackId="a" fill="#f43f5e" radius={[4, 4, 0, 0]} barSize={16} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          
+        </motion.div>
       </section>
 
-      <section className="flex-1 lg:w-5/12 flex flex-col bg-[#fafafa] dark:bg-[#0a0a0a]">
+      <section className="flex-1 lg:w-5/12 flex flex-col bg-transparent">
         <motion.div variants={itemVariants} className="p-4 sm:p-6 md:p-8 border-b border-black/5 dark:border-white/5">
           <div className="flex justify-between items-end mb-6">
             <h2 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-zinc-900 dark:text-white">Activity Overview</h2>
@@ -208,6 +286,43 @@ export default function Dashboard() {
                 <Bar dataKey="count" name="Orders" fill="#ea580c" radius={[6, 6, 0, 0]} barSize={24} />
               </BarChart>
             </ResponsiveContainer>
+          </div>
+        </motion.div>
+
+        {/* --- Activity Feed Area --- */}
+        <motion.div variants={itemVariants} className="flex-1 p-4 sm:p-6 md:p-8 border-t border-black/5 dark:border-white/5 bg-white/40 dark:bg-black/20 backdrop-blur-xl">
+          <div className="flex justify-between items-center mb-6">
+             <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-500">Recent Activity</h2>
+             <span className="text-[10px] font-bold bg-orange-500/10 text-orange-600 dark:text-orange-400 px-2 py-1 rounded-xl uppercase">Live</span>
+          </div>
+          <div className="flex flex-col gap-4">
+             {orders.slice(0, 3).map((order) => (
+                <div key={`order-${order.id}`} className="flex gap-3">
+                   <div className="h-2 w-2 rounded-full bg-blue-500 shrink-0 mt-1.5 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
+                   <div className="flex flex-col">
+                      <p className="text-sm font-medium text-zinc-900 dark:text-white">Order <span className="font-bold">{order.orderNumber}</span> updated to <span className="font-bold text-orange-500">{order.status}</span></p>
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">System • {order.customerName}</span>
+                   </div>
+                </div>
+             ))}
+             {tasks.slice(0, 2).map((t) => (
+                <div key={`task-${t.id}`} className="flex gap-3">
+                   <div className="h-2 w-2 rounded-full bg-amber-500 shrink-0 mt-1.5 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></div>
+                   <div className="flex flex-col">
+                      <p className="text-sm font-medium text-zinc-900 dark:text-white">Task <span className="font-bold">{t.title}</span> marked as <span className="font-bold text-amber-500">{t.status}</span></p>
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">System • {users.find(u => u.id === t.assigneeId)?.name || 'Unassigned'}</span>
+                   </div>
+                </div>
+             ))}
+             {inventory.slice(0, 1).map((i) => (
+                <div key={`inv-${i.id}`} className="flex gap-3">
+                   <div className="h-2 w-2 rounded-full bg-emerald-500 shrink-0 mt-1.5 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                   <div className="flex flex-col">
+                      <p className="text-sm font-medium text-zinc-900 dark:text-white">Inventory <span className="font-bold">{i.name}</span> levels adjusted</p>
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">System • {i.weightKg}kg</span>
+                   </div>
+                </div>
+             ))}
           </div>
         </motion.div>
       </section>

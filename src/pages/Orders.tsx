@@ -26,11 +26,11 @@ const DroppableStage: React.FC<DroppableStageProps> = ({ id, stageOrders, orders
   return (
     <div 
       ref={setNodeRef}
-      className={`flex-shrink-0 w-[85vw] sm:w-80 max-w-[400px] flex flex-col bg-[#f4f4f5] dark:bg-[#111] border rounded-2xl transition-colors snap-center ${isOver ? 'border-orange-500 bg-white dark:bg-black' : 'border-black/5 dark:border-white/10'}`}
+      className={`flex-shrink-0 w-[85vw] sm:w-80 max-w-[400px] flex flex-col bg-white/40 dark:bg-black/20 backdrop-blur-xl border rounded-[24px] shadow-[0_8px_40px_rgb(0,0,0,0.02)] dark:shadow-[0_8px_40px_rgb(0,0,0,0.1)] transition-colors snap-center ${isOver ? 'border-orange-500 bg-white/80 dark:bg-black/60 shadow-orange-500/10' : 'border-black/[0.04] dark:border-white/[0.06]'}`}
     >
-      <div className="p-4 border-b border-black/5 dark:border-white/5 flex justify-between items-center bg-white dark:bg-black/50 rounded-t-2xl">
-        <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-700 dark:text-zinc-300">{id}</h3>
-        <span className="text-[10px] font-black bg-black/10 dark:bg-white/10 px-2 py-1 rounded-full text-zinc-900 dark:text-white">{stageOrders.length}</span>
+      <div className="p-4 border-b border-black/[0.04] dark:border-white/[0.04] flex justify-between items-center rounded-t-[24px]">
+        <h3 className="text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-zinc-100">{id}</h3>
+        <span className="text-[10px] font-black bg-black/5 dark:bg-white/10 px-2.5 py-1 rounded-full text-zinc-900 dark:text-white shadow-inner">{stageOrders.length}</span>
       </div>
       <div className="p-3 sm:p-4 flex-1 overflow-y-auto space-y-3">
           {stageOrders.map(order => (
@@ -69,7 +69,7 @@ const DraggableOrder: React.FC<DraggableOrderProps> = ({ order, setOrders, order
     <div 
       ref={setNodeRef} 
       style={style}
-      className={`bg-white dark:bg-zinc-950 border rounded-xl p-4 hover:border-orange-500/50 transition-colors select-none ${isDragging ? 'border-orange-500 shadow-[0_20px_40px_rgba(0,0,0,0.5)] scale-[1.02]' : 'border-black/5 dark:border-white/5'}`}
+      className={`bg-white/80 dark:bg-[#111]/80 backdrop-blur-xl border rounded-[16px] p-4 hover:border-orange-500/50 hover:shadow-xl transition-all select-none ${isDragging ? 'border-orange-500 shadow-[0_20px_40px_rgba(234,88,12,0.15)] scale-[1.02]' : 'border-black/[0.06] dark:border-white/[0.08] shadow-sm'}`}
     >
       <div 
         {...listeners} 

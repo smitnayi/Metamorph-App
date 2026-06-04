@@ -104,14 +104,14 @@ export default function ResourceAnalytics() {
           <p className="text-zinc-600 dark:text-zinc-400 mt-2 font-medium text-sm">Real-time performance metrics and historical trends.</p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-          <div className="flex bg-[#f4f4f5] dark:bg-[#111] border border-black/5 dark:border-white/10 p-1 rounded-xl">
+          <div className="flex shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white/60 dark:bg-black/40 backdrop-blur-xl border border-black/5 dark:border-white/10 p-1 rounded-[14px]">
             {['Daily', 'Weekly', 'Monthly'].map(tf => (
               <button
                 key={tf}
                 onClick={() => setTimeframe(tf as any)}
                 className={cn(
-                  "px-4 py-3 sm:py-2 flex-1 text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-colors rounded-lg",
-                  timeframe === tf ? "bg-orange-500 text-black" : "text-zinc-500 hover:text-zinc-900 dark:text-white"
+                  "px-4 py-3 sm:py-2 flex-1 text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-all rounded-[10px]",
+                  timeframe === tf ? "bg-orange-500 text-black shadow-md shadow-orange-500/20" : "text-zinc-500 hover:text-zinc-900 dark:text-white"
                 )}
               >
                 {tf}
@@ -120,7 +120,7 @@ export default function ResourceAnalytics() {
           </div>
           <button 
             onClick={handleExport}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center bg-[#f4f4f5] dark:bg-[#111] border border-black/5 dark:border-white/10 px-4 py-3 sm:py-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:text-white hover:bg-black/5 dark:bg-white/5 transition-colors active:scale-95"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center bg-white/60 dark:bg-black/40 backdrop-blur-xl border border-black/5 dark:border-white/10 px-4 py-3 sm:py-2 rounded-[14px] text-[10px] sm:text-xs font-black uppercase tracking-widest text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:text-white hover:border-orange-500 transition-all shadow-[0_8px_30px_rgb(0,0,0,0.04)] active:scale-95"
           >
             <DownloadCloud className="h-4 w-4 mr-0 sm:mr-2" />
             <span className="hidden sm:inline">Export Report</span>
@@ -130,8 +130,9 @@ export default function ResourceAnalytics() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-        <Card className="bg-[#f4f4f5] dark:bg-[#111] border border-blue-500/30 rounded-2xl shadow-xl">
-          <CardContent className="p-5 sm:p-6">
+        <Card className="border border-blue-500/30 rounded-2xl shadow-lg relative overflow-hidden group">
+          <div className="absolute inset-0 bg-blue-500/5 mix-blend-overlay group-hover:bg-blue-500/10 transition-colors pointer-events-none" />
+          <CardContent className="p-5 sm:p-6 relative z-10">
             <div className="flex justify-between items-start mb-4">
               <div className="bg-blue-500/20 p-3 text-blue-400 rounded-xl">
                 <TrendingUp className="h-6 w-6" />
@@ -147,8 +148,9 @@ export default function ResourceAnalytics() {
           </CardContent>
         </Card>
         
-        <Card className="bg-[#f4f4f5] dark:bg-[#111] border border-amber-500/30 rounded-2xl shadow-xl">
-          <CardContent className="p-5 sm:p-6">
+        <Card className="border border-amber-500/30 rounded-2xl shadow-lg relative overflow-hidden group">
+          <div className="absolute inset-0 bg-amber-500/5 mix-blend-overlay group-hover:bg-amber-500/10 transition-colors pointer-events-none" />
+          <CardContent className="p-5 sm:p-6 relative z-10">
             <div className="flex justify-between items-start mb-4">
               <div className="bg-amber-500/20 p-3 text-amber-400 rounded-xl">
                 <AlertTriangle className="h-6 w-6" />
@@ -163,8 +165,9 @@ export default function ResourceAnalytics() {
           </CardContent>
         </Card>
 
-        <Card className="bg-[#f4f4f5] dark:bg-[#111] border border-emerald-500/30 rounded-2xl shadow-xl">
-          <CardContent className="p-5 sm:p-6">
+        <Card className="border border-emerald-500/30 rounded-2xl shadow-lg relative overflow-hidden group">
+          <div className="absolute inset-0 bg-emerald-500/5 mix-blend-overlay group-hover:bg-emerald-500/10 transition-colors pointer-events-none" />
+          <CardContent className="p-5 sm:p-6 relative z-10">
             <div className="flex justify-between items-start mb-4">
               <div className="bg-emerald-500/20 p-3 text-emerald-400 rounded-xl">
                 <CheckCircle2 className="h-6 w-6" />
@@ -182,7 +185,7 @@ export default function ResourceAnalytics() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:gap-6 mt-6">
-        <Card className="bg-[#f4f4f5] dark:bg-[#111] border border-black/5 dark:border-white/5 rounded-2xl shadow-xl">
+        <Card className="rounded-2xl shadow-xl border-black/[0.04] dark:border-white/[0.06]">
           <CardContent className="p-5 md:p-6">
             <div className="flex justify-between items-center mb-6 border-b border-black/5 dark:border-white/5 pb-4">
                <div>

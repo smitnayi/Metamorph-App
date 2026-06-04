@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { auth, loginWithGoogle, logoutUser, loginWithEmail, signupWithEmail, db } from "../lib/firebase";
+import { auth, loginWithGoogle, logoutUser, loginWithEmail, signupWithEmail, db, handleRedirectLogin } from "../lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
@@ -27,6 +27,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Process any pending redirect logins for mobile
+    handleRedirectLogin().catch(console.error);
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {

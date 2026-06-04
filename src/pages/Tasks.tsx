@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '../components/ui/Card';
 import { useDataStore } from '../store/data';
-import { Search, Plus, Filter, CheckSquare, Clock, AlertCircle } from 'lucide-react';
+import { Search, Plus, Filter, CheckSquare, Clock, AlertCircle, Trash2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Task } from '../types';
 import Modal from '../components/ui/Modal';
@@ -125,16 +125,30 @@ export default function Tasks() {
           {filteredTasks.map(task => {
             const assignee = users.find(u => u.id === task.assigneeId);
             return (
-              <motion.div 
-                layout
-                initial={{ opacity: 0, scale: 0.9, filter: "blur(4px)" }}
-                animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                exit={{ opacity: 0, scale: 0.9, filter: "blur(4px)" }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                whileHover={{ y: -4, scale: 1.01 }}
-                key={task.id} 
-                className="bg-[#f4f4f5] dark:bg-[#111] border border-black/5 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-xl transition-shadow flex flex-col"
-              >
+              <div key={task.id} className="relative overflow-hidden rounded-[24px] bg-red-500 w-full">
+                 <div className="absolute inset-y-0 right-0 flex items-center pr-6 z-0 pointer-events-none">
+                   <span className="text-white font-black text-xs uppercase tracking-widest flex items-center"><Trash2 className="h-4 w-4 mr-2"/> Delete</span>
+                 </div>
+                 <motion.div 
+                   layout
+                   initial={{ opacity: 0, scale: 0.9, filter: "blur(4px)" }}
+                   animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                   exit={{ opacity: 0, scale: 0.9, filter: "blur(4px)" }}
+                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                   whileHover={{ y: -4 }}
+                   drag="x"
+                   dragConstraints={{ left: 0, right: 0 }}
+                   dragElastic={0.4}
+                   onDragEnd={(e, { offset }) => {
+                     if (offset.x < -100) {
+                        if ('vibrate' in navigator) navigator.vibrate([50, 50, 50]);
+                        const newTasks = tasks.filter(t => t.id !== task.id);
+                        setTasks(newTasks);
+                        toast.success('Task deleted');
+                     }
+                   }}
+                   className="bg-white/60 dark:bg-black/40 backdrop-blur-3xl border border-black/[0.04] dark:border-white/[0.06] rounded-[24px] p-5 shadow-sm hover:shadow-xl transition-shadow flex flex-col relative z-10 w-full h-full"
+                 >
                 <div className="flex justify-between items-start mb-4">
                   <div className={cn("px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest", getPriorityColor(task.priority))}>
                     {task.priority} Priority
@@ -172,6 +186,7 @@ export default function Tasks() {
                   </select>
                 </div>
               </motion.div>
+             </div>
             );
           })}
         </AnimatePresence>

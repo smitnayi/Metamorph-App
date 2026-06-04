@@ -1,10 +1,10 @@
 {
-  "projectId": "ferrous-producer-pmln4",
-  "appId": "1:279137208498:web:c262acf4c5b171f0a1a1ab",
-  "apiKey": "AIzaSyBC46UTgoyA6_w0x3F1OFSv6jkoGS5ZnHQ",
-  "authDomain": "ferrous-producer-pmln4.firebaseapp.com",
+  "projectId": "metamorph-c9588",
+  "appId": "1:974773878904:web:188f0d67d63feadb70ad8d",
+  "apiKey": "AIzaSyCzxVvGgePZ8UfO0_C4yrv3znO0lHrGsPQ",
+  "authDomain": "metamorph-c9588.firebaseapp.com",
   "firestoreDatabaseId": "ai-studio-a1c1b12a-92e4-44cf-b70e-8c0917d91edf",
-  "storageBucket": "ferrous-producer-pmln4.firebasestorage.app",
-  "messagingSenderId": "279137208498",
+  "storageBucket": "metamorph-c9588.firebasestorage.app",
+  "messagingSenderId": "974773878904",
   "measurementId": ""
 }

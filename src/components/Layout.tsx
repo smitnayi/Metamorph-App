@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate, useResolvedPath, useMatch } from "react-router-dom";
-import { ShieldCheck, LogOut, Home, BarChart2, Package, LayoutList, Shield, Users, Briefcase, CheckSquare, Key, LucideIcon, ShieldAlert, Moon, Sun, Menu, X, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ShieldCheck, LogOut, Home, BarChart2, Package, LayoutList, Shield, Users, Briefcase, CheckSquare, Key, LucideIcon, ShieldAlert, Moon, Sun, Menu, X, PanelLeftClose, PanelLeftOpen, Wifi, WifiOff, RefreshCw, Search } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "../contexts/AuthContext";
 import { useDataStore } from "../store/data";
@@ -8,6 +8,9 @@ import { useRoleAccess } from "../hooks/useRoleAccess";
 import { Subject } from "../types";
 import { useTheme } from "../store/theme";
 import { motion, AnimatePresence } from "motion/react";
+import GlobalSearch from "./GlobalSearch";
+import QuickAdd from "./QuickAdd";
+import InstallPwaPrompt from "./InstallPwaPrompt";
 
 export interface NavItem {
   path: string;
@@ -104,6 +107,18 @@ export default function Layout() {
   
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  React.useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   React.useEffect(() => {
     if (currentUser) {
@@ -139,14 +154,14 @@ export default function Layout() {
   const currentRoleName = roles.find(r => r.id === currentUser.roleId)?.name || 'Unknown Role';
 
   return (
-    <div className="h-[100dvh] w-full bg-[#f7f7f8] dark:bg-[#0a0a0a] text-zinc-900 dark:text-white flex font-sans overflow-hidden transition-colors duration-500">
+    <div className="h-[100dvh] w-full bg-transparent text-zinc-900 dark:text-white flex font-sans overflow-hidden transition-colors duration-500">
       
       {/* Desktop Sidebar */}
       <motion.aside 
         initial={false}
         animate={{ width: isSidebarCollapsed ? 80 : 256 }}
         transition={{ type: "spring", stiffness: 400, damping: 30 }}
-        className="hidden md:flex flex-col border-r border-black/5 dark:border-white/5 bg-white dark:bg-[#111] shrink-0 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)] pt-6 whitespace-nowrap overflow-hidden"
+        className="hidden md:flex flex-col border-r border-black/5 dark:border-white/5 bg-white/70 dark:bg-[#0a0a0a]/70 backdrop-blur-2xl shrink-0 z-20 shadow-[0_0_40px_rgba(0,0,0,0.02)] dark:shadow-[0_0_40px_rgba(0,0,0,0.2)] pt-6 whitespace-nowrap overflow-hidden relative"
       >
         <div className={cn("px-6 mb-8 flex flex-col gap-1 items-center md:items-start", isSidebarCollapsed && "items-center px-0")}>
           <div className={cn("flex items-center gap-3", isSidebarCollapsed ? "justify-center w-full" : "")}>
@@ -191,8 +206,26 @@ export default function Layout() {
       </motion.aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col relative h-full overflow-hidden bg-[#f7f7f8] dark:bg-[#0a0a0a]">
+      <main className="flex-1 flex flex-col relative h-full overflow-hidden bg-transparent">
         
+        {/* Sync Status - Desktop Floating or Mobile Header */}
+        <div className="absolute top-4 right-4 z-40 hidden md:flex items-center gap-4">
+           {/* Global Search Hint */}
+           <div className="flex items-center gap-2 bg-white/60 dark:bg-[#111]/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-black/5 dark:border-white/5 shadow-sm text-xs font-medium text-zinc-500">
+             <Search className="h-3.5 w-3.5" />
+             <span className="hidden lg:inline">Search</span>
+             <kbd className="font-sans font-bold bg-black/5 dark:bg-white/10 px-1.5 py-0.5 rounded text-[10px]">⌘K</kbd>
+           </div>
+           
+           {/* Connectivity Indicator */}
+           <div className={cn("flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-sm text-xs font-bold uppercase tracking-widest backdrop-blur-md", 
+               isOnline ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+           )}>
+             {isOnline ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
+             {isOnline ? <span>Live</span> : <span>Offline</span>}
+           </div>
+        </div>
+
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between h-16 px-4 bg-white/80 dark:bg-[#111]/80 backdrop-blur-md border-b border-black/5 dark:border-white/5 z-30 shrink-0">
           <div className="flex items-center gap-2">
@@ -296,6 +329,9 @@ export default function Layout() {
         )}
       </AnimatePresence>
 
+      <GlobalSearch />
+      <QuickAdd />
+      <InstallPwaPrompt />
     </div>
   );
 }

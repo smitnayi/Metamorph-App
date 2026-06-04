@@ -1,29 +1,64 @@
 /// <reference types="vite/client" />
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
+import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, signInWithCredential, GoogleAuthProvider, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getFirestore, doc, getDoc, setDoc, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
+import { Capacitor } from '@capacitor/core';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { toast } from 'sonner';
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
-};
+import firebaseConfig from '../../firebase-applet-config.json';
 
 export const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+
+// Initialize Firestore with offline persistence
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()})
+}, firebaseConfig.firestoreDatabaseId);
+
 export const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
 export async function loginWithGoogle() {
   try {
-    const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-    
+    if (Capacitor.isNativePlatform()) {
+       const result = await FirebaseAuthentication.signInWithGoogle();
+       const credential = GoogleAuthProvider.credential(result.credential?.idToken);
+       const authResult = await signInWithCredential(auth, credential);
+       return await processAuthResult(authResult.user);
+    } else {
+       // For web, use popup which is generally safer for partitioned storage unless forced to redirect
+       const isIOSMobileWeb = !Capacitor.isNativePlatform() && /iPad|iPhone|iPod/.test(navigator.userAgent);
+       
+       if (isIOSMobileWeb) {
+         await signInWithRedirect(auth, googleProvider);
+         return null;
+       } else {
+         const result = await signInWithPopup(auth, googleProvider);
+         return await processAuthResult(result.user);
+       }
+    }
+  } catch (error: any) {
+    console.error("Firebase Auth Error", error);
+    toast.error(error.message || "Failed to log in");
+    throw error;
+  }
+}
+
+export async function handleRedirectLogin() {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result && result.user) {
+      return await processAuthResult(result.user);
+    }
+    return null;
+  } catch (error: any) {
+    console.error("Firebase Auth Redirect Error", error);
+    toast.error(error.message || "Failed to complete login");
+    return null;
+  }
+}
+
+async function processAuthResult(user: any) {
     // Check if user exists in the database
     const userRef = doc(db, 'users', user.uid);
     const userSnap = await getDoc(userRef);
@@ -41,11 +76,6 @@ export async function loginWithGoogle() {
     }
     
     return user;
-  } catch (error: any) {
-    console.error("Firebase Auth Error", error);
-    toast.error(error.message || "Failed to log in");
-    throw error;
-  }
 }
 
 export async function logoutUser() {
@@ -55,23 +85,7 @@ export async function logoutUser() {
 export async function loginWithEmail(email: string, pass: string) {
   try {
     const result = await signInWithEmailAndPassword(auth, email, pass);
-    const user = result.user;
-
-    const userRef = doc(db, 'users', user.uid);
-    const userSnap = await getDoc(userRef);
-
-    let roleId = 'role-employee';
-
-    if (!userSnap.exists()) {
-      await setDoc(userRef, {
-        uid: user.uid,
-        name: user.displayName || email.split('@')[0],
-        email: user.email || '',
-        roleId: roleId
-      });
-    }
-
-    return user;
+    return await processAuthResult(result.user);
   } catch (error: any) {
     console.error("Firebase Email Auth Error", error);
     toast.error(error.message || "Failed to log in");
@@ -82,20 +96,7 @@ export async function loginWithEmail(email: string, pass: string) {
 export async function signupWithEmail(email: string, pass: string) {
   try {
     const result = await createUserWithEmailAndPassword(auth, email, pass);
-    const user = result.user;
-
-    const userRef = doc(db, 'users', user.uid);
-    
-    let roleId = 'role-employee';
-
-    await setDoc(userRef, {
-      uid: user.uid,
-      name: email.split('@')[0],
-      email: user.email || '',
-      roleId: roleId
-    });
-
-    return user;
+    return await processAuthResult(result.user);
   } catch (error: any) {
     console.error("Firebase Email Auth Error", error);
     toast.error(error.message || "Failed to sign up");

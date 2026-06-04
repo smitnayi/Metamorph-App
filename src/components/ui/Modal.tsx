@@ -52,7 +52,7 @@ export default function Modal({ isOpen, onClose, title, children, className, siz
           />
           <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
             <motion.div 
-              style={{ maxHeight: '90vh' }}
+              style={{ maxHeight: '90dvh' }}
               initial={{ y: "100%", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: "100%", opacity: 0 }}
@@ -75,13 +75,13 @@ export default function Modal({ isOpen, onClose, title, children, className, siz
                 <h2 className="text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-white">{title}</h2>
                 <button 
                   onClick={onClose} 
-                  className="text-zinc-500 hover:text-zinc-900 dark:text-white transition-colors p-2 -mr-2 bg-black/5 dark:bg-white/5 rounded-full"
+                  className="text-zinc-500 hover:text-zinc-900 dark:text-white transition-colors p-3 sm:p-2 -mr-3 sm:-mr-2 bg-black/5 dark:bg-white/5 rounded-full"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-5 w-5 sm:h-4 sm:w-4" />
                 </button>
               </div>
               <div 
-                className="p-4 sm:p-5 flex-1 w-full overflow-y-auto overscroll-contain pb-12"
+                className="p-4 sm:p-5 flex-1 w-full overflow-y-auto overscroll-contain pb-inset-bottom"
                 onPointerDownCapture={e => e.stopPropagation()}
               >
                 {children}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '../components/ui/Card';
-import { Search, Filter, Plus, AlertCircle, Edit2, DownloadCloud } from 'lucide-react';
+import { Search, Filter, Plus, AlertCircle, Edit2, DownloadCloud, Trash2, RefreshCw } from 'lucide-react';
 import { useDataStore } from '../store/data';
 import { toast } from 'sonner';
 import Modal from '../components/ui/Modal';
@@ -138,9 +138,12 @@ export default function Inventory() {
       {/* Mobile Card Layout */}
       <div className="md:hidden space-y-4">
         {filteredInventory.map((item) => (
-          <div key={item.id} className="relative overflow-hidden rounded-2xl bg-orange-500">
-             <div className="absolute inset-y-0 left-0 flex items-center pl-6 z-0">
-               <span className="text-black font-black text-xs uppercase tracking-widest flex items-center"><Edit2 className="h-4 w-4 mr-2"/> Edit Item</span>
+          <div key={item.id} className="relative overflow-hidden rounded-[24px] bg-red-500">
+             <div className="absolute inset-y-0 left-0 flex items-center pl-6 z-0 pointer-events-none">
+               <span className="text-white font-black text-xs uppercase tracking-widest flex items-center"><Edit2 className="h-4 w-4 mr-2"/> Edit</span>
+             </div>
+             <div className="absolute inset-y-0 right-0 flex items-center pr-6 z-0 pointer-events-none">
+               <span className="text-white font-black text-xs uppercase tracking-widest flex items-center"><Trash2 className="h-4 w-4 mr-2"/> Delete</span>
              </div>
              <motion.div 
                drag="x"
@@ -148,12 +151,24 @@ export default function Inventory() {
                dragElastic={0.4}
                onDragEnd={(e, { offset }) => {
                  if (offset.x > 80) openEdit(item);
+                 if (offset.x < -80) {
+                    if ('vibrate' in navigator) navigator.vibrate([50, 50, 50]);
+                    setInventory(inventory.filter(i => i.id !== item.id));
+                    toast.success('Item deleted');
+                 }
                }}
-               className="bg-[#f4f4f5] dark:bg-[#111] border border-black/5 dark:border-white/5 rounded-2xl p-4 flex flex-col gap-4 relative z-10 w-full"
+               className="bg-white/60 dark:bg-[#1a1a1a]/80 backdrop-blur-3xl border border-black/[0.04] dark:border-white/[0.06] rounded-[24px] p-4 flex flex-col gap-4 relative z-10 w-full shadow-sm"
              >
             <div className="flex justify-between items-start">
               <div>
-                <div className="font-bold text-base uppercase text-zinc-900 dark:text-white leading-tight">{item.name}</div>
+                <div className="font-bold text-base uppercase text-zinc-900 dark:text-white leading-tight flex items-center gap-2">
+                   {item.name}
+                   {(item as any)._hasPendingWrites && (
+                     <div className="flex animate-pulse text-amber-500" title="Queued for Sync">
+                       <RefreshCw className="h-3 w-3" />
+                     </div>
+                   )}
+                </div>
                 <div className="text-zinc-500 text-xs mt-1 font-mono">{item.sku}</div>
               </div>
               <div 

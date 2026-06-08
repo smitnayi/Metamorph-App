@@ -145,6 +145,39 @@ export interface InventoryUsage {
   date: string;
 }
 
+export interface LabRoutineCheck {
+  id: string;
+  date: string;
+  degreaseAlkali: number;
+  degreaseTime: number;
+  rinse1Alkali: number;
+  rinse1Time: number;
+  desmutAcid: number;
+  desmutTime: number;
+  rinse2Acid: number;
+  rinse2Time: number;
+  alCoatingAcid: number;
+  alCoatingFreeAcid: number;
+  alCoatingTime: number;
+  rinse3Acid: number;
+  rinse3Time: number;
+  rinse4pH: number;
+  rinse4Cond: number;
+  rinse4Time: number;
+  inspectorName: string;
+  signature?: string;
+  notes?: string;
+}
+
+export interface LabSpecialMeasure {
+  id: string;
+  date: string;
+  measureType: 'Etch Rate' | 'Oil Content' | 'Chrome Weight';
+  value: number;
+  inspectorName: string;
+  notes?: string;
+}
+
 export interface QualityCheck {
   id: string;
   orderId: string;

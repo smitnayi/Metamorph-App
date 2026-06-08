@@ -240,10 +240,10 @@ export default function Inventory() {
       </div>
 
       {/* Desktop Table Layout */}
-      <Card className="hidden md:block bg-[#f4f4f5] dark:bg-[#111] border-black/5 dark:border-white/5 rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left font-sans block  whitespace-nowrap">
-            <thead className="bg-[#f4f4f5] dark:bg-[#111] text-zinc-500 text-[10px] font-black uppercase tracking-widest border-b border-black/10 dark:border-white/20 w-full table">
+      <Card className="hidden md:block bg-[#f4f4f5] dark:bg-[#111] border-black/5 dark:border-white/5 rounded-2xl overflow-hidden w-full">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left font-sans whitespace-nowrap min-w-[900px]">
+            <thead className="bg-[#f4f4f5] dark:bg-[#111] text-zinc-500 text-[10px] font-black uppercase tracking-widest border-b border-black/10 dark:border-white/20">
               <tr>
                 <th className="px-6 py-4 w-1/3">SKU / Name</th>
                 <th className="px-6 py-4 hidden md:table-cell">Finish</th>
@@ -253,7 +253,7 @@ export default function Inventory() {
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/10 text-zinc-900 dark:text-white w-full table">
+            <tbody className="divide-y divide-white/10 text-zinc-900 dark:text-white">
               {filteredInventory.map((item) => (
                 <tr key={item.id} className="hover:bg-black/5 dark:bg-white/5 transition-colors group">
                   <td className="px-6 py-5 w-1/3">

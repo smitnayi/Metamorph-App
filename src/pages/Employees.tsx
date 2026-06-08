@@ -104,8 +104,8 @@ export default function Employees() {
 
       {/* Desktop Table Layout */}
       <div className="hidden md:block rounded-2xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-sm text-left whitespace-nowrap min-w-[700px]">
             <thead className="bg-white dark:bg-black text-zinc-500 font-bold uppercase tracking-widest text-[10px]">
               <tr>
                 <th className="px-6 py-4">Employee</th>

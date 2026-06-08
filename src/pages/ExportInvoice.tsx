@@ -1,17 +1,17 @@
 import React, { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useDataStore } from '../store/data';
 
 export default function ExportInvoice() {
   const { orderId } = useParams();
+  const navigate = useNavigate();
   const { orders, costSettings } = useDataStore();
   
   const order = orders.find(o => o.id === orderId);
   const estimation = order?.costEstimation;
 
   useEffect(() => {
-    // Optional: automatically prompt print when loaded
-    // setTimeout(() => window.print(), 500);
+    // We removed the automatic print so user can manually trigger PDF generation
   }, []);
 
   if (!order || !estimation) {
@@ -32,146 +32,176 @@ export default function ExportInvoice() {
                     
   const profit = order.totalValue - totalCost;
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
-    <div className="bg-[#f0ece1] min-h-screen text-[#1d1d1b] font-sans p-8 md:p-16 flex justify-center">
-      <div className="w-full max-w-4xl bg-[#f0ece1] shadow-2xl p-10 md:p-16 relative overflow-hidden print:shadow-none print:p-0">
-        
-        {/* Top Header */}
-        <div className="flex justify-between items-start mb-20 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed">
-          <div>(METAMORPHMETALS.COM)</div>
-          <div className="text-right">
-             +91 98765 43210<br/>
-             metamorphmetals.com
-          </div>
-          <div className="text-right">
-             123 Industrial Area, Phase 1<br/>
-             Gujarat, India
-          </div>
-        </div>
-
-        {/* Invoice Title & Meta */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20">
-           <div className="col-span-2 md:col-span-1">
-             <div className="font-bold mb-1 uppercase tracking-widest text-[10px]">BILLED TO:</div>
-             <div className="font-medium text-sm">{order.customerName}</div>
-           </div>
-           <div className="col-span-2 md:col-span-1">
-             <div className="font-bold mb-1 uppercase tracking-widest text-[10px]">PAY TO:</div>
-             <div className="font-medium text-sm">Metamorph Metals<br/>123 Industrial Area, Gujarat</div>
-           </div>
-           
-           <div className="col-span-2 md:col-span-2 flex justify-between items-end flex-col">
-              <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-zinc-900 mb-2">PROFORMA INVOICE</h1>
-              <div className="text-right text-xs font-medium space-y-1">
-                 <div>No.. {order.orderNumber}</div>
-                 <div>{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-              </div>
-           </div>
-        </div>
-
-        {/* Bank & Details */}
-        <div className="mb-16 grid grid-cols-[100px_1fr] gap-2 text-xs font-medium">
-           <div>Bank</div><div>HDFC Bank</div>
-           <div>Account Name</div><div>Metamorph Metals</div>
-           <div>IFSC</div><div>HDFC0001234</div>
-           <div>Account Number</div><div>50200012345678</div>
-        </div>
-
-        {/* Table */}
-        <div className="mb-20">
-           <div className="grid grid-cols-4 md:grid-cols-[2fr_1fr_1fr_1fr] border-b border-black pb-4 mb-4 text-[10px] font-bold uppercase tracking-widest">
-              <div>DESCRIPTION</div>
-              <div className="text-right">RATE</div>
-              <div className="text-right">QTY/HRS</div>
-              <div className="text-right">AMOUNT</div>
-           </div>
-           
-           <div className="space-y-4 text-sm font-medium">
-              <div className="grid grid-cols-4 md:grid-cols-[2fr_1fr_1fr_1fr]">
-                 <div>Labour Allocation</div>
-                 <div className="text-right">-</div>
-                 <div className="text-right">-</div>
-                 <div className="text-right">₹{Number(estimation.labourAllocation).toFixed(2)}</div>
-              </div>
-              <div className="grid grid-cols-4 md:grid-cols-[2fr_1fr_1fr_1fr]">
-                 <div>Office Staff</div>
-                 <div className="text-right">-</div>
-                 <div className="text-right">-</div>
-                 <div className="text-right">₹{Number(estimation.officeStaffAllocation).toFixed(2)}</div>
-              </div>
-              <div className="grid grid-cols-4 md:grid-cols-[2fr_1fr_1fr_1fr]">
-                 <div>Rent/Overhead</div>
-                 <div className="text-right">-</div>
-                 <div className="text-right">-</div>
-                 <div className="text-right">₹{Number(estimation.rentAllocation).toFixed(2)}</div>
-              </div>
-              <div className="grid grid-cols-4 md:grid-cols-[2fr_1fr_1fr_1fr]">
-                 <div>Electricity</div>
-                 <div className="text-right">₹{costSettings.electricityRate}/u</div>
-                 <div className="text-right">{estimation.electricityUsage}</div>
-                 <div className="text-right">₹{electricityCost.toFixed(2)}</div>
-              </div>
-              <div className="grid grid-cols-4 md:grid-cols-[2fr_1fr_1fr_1fr]">
-                 <div>Gas</div>
-                 <div className="text-right">₹{costSettings.gasRate}/u</div>
-                 <div className="text-right">{estimation.gasUsage}</div>
-                 <div className="text-right">₹{gasCost.toFixed(2)}</div>
-              </div>
-              <div className="grid grid-cols-4 md:grid-cols-[2fr_1fr_1fr_1fr]">
-                 <div>Process Charge ({estimation.materialKg}kg material)</div>
-                 <div className="text-right">₹{costSettings.processChargeRate}/kg</div>
-                 <div className="text-right">{estimation.materialKg}</div>
-                 <div className="text-right">₹{processCharge.toFixed(2)}</div>
-              </div>
-              <div className="grid grid-cols-4 md:grid-cols-[2fr_1fr_1fr_1fr]">
-                 <div>Transport</div>
-                 <div className="text-right">-</div>
-                 <div className="text-right">-</div>
-                 <div className="text-right">₹{Number(estimation.transportCost).toFixed(2)}</div>
-              </div>
-              <div className="grid grid-cols-4 md:grid-cols-[2fr_1fr_1fr_1fr]">
-                 <div>Misc</div>
-                 <div className="text-right">-</div>
-                 <div className="text-right">-</div>
-                 <div className="text-right">₹{Number(estimation.miscCost).toFixed(2)}</div>
-              </div>
-           </div>
-
-           <div className="mt-8 pt-4 border-t border-black grid grid-cols-4 md:grid-cols-[2fr_1fr_1fr_1fr] text-sm font-bold">
-              <div>Sub-Total Cost</div>
-              <div className="col-span-2"></div>
-              <div className="text-right">₹{totalCost.toFixed(2)}</div>
-           </div>
-           
-           <div className="mt-4 pt-4 border-t border-black grid grid-cols-4 md:grid-cols-[2fr_1fr_1fr_1fr] text-sm font-bold">
-              <div>TOTAL BUYER COST</div>
-              <div className="col-span-2"></div>
-              <div className="text-right text-emerald-600">₹{order.totalValue.toFixed(2)}</div>
-           </div>
-           
-           <div className="mt-4 pt-4 border-t border-black grid grid-cols-4 md:grid-cols-[2fr_1fr_1fr_1fr] text-sm font-black">
-              <div>ESTIMATED PROFIT</div>
-              <div className="col-span-2"></div>
-              <div className="text-right text-orange-600">₹{profit.toFixed(2)}</div>
-           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="text-[10px] font-bold uppercase tracking-widest leading-relaxed max-w-sm mb-32">
-          Payment is required within 14 business days of invoice date.<br/>
-          Please send remittance to billing@metamorphmetals.com
-        </div>
-
-        <div className="absolute bottom-0 left-0 w-full flex justify-center translate-y-1/4 opacity-10 pointer-events-none">
-          <h1 className="text-[8rem] md:text-[12rem] font-black tracking-tighter text-black select-none uppercase">Metamorph</h1>
-        </div>
-        
+    <div className="bg-[#111] min-h-screen text-[#1d1d1b] font-sans relative p-4 md:p-8">
+      <div className="print:hidden fixed top-4 right-4 md:top-8 md:right-8 z-50 flex gap-3">
+        <button 
+          onClick={() => navigate(-1)} 
+          className="bg-white/10 backdrop-blur-md text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white/20 transition-colors flex items-center gap-2 shadow-lg border border-white/10"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          Back
+        </button>
+        <button 
+          onClick={handlePrint}
+          className="bg-orange-600 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-orange-700 transition-colors flex items-center gap-2 shadow-lg"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+          Print to PDF
+        </button>
       </div>
-      
-      <div className="fixed bottom-8 right-8 print:hidden flex gap-4">
-         <button onClick={() => window.close()} className="px-6 py-3 bg-white text-black font-bold text-sm tracking-widest uppercase rounded-full shadow-xl hover:bg-zinc-100">Close</button>
-         <button onClick={() => window.print()} className="px-6 py-3 bg-orange-600 text-white font-bold text-sm tracking-widest uppercase rounded-full shadow-xl hover:bg-orange-700">Print / PDF</button>
-      </div>
-    </div>
+
+      <div className="flex justify-center w-full overflow-x-auto print:overflow-visible print:block pb-10 print:pb-0">
+        <div className="w-[794px] min-h-[1123px] mx-auto bg-[#f0ece1] p-12 md:p-16 relative flex flex-col justify-between shadow-2xl shrink-0 print:shadow-none print:w-[100%] print:min-h-auto">
+          <div className="flex-1">
+           {/* Top Header */}
+           <div className="flex justify-between items-start mb-20 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed border-b-2 border-black pb-6">
+             <div>(metamorphmetal.com)</div>
+             <div className="text-center">
+                +91 99986 28121<br/>
+                sales@metamorphmetal.com
+             </div>
+             <div className="text-right max-w-[320px]">
+                B-24, Atmiya 2 Industrial Park, Bamangam,<br/>
+                Tal. Karjan, Dist. Vadodara - 391243
+             </div>
+           </div>
+
+           {/* Invoice Title & Meta */}
+           <div className="grid grid-cols-4 gap-4 mb-20 w-full items-end">
+              <div className="col-span-1">
+                <div className="font-bold mb-1 uppercase tracking-widest text-[10px]">BILLED TO:</div>
+                <div className="font-medium text-sm">{order.customerName}</div>
+              </div>
+              <div className="col-span-1">
+                <div className="font-bold mb-1 uppercase tracking-widest text-[10px]">PAY TO:</div>
+                <div className="font-medium text-sm leading-tight">Metamorph<br/>B-24, Atmiya 2 Ind. Park</div>
+              </div>
+              
+              <div className="col-span-2 text-right">
+                 <h1 className="text-[60px] font-black uppercase tracking-tighter leading-none text-zinc-900 mb-4">INVOICE</h1>
+                 <div className="text-xs font-medium space-y-1">
+                    <div>No.. {order.orderNumber}</div>
+                    <div>{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                 </div>
+              </div>
+           </div>
+
+           {/* Bank & Details */}
+           <div className="mb-16 grid grid-cols-[100px_1fr] gap-2 text-xs font-medium">
+              <div>Bank</div><div>HDFC Bank</div>
+              <div>Account Name</div><div>Metamorph Metal</div>
+              <div>IFSC</div><div>HDFC0001234</div>
+              <div>Account Number</div><div>50200012345678</div>
+           </div>
+
+           {/* Table */}
+           <div className="mb-20">
+              <div className="grid grid-cols-4 border-b-2 border-black pb-4 mb-4 text-[10px] font-bold uppercase tracking-widest">
+                 <div>DESCRIPTION</div>
+                 <div className="text-right">RATE</div>
+                 <div className="text-right">QTY/HRS</div>
+                 <div className="text-right">AMOUNT</div>
+              </div>
+              
+              <div className="space-y-4 text-sm font-medium">
+                 <div className="grid grid-cols-4">
+                    <div>Labour Allocation</div>
+                    <div className="text-right">-</div>
+                    <div className="text-right">-</div>
+                    <div className="text-right">₹{Number(estimation.labourAllocation).toFixed(2)}</div>
+                 </div>
+                 <div className="grid grid-cols-4">
+                    <div>Office Staff</div>
+                    <div className="text-right">-</div>
+                    <div className="text-right">-</div>
+                    <div className="text-right">₹{Number(estimation.officeStaffAllocation).toFixed(2)}</div>
+                 </div>
+                 <div className="grid grid-cols-4">
+                    <div>Rent/Overhead</div>
+                    <div className="text-right">-</div>
+                    <div className="text-right">-</div>
+                    <div className="text-right">₹{Number(estimation.rentAllocation).toFixed(2)}</div>
+                 </div>
+                 <div className="grid grid-cols-4">
+                    <div>Electricity</div>
+                    <div className="text-right">₹{costSettings.electricityRate}/u</div>
+                    <div className="text-right">{estimation.electricityUsage}</div>
+                    <div className="text-right">₹{electricityCost.toFixed(2)}</div>
+                 </div>
+                 <div className="grid grid-cols-4">
+                    <div>Gas</div>
+                    <div className="text-right">₹{costSettings.gasRate}/u</div>
+                    <div className="text-right">{estimation.gasUsage}</div>
+                    <div className="text-right">₹{gasCost.toFixed(2)}</div>
+                 </div>
+                 <div className="grid grid-cols-4">
+                    <div>Process Charge ({estimation.materialKg}kg material)</div>
+                    <div className="text-right">₹{costSettings.processChargeRate}/kg</div>
+                    <div className="text-right">{estimation.materialKg}</div>
+                    <div className="text-right">₹{processCharge.toFixed(2)}</div>
+                 </div>
+                 <div className="grid grid-cols-4">
+                    <div>Transport</div>
+                    <div className="text-right">-</div>
+                    <div className="text-right">-</div>
+                    <div className="text-right">₹{Number(estimation.transportCost).toFixed(2)}</div>
+                 </div>
+                 <div className="grid grid-cols-4">
+                    <div>Misc</div>
+                    <div className="text-right">-</div>
+                    <div className="text-right">-</div>
+                    <div className="text-right">₹{Number(estimation.miscCost).toFixed(2)}</div>
+                 </div>
+              </div>
+
+              <div className="mt-8 pt-4 border-t-2 border-black grid grid-cols-4 text-sm font-bold">
+                 <div>Sub-Total Cost</div>
+                 <div className="col-span-2"></div>
+                 <div className="text-right tracking-tight">₹{totalCost.toFixed(2)}</div>
+              </div>
+              
+              <div className="mt-4 pt-4 border-t-2 border-black grid grid-cols-4 text-sm font-black">
+                 <div>TOTAL BUYER COST</div>
+                 <div className="col-span-2"></div>
+                 <div className="text-right text-emerald-600 tracking-tight">₹{order.totalValue.toFixed(2)}</div>
+              </div>
+              
+              <div className="mt-4 pt-4 border-t-2 border-black grid grid-cols-4 text-sm font-black">
+                 <div>ESTIMATED PROFIT</div>
+                 <div className="col-span-2"></div>
+                 <div className="text-right text-orange-600 tracking-tight">₹{profit.toFixed(2)}</div>
+              </div>
+           </div>
+        </div>
+
+         {/* Footer Graphic */}
+         <div className="relative border-t-2 border-black pt-12 mt-12 overflow-hidden">
+           <div className="text-[10px] font-bold uppercase tracking-widest leading-relaxed max-w-sm mb-12">
+             Payment is required within 14 business days of invoice date.<br/>
+             Please send remittance to sales@metamorphmetal.com
+           </div>
+
+           <div className="w-full flex justify-center opacity-[0.08] pointer-events-none -mb-16">
+              <svg viewBox="0 0 1300 350" className="w-[110%] h-auto text-black" preserveAspectRatio="xMidYMid meet">
+                 <text x="50%" y="54%" dominantBaseline="central" textAnchor="middle" fontSize="200" fontWeight="900" fontFamily="system-ui, sans-serif" fill="currentColor" letterSpacing="-0.02em">
+                    METAMORPH
+                 </text>
+              </svg>
+           </div>
+         </div>
+       </div>
+       <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          @page { size: A4 portrait; margin: 0; }
+          body { background-color: #f0ece1 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+      `}} />
+     </div>
+   </div>
   );
 }

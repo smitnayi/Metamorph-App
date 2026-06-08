@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
+import { useNavigate } from 'react-router-dom';
+import { AlertTriangle } from 'lucide-react';
 import { useDataStore } from '../store/data';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -29,7 +31,13 @@ const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
-  const { orders, tasks, qualityChecks, inventory, users } = useDataStore();
+  const navigate = useNavigate();
+  const { orders, tasks, qualityChecks, inventory, users, labRoutineChecks } = useDataStore();
+
+  const hasRoutineToday = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return labRoutineChecks.some(c => c.date === today);
+  }, [labRoutineChecks]);
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 800);
@@ -157,7 +165,24 @@ export default function Dashboard() {
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="flex flex-col lg:flex-row h-full">
-      <section className="flex-1 lg:w-7/12 border-b lg:border-b-0 lg:border-r border-black/5 dark:border-white/10 p-4 sm:p-6 md:p-8 flex flex-col justify-between relative overflow-hidden">
+      <section className="flex-1 lg:w-7/12 border-b lg:border-b-0 lg:border-r border-black/5 dark:border-white/10 p-4 sm:p-6 md:p-8 flex flex-col relative overflow-auto scrollbar-hide">
+        {!hasRoutineToday && (
+          <motion.div variants={itemVariants} className="mb-6 bg-rose-500/10 border border-rose-500/20 rounded-[24px] p-4 flex items-start sm:items-center gap-4 cursor-pointer hover:bg-rose-500/20 transition-colors" onClick={() => navigate('/lab')}>
+             <div className="h-12 w-12 bg-rose-500/20 rounded-full flex items-center justify-center shrink-0 text-rose-600 dark:text-rose-400">
+                <AlertTriangle className="h-5 w-5" />
+             </div>
+             <div className="flex-1">
+                <h3 className="text-xs font-black uppercase tracking-widest text-rose-600 dark:text-rose-400 mb-0.5 mt-1 sm:mt-0">Missing Lab Report</h3>
+                <p className="text-sm font-medium text-rose-700/80 dark:text-rose-300 text-balance leading-tight">Today's chemical process control sheet has not been filled out yet.</p>
+             </div>
+             <div className="hidden sm:block shrink-0">
+                <button className="bg-rose-500 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest pointer-events-none shadow-sm">
+                  Fill Now
+                </button>
+             </div>
+          </motion.div>
+        )}
+
         <motion.div variants={itemVariants}>
           <label className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] text-orange-500">Operational Pulse</label>
           <motion.div 

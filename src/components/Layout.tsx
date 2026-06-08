@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate, useResolvedPath, useMatch } from "react-router-dom";
-import { ShieldCheck, LogOut, Home, BarChart2, Package, LayoutList, Shield, Users, Briefcase, CheckSquare, Key, LucideIcon, ShieldAlert, Moon, Sun, Menu, X, PanelLeftClose, PanelLeftOpen, Wifi, WifiOff, RefreshCw, Search, Clock } from "lucide-react";
+import { ShieldCheck, LogOut, Home, BarChart2, Package, LayoutList, Shield, Users, Briefcase, CheckSquare, Key, LucideIcon, ShieldAlert, Moon, Sun, Menu, X, PanelLeftClose, PanelLeftOpen, Wifi, WifiOff, RefreshCw, Search, Clock, Beaker } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "../contexts/AuthContext";
 import { useDataStore } from "../store/data";
@@ -27,6 +27,7 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { path: "/orders", label: "Jobs", icon: LayoutList, subject: "orders" },
   { path: "/tasks", label: "Tasks", icon: CheckSquare, subject: "tasks" },
   { path: "/quality", label: "QA", icon: Shield, subject: "quality" },
+  { path: "/lab", label: "Lab", icon: Beaker, subject: "quality" },
   { path: "/customers", label: "CRM", icon: Users, subject: "crm" },
   { path: "/employees", label: "Staff", icon: Briefcase, subject: "employees" },
   { path: "/labors", label: "Labors", icon: Clock, subject: "employees" },
@@ -37,9 +38,10 @@ interface NavItemLinkProps {
   item: NavItem;
   mobile?: boolean;
   collapsed?: boolean;
+  hasAlert?: boolean;
 }
 
-const NavItemLink: React.FC<NavItemLinkProps> = ({ item, mobile = false, collapsed = false }) => {
+const NavItemLink: React.FC<NavItemLinkProps> = ({ item, mobile = false, collapsed = false, hasAlert = false }) => {
   const resolved = useResolvedPath(item.path);
   const match = useMatch({ path: resolved.pathname, end: item.path === "/" });
   const isActive = match !== null;
@@ -54,8 +56,9 @@ const NavItemLink: React.FC<NavItemLinkProps> = ({ item, mobile = false, collaps
         )}
       >
         <div className="flex items-center justify-center h-8 w-8 rounded-full mb-1 transition-all z-10 w-full relative">
-          <motion.div whileTap={{ scale: 0.85 }} className="flex justify-center items-center h-full w-full">
+          <motion.div whileTap={{ scale: 0.85 }} className="flex justify-center items-center h-full w-full relative">
              <item.icon className={cn("h-[22px] w-[22px]", isActive ? "stroke-[2.5px] drop-shadow-md" : "")} />
+             {hasAlert && <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-[#0a0a0a]" />}
           </motion.div>
           {isActive && (
             <motion.div layoutId="mobile-nav-bg" transition={{ type: "spring", stiffness: 350, damping: 25 }} className="absolute inset-0 m-auto h-10 w-10 md:h-11 md:w-11 rounded-full bg-orange-100 dark:bg-orange-500/20 z-[-1]" />
@@ -75,8 +78,9 @@ const NavItemLink: React.FC<NavItemLinkProps> = ({ item, mobile = false, collaps
       )}
       title={collapsed ? item.label : undefined}
     >
-      <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+      <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="relative">
         <item.icon className={cn("h-[18px] w-[18px] relative z-10 shrink-0", isActive ? "stroke-[2.5px]" : "stroke-2")} />
+         {hasAlert && <span className="absolute -top-1 -right-1 z-20 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-[var(--bg)] shadow-sm" />}
       </motion.div>
       <motion.span 
         initial={false}
@@ -103,7 +107,7 @@ export default function Layout() {
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
   const { hasPermission } = useRoleAccess();
-  const { roles, users, setUsers } = useDataStore();
+  const { roles, users, setUsers, labRoutineChecks } = useDataStore();
   const { isDark, toggleTheme } = useTheme();
   
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -174,9 +178,11 @@ export default function Layout() {
         </div>
 
         <div className="flex-1 overflow-y-auto scrollbar-hide px-4 flex flex-col gap-1 pb-6 w-full">
-           {navItems.map(item => (
-             <NavItemLink key={item.path} item={item} collapsed={isSidebarCollapsed} />
-           ))}
+           {navItems.map(item => {
+             const today = new Date().toISOString().split('T')[0];
+             const isLabAlert = item.path === '/lab' && !labRoutineChecks.some(c => c.date === today);
+             return <NavItemLink key={item.path} item={item} collapsed={isSidebarCollapsed} hasAlert={isLabAlert} />
+           })}
         </div>
 
         <div className="p-4 mt-auto border-t border-black/5 dark:border-white/5 flex flex-col gap-4">
@@ -266,9 +272,11 @@ export default function Layout() {
 
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-4 left-4 right-4 rounded-[20px] bg-white/90 dark:bg-[#1a1a1a]/90 flex items-center justify-between px-2 h-[68px] z-50 shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-xl border border-white/50 dark:border-white/10">
-        {navItems.slice(0, 4).map(item => (
-          <NavItemLink key={item.path} item={item} mobile />
-        ))}
+        {navItems.slice(0, 4).map(item => {
+          const today = new Date().toISOString().split('T')[0];
+          const isLabAlert = item.path === '/lab' && !labRoutineChecks.some(c => c.date === today);
+          return <NavItemLink key={item.path} item={item} mobile hasAlert={isLabAlert} />
+        })}
         <button
           onClick={() => setMobileMenuOpen(true)}
           className="flex flex-col items-center justify-center min-w-[56px] px-1 py-1 transition-colors rounded-xl text-zinc-500 hover:text-zinc-700 dark:text-zinc-300"
@@ -307,13 +315,18 @@ export default function Layout() {
                     to={item.path}
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) => cn(
-                      "flex items-center gap-4 p-4 rounded-2xl transition-all",
+                      "flex items-center gap-4 p-4 rounded-2xl transition-all relative overflow-hidden",
                       isActive 
                         ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20" 
                         : "bg-black/5 dark:bg-white/5 text-zinc-700 dark:text-zinc-300 active:scale-95"
                     )}
                   >
-                    <item.icon className={cn("h-6 w-6")} />
+                    <div className="relative">
+                      <item.icon className={cn("h-6 w-6")} />
+                      {item.path === '/lab' && !labRoutineChecks.some(c => c.date === new Date().toISOString().split('T')[0]) && (
+                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white dark:border-[#111]" />
+                      )}
+                    </div>
                     <span className="font-bold tracking-wide text-[15px]">{item.label}</span>
                   </NavLink>
                 </motion.div>

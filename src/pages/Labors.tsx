@@ -249,8 +249,8 @@ export default function Labors() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-sm text-left whitespace-nowrap min-w-[700px]">
             <thead className="bg-white/50 dark:bg-black/50 text-zinc-500 font-bold uppercase tracking-widest text-[10px]">
               <tr>
                 <th className="px-4 py-3 rounded-l-xl">Labor Name</th>

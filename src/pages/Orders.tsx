@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '../components/ui/Card';
 import { Search, Plus, Settings, Calculator } from 'lucide-react';
 import { useDataStore } from '../store/data';
@@ -119,6 +120,7 @@ const DraggableOrder: React.FC<DraggableOrderProps> = ({ order, setOrders, order
 }
 
 export default function Orders() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const { orders, setOrders, costSettings, setCostSettings, inventory, addActivityLog, inventoryUsages, setInventoryUsages, setInventory } = useDataStore();
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
@@ -530,7 +532,7 @@ export default function Orders() {
                  <Calculator className="h-4 w-4 mr-2" /> Estimation
                </h3>
                {costingOrder?.costEstimation && (
-                 <button type="button" onClick={() => window.open(`/export/${costingOrder.id}`, '_blank')} className="text-xs font-bold text-orange-500 hover:text-orange-600">
+                 <button type="button" onClick={() => navigate(`/export/${costingOrder.id}`)} className="text-xs font-bold text-orange-500 hover:text-orange-600">
                     Export Invoice
                  </button>
                )}

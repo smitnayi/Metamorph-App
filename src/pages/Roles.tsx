@@ -208,8 +208,8 @@ export default function Roles() {
 
           <div>
              <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest block mb-4 px-1">Permissions Matrix</label>
-             <div className="bg-white dark:bg-black/50 rounded-xl border border-black/5 dark:border-white/10 overflow-x-auto">
-                <table className="w-full text-sm text-left">
+             <div className="bg-white dark:bg-black/50 rounded-xl border border-black/5 dark:border-white/10 overflow-x-auto w-full">
+                <table className="w-full text-sm text-left whitespace-nowrap min-w-[700px]">
                   <thead className="bg-black/5 dark:bg-white/5 text-zinc-600 dark:text-zinc-400">
                     <tr>
                       <th className="px-4 py-3 font-medium rounded-tl-xl">Module</th>

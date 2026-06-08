@@ -11,9 +11,11 @@ import CRM from "./pages/CRM";
 import Employees from "./pages/Employees";
 import Roles from "./pages/Roles";
 import Labors from "./pages/Labors";
+import Lab from "./pages/Lab";
 import AdminDashboard from "./pages/AdminDashboard";
 import Login from "./pages/Login";
 import ExportInvoice from "./pages/ExportInvoice";
+import ExportLabReport from "./pages/ExportLabReport";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { initStoreSync, cleanupStoreSync } from "./store/data";
 
@@ -46,6 +48,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/export/:orderId" element={<ProtectedRoute><ExportInvoice /></ProtectedRoute>} />
+          <Route path="/export-lab" element={<ProtectedRoute><ExportLabReport /></ProtectedRoute>} />
           <Route
             path="/"
             element={
@@ -63,6 +66,7 @@ export default function App() {
             <Route path="customers" element={<CRM />} />
             <Route path="employees" element={<Employees />} />
             <Route path="labors" element={<Labors />} />
+            <Route path="lab" element={<Lab />} />
             <Route path="roles" element={<Roles />} />
             <Route path="admin" element={<AdminDashboard />} />
           </Route>

@@ -642,9 +642,9 @@ Quality Control Team`;
 
            {/* Desktop view */}
            <Card className="hidden md:block bg-[#f4f4f5] dark:bg-[#111] border-black/5 dark:border-white/5 rounded-2xl overflow-hidden shadow-xl">
-             <div className="overflow-x-auto">
-               <table className="w-full text-left font-sans block whitespace-nowrap">
-                 <thead className="bg-[#f4f4f5] dark:bg-[#111] text-zinc-500 text-[10px] font-black uppercase tracking-widest border-b border-black/10 dark:border-white/20 w-full table">
+             <div className="overflow-x-auto w-full">
+               <table className="w-full text-left font-sans whitespace-nowrap min-w-[800px]">
+                 <thead className="bg-[#f4f4f5] dark:bg-[#111] text-zinc-500 text-[10px] font-black uppercase tracking-widest border-b border-black/10 dark:border-white/20">
                    <tr>
                      <th className="px-6 py-4">Check ID / Date</th>
                      <th className="px-6 py-4">Order Ref</th>
@@ -654,7 +654,7 @@ Quality Control Team`;
                      <th className="px-6 py-4 text-right">Details</th>
                    </tr>
                  </thead>
-                 <tbody className="divide-y divide-white/10 text-zinc-900 dark:text-white w-full table">
+                 <tbody className="divide-y divide-white/10 text-zinc-900 dark:text-white">
                    {filteredChecks.map((qa) => {
                      const order = orders.find(o => o.id === qa.orderId);
                      

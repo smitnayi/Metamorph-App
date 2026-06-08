@@ -9,7 +9,7 @@ import { motion } from 'motion/react';
 
 export default function Inventory() {
   const [searchTerm, setSearchTerm] = useState('');
-  const { inventory, setInventory } = useDataStore();
+  const { inventory, setInventory, inventoryUsages, addActivityLog } = useDataStore();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isRestockModalOpen, setIsRestockModalOpen] = useState(false);
   const [activeItem, setActiveItem] = useState<InventoryItem | null>(null);
@@ -19,10 +19,15 @@ export default function Inventory() {
   });
   const [restockAmount, setRestockAmount] = useState<number>(0);
 
-  const filteredInventory = inventory.filter(item => 
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    item.sku.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [filterFinish, setFilterFinish] = useState<string>('All');
+
+  const filteredInventory = inventory.filter(item => {
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) || item.sku.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterFinish === 'All' || item.finish === filterFinish;
+    return matchesSearch && matchesFilter;
+  });
 
   const handleAddItem = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +47,8 @@ export default function Inventory() {
       location: newItem.location || 'Warehouse',
       lastUpdated: new Date().toISOString()
     };
-    setInventory([...inventory, item]);
+    setInventory(prev => [...prev, item]);
+    addActivityLog({ action: 'create', module: 'Inventory', details: `Added new stock item: ${item.name}`, userId: 'user1', userName: 'Admin' });
     toast.success(`${item.name} added to inventory`);
     setIsAddModalOpen(false);
     setNewItem({ name: '', sku: '', finish: 'Matte', colorCode: '#000000', weightKg: 0, lowStockThreshold: 50, supplier: '' });
@@ -51,9 +57,10 @@ export default function Inventory() {
   const handleRestock = (e: React.FormEvent) => {
     e.preventDefault();
     if (activeItem) {
-      setInventory(inventory.map(item => 
+      setInventory(prev => prev.map(item => 
         item.id === activeItem.id ? { ...item, weightKg: item.weightKg + Number(restockAmount) } : item
       ));
+      addActivityLog({ action: 'restock', module: 'Inventory', details: `Restocked ${restockAmount}kg to ${activeItem.name}`, userId: 'user1', userName: 'Admin' });
       toast.success(`Added ${restockAmount}kg to ${activeItem.name}`);
     }
     setIsRestockModalOpen(false);
@@ -68,8 +75,21 @@ export default function Inventory() {
   };
 
   const openEdit = (item: InventoryItem) => {
-    toast.success('In a real app, this would open a full detail editor. For now, it works.');
+    setEditingItem(item);
+    setIsEditModalOpen(true);
   };
+
+  const handleEditItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingItem) {
+      setInventory(prev => prev.map(item => item.id === editingItem.id ? editingItem : item));
+      toast.success(`${editingItem.name} updated successfully`);
+      addActivityLog({ action: 'update', module: 'Inventory', details: `Updated powder item: ${editingItem.name}`, userId: 'user1', userName: 'Admin' });
+      setIsEditModalOpen(false);
+      setEditingItem(null);
+    }
+  };
+
 
   const handleExportStock = () => {
     let csvContent = "SKU,Name,Finish,Color Code,Stock (Kg),Low Alert (Kg),Supplier\n";
@@ -125,13 +145,17 @@ export default function Inventory() {
               className="w-full pl-12 pr-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors placeholder:text-zinc-600 font-medium"
             />
           </div>
-          <button 
-            onClick={() => toast.info('Advanced filtering options simulated.')}
-            className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black px-6 py-4 text-sm font-bold uppercase tracking-widest text-zinc-900 dark:text-white hover:bg-white hover:text-black transition-colors"
+          <select
+            value={filterFinish}
+            onChange={(e) => setFilterFinish(e.target.value)}
+            className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black px-4 py-4 text-sm font-bold uppercase tracking-widest text-zinc-900 dark:text-white transition-colors appearance-none focus:outline-none focus:border-orange-500 cursor-pointer"
           >
-            <Filter className="h-4 w-4 mr-2" />
-            Options
-          </button>
+            <option value="All">All Finishes</option>
+            <option value="Matte">Matte</option>
+            <option value="Gloss">Gloss</option>
+            <option value="Texture">Texture</option>
+            <option value="Satin">Satin</option>
+          </select>
         </div>
       </div>
 
@@ -153,7 +177,7 @@ export default function Inventory() {
                  if (offset.x > 80) openEdit(item);
                  if (offset.x < -80) {
                     if ('vibrate' in navigator) navigator.vibrate([50, 50, 50]);
-                    setInventory(inventory.filter(i => i.id !== item.id));
+                    setInventory(prev => prev.filter(i => i.id !== item.id));
                     toast.success('Item deleted');
                  }
                }}
@@ -351,6 +375,59 @@ export default function Inventory() {
                Confirm Restock
              </button>
          </form>
+      </Modal>
+
+      <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title={`Edit ${editingItem?.name || ''}`}>
+        <div className="space-y-6">
+          <form onSubmit={handleEditItem} className="space-y-5">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Name</label>
+                <input type="text" required value={editingItem?.name || ''} onChange={e => setEditingItem(prev => prev ? {...prev, name: e.target.value} : null)} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white" />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">SKU</label>
+                <input type="text" required value={editingItem?.sku || ''} onChange={e => setEditingItem(prev => prev ? {...prev, sku: e.target.value} : null)} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+               <div>
+                 <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Low Alert (Kg)</label>
+                 <input type="number" required min="0" value={editingItem?.lowStockThreshold || 0} onChange={e => setEditingItem(prev => prev ? {...prev, lowStockThreshold: Number(e.target.value)} : null)} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white" />
+               </div>
+               <div>
+                 <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Finish</label>
+                 <select value={editingItem?.finish || 'Matte'} onChange={e => setEditingItem(prev => prev ? {...prev, finish: e.target.value as any} : null)} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white">
+                   <option>Matte</option><option>Gloss</option><option>Satin</option><option>Texture</option>
+                 </select>
+               </div>
+            </div>
+            <button type="submit" className="w-full bg-white text-black font-black uppercase tracking-widest py-3 rounded-xl mt-2 hover:bg-zinc-200 transition-colors shadow-lg active:scale-[0.98]">
+              Save Changes
+            </button>
+          </form>
+          
+          <div className="pt-6 border-t border-black/10 dark:border-white/10">
+            <h4 className="text-sm font-black uppercase tracking-widest mb-4">Usage History</h4>
+            <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+              {inventoryUsages.filter(u => u.inventoryId === editingItem?.id).length === 0 ? (
+                <p className="text-xs text-zinc-500 font-medium italic">No usage recorded yet.</p>
+              ) : (
+                inventoryUsages.filter(u => u.inventoryId === editingItem?.id).map(usage => (
+                  <div key={usage.id} className="bg-zinc-50 dark:bg-zinc-900/50 rounded-lg p-3 flex justify-between items-center text-xs border border-white/5">
+                     <div>
+                       <span className="font-bold block">{usage.amountKg}kg Used</span>
+                       <span className="text-zinc-500">Order: {usage.orderId} - {usage.customerName}</span>
+                     </div>
+                     <div className="text-zinc-400 font-mono">
+                       {new Date(usage.date).toLocaleDateString()}
+                     </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
       </Modal>
 
     </div>

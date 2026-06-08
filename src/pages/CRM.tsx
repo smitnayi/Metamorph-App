@@ -9,7 +9,7 @@ import { Customer } from '../types';
 
 export default function CRM() {
   const [searchTerm, setSearchTerm] = useState('');
-  const { customers, setCustomers, orders } = useDataStore();
+  const { customers, setCustomers, orders, addActivityLog } = useDataStore();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [activeCustomer, setActiveCustomer] = useState<Customer | null>(null);
   const [newNote, setNewNote] = useState('');
@@ -47,7 +47,8 @@ export default function CRM() {
       communicationHistory: []
     };
     
-    setCustomers([customer, ...customers]);
+    setCustomers(prev => [customer, ...prev]);
+    addActivityLog({ action: 'create', module: 'CRM', details: `Added new customer: ${customer.companyName}`, userId: 'user1', userName: 'Admin' });
     setIsAddModalOpen(false);
     toast.success(`${customer.companyName} added to CRM`);
     setNewCustomer({ companyName: '', email: '', phone: '', status: 'Active', lifetimeValue: 0, totalOrders: 0 });
@@ -55,7 +56,7 @@ export default function CRM() {
 
   const handleSaveNote = () => {
     if (!activeCustomer || !newNote) return;
-    setCustomers(customers.map(c => 
+    setCustomers(prev => prev.map(c => 
       c.id === activeCustomer.id ? { 
         ...c, 
         communicationHistory: [{
@@ -70,6 +71,7 @@ export default function CRM() {
       }, ...(prev.communicationHistory || [])]
     } : null);
     setNewNote('');
+    addActivityLog({ action: 'manage', module: 'CRM', details: `Added communication note for ${activeCustomer.companyName}`, userId: 'user1', userName: 'Admin' });
     toast.success('Communication logged');
   };
 
@@ -312,6 +314,7 @@ export default function CRM() {
           <button 
             onClick={() => {
               if(!bulkMessage) return toast.error('Message body is empty.');
+              addActivityLog({ action: 'manage', module: 'CRM', details: `Sent bulk broadcast to ${customers.length} customers.`, userId: 'user1', userName: 'Admin' });
               toast.success(`Broadcast successfully queued for ${customers.length} customers.`);
               setBulkMessage('');
               setIsBulkUpdateOpen(false);

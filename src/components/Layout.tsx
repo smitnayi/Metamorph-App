@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate, useResolvedPath, useMatch } from "react-router-dom";
-import { ShieldCheck, LogOut, Home, BarChart2, Package, LayoutList, Shield, Users, Briefcase, CheckSquare, Key, LucideIcon, ShieldAlert, Moon, Sun, Menu, X, PanelLeftClose, PanelLeftOpen, Wifi, WifiOff, RefreshCw, Search } from "lucide-react";
+import { ShieldCheck, LogOut, Home, BarChart2, Package, LayoutList, Shield, Users, Briefcase, CheckSquare, Key, LucideIcon, ShieldAlert, Moon, Sun, Menu, X, PanelLeftClose, PanelLeftOpen, Wifi, WifiOff, RefreshCw, Search, Clock } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "../contexts/AuthContext";
 import { useDataStore } from "../store/data";
@@ -29,6 +29,7 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { path: "/quality", label: "QA", icon: Shield, subject: "quality" },
   { path: "/customers", label: "CRM", icon: Users, subject: "crm" },
   { path: "/employees", label: "Staff", icon: Briefcase, subject: "employees" },
+  { path: "/labors", label: "Labors", icon: Clock, subject: "employees" },
   { path: "/roles", label: "Roles", icon: Key, subject: "settings" },
 ];
 
@@ -208,23 +209,28 @@ export default function Layout() {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col relative h-full overflow-hidden bg-transparent">
         
-        {/* Sync Status - Desktop Floating or Mobile Header */}
-        <div className="absolute top-4 right-4 z-40 hidden md:flex items-center gap-4">
-           {/* Global Search Hint */}
-           <div className="flex items-center gap-2 bg-white/60 dark:bg-[#111]/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-black/5 dark:border-white/5 shadow-sm text-xs font-medium text-zinc-500">
-             <Search className="h-3.5 w-3.5" />
-             <span className="hidden lg:inline">Search</span>
-             <kbd className="font-sans font-bold bg-black/5 dark:bg-white/10 px-1.5 py-0.5 rounded text-[10px]">⌘K</kbd>
+        {/* Desktop Header */}
+        <header className="hidden md:flex items-center justify-end px-8 py-4 shrink-0 z-30">
+           <div className="flex items-center gap-4">
+              {/* Global Search Hint */}
+              <button 
+                onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
+                className="flex items-center gap-2 bg-white/60 dark:bg-[#111]/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-black/5 dark:border-white/5 shadow-sm text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
+              >
+                <Search className="h-3.5 w-3.5" />
+                <span className="hidden lg:inline">Search</span>
+                <kbd className="font-sans font-bold bg-black/5 dark:bg-white/10 px-1.5 py-0.5 rounded text-[10px]">⌘K</kbd>
+              </button>
+              
+              {/* Connectivity Indicator */}
+              <div className={cn("flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-sm text-xs font-bold uppercase tracking-widest backdrop-blur-md", 
+                  isOnline ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+              )}>
+                {isOnline ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
+                {isOnline ? <span>Live</span> : <span>Offline</span>}
+              </div>
            </div>
-           
-           {/* Connectivity Indicator */}
-           <div className={cn("flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-sm text-xs font-bold uppercase tracking-widest backdrop-blur-md", 
-               isOnline ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
-           )}>
-             {isOnline ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
-             {isOnline ? <span>Live</span> : <span>Offline</span>}
-           </div>
-        </div>
+        </header>
 
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between h-16 px-4 bg-white/80 dark:bg-[#111]/80 backdrop-blur-md border-b border-black/5 dark:border-white/5 z-30 shrink-0">
@@ -234,9 +240,12 @@ export default function Layout() {
              </div>
              <h1 className="text-lg font-black tracking-tighter uppercase italic">Metamorph</h1>
           </div>
-          <button onClick={toggleTheme} className="flex h-9 w-9 items-center justify-center rounded-full bg-black/5 dark:bg-white/5">
-             {isDark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px] text-zinc-600" />}
-          </button>
+          <div className="flex items-center gap-3">
+             <div className={cn("flex h-2 w-2 rounded-full", isOnline ? "bg-emerald-500" : "bg-rose-500 animate-pulse")} title={isOnline ? "Online" : "Offline"} />
+             <button onClick={toggleTheme} className="flex h-9 w-9 items-center justify-center rounded-full bg-black/5 dark:bg-white/5">
+                {isDark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px] text-zinc-600" />}
+             </button>
+          </div>
         </header>
 
         <div className="flex-1 overflow-auto relative">

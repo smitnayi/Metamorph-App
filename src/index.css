@@ -9,6 +9,13 @@
 }
 
 @layer base {
+  :root {
+    color-scheme: light;
+  }
+  .dark {
+    color-scheme: dark;
+  }
+  
   body {
     @apply bg-[#f0f0f2] dark:bg-[#060606] text-zinc-900 dark:text-zinc-50 font-sans antialiased transition-colors duration-500 relative min-h-screen overflow-x-hidden;
   }

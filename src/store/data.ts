@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { InventoryItem, Order, Customer, Task, User, QualityCheck, Role, CostSettings } from '../types';
+import { InventoryItem, Order, Customer, Task, User, QualityCheck, Role, CostSettings, Labor, LaborAttendance, ActivityLog, InventoryUsage } from '../types';
 import { db } from '../lib/firebase';
 import { collection, onSnapshot, writeBatch, doc } from 'firebase/firestore';
 
@@ -61,6 +61,10 @@ interface AppState {
   tasks: Task[];
   qualityChecks: QualityCheck[];
   costSettings: CostSettings;
+  labors: Labor[];
+  laborAttendances: LaborAttendance[];
+  activityLogs: ActivityLog[];
+  inventoryUsages: InventoryUsage[];
   setUsers: (val: User[] | ((prev: User[]) => User[])) => void;
   setRoles: (val: Role[] | ((prev: Role[]) => Role[])) => void;
   setInventory: (val: InventoryItem[] | ((prev: InventoryItem[]) => InventoryItem[])) => void;
@@ -69,6 +73,11 @@ interface AppState {
   setTasks: (val: Task[] | ((prev: Task[]) => Task[])) => void;
   setQualityChecks: (val: QualityCheck[] | ((prev: QualityCheck[]) => QualityCheck[])) => void;
   setCostSettings: (val: CostSettings | ((prev: CostSettings) => CostSettings)) => void;
+  setLabors: (val: Labor[] | ((prev: Labor[]) => Labor[])) => void;
+  setLaborAttendances: (val: LaborAttendance[] | ((prev: LaborAttendance[]) => LaborAttendance[])) => void;
+  setActivityLogs: (val: ActivityLog[] | ((prev: ActivityLog[]) => ActivityLog[])) => void;
+  setInventoryUsages: (val: InventoryUsage[] | ((prev: InventoryUsage[]) => InventoryUsage[])) => void;
+  addActivityLog: (log: Omit<ActivityLog, 'id' | 'timestamp'>) => void;
 }
 
 const syncToFirebase = async <T extends { id: string }>(collectionName: string, currentItems: T[], nextItems: T[]) => {
@@ -103,6 +112,10 @@ export const useDataStore = create<AppState>((set, get) => ({
   customers: [],
   tasks: [],
   qualityChecks: [],
+  labors: [],
+  laborAttendances: [],
+  activityLogs: [],
+  inventoryUsages: [],
   costSettings: { electricityRate: 150, gasRate: 20, processChargeRate: 2 },
   
   setUsers: (val) => {
@@ -143,6 +156,34 @@ export const useDataStore = create<AppState>((set, get) => ({
   setCostSettings: (val) => {
     const next = typeof val === 'function' ? val(get().costSettings) : val;
     set({ costSettings: next });
+  },
+  setLabors: (val) => {
+    const next = typeof val === 'function' ? val(get().labors) : val;
+    syncToFirebase('labors', get().labors, next);
+    set({ labors: next });
+  },
+  setLaborAttendances: (val) => {
+    const next = typeof val === 'function' ? val(get().laborAttendances) : val;
+    syncToFirebase('laborAttendances', get().laborAttendances, next);
+    set({ laborAttendances: next });
+  },
+  setActivityLogs: (val) => {
+    const next = typeof val === 'function' ? val(get().activityLogs) : val;
+    syncToFirebase('activityLogs', get().activityLogs, next);
+    set({ activityLogs: next });
+  },
+  setInventoryUsages: (val) => {
+    const next = typeof val === 'function' ? val(get().inventoryUsages) : val;
+    syncToFirebase('inventoryUsages', get().inventoryUsages, next);
+    set({ inventoryUsages: next });
+  },
+  addActivityLog: (log) => {
+    const newLog: ActivityLog = {
+      ...log,
+      id: Math.random().toString(),
+      timestamp: new Date().toISOString()
+    };
+    get().setActivityLogs([...get().activityLogs, newLog]);
   }
 }));
 
@@ -151,7 +192,7 @@ let unsubscribers: (() => void)[] = [];
 export function initStoreSync() {
   if (unsubscribers.length > 0) return;
 
-  const collections = ['users', 'roles', 'inventory', 'orders', 'customers', 'tasks', 'qualityChecks'];
+  const collections = ['users', 'roles', 'inventory', 'orders', 'customers', 'tasks', 'qualityChecks', 'labors', 'laborAttendances', 'activityLogs', 'inventoryUsages'];
   
   unsubscribers = collections.map(col => {
      return onSnapshot(collection(db, col), { includeMetadataChanges: true }, (snap) => {

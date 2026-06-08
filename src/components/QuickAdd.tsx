@@ -1,65 +1,75 @@
-import React, { useState } from 'react';
-import { Plus, LayoutList, Users, CheckSquare, X } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { LayoutList, Users, CheckSquare, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '../lib/utils';
 
 export default function QuickAdd() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const actions = [
-    { label: 'New Order', icon: LayoutList, path: '/orders', color: 'bg-blue-500' },
-    { label: 'New Customer', icon: Users, path: '/customers', color: 'bg-emerald-500' },
-    { label: 'New Task', icon: CheckSquare, path: '/tasks', color: 'bg-amber-500' }
+    { label: 'Order', icon: LayoutList, path: '/orders' },
+    { label: 'Lead', icon: Users, path: '/crm' },
+    { label: 'Task', icon: CheckSquare, path: '/tasks' }
   ];
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleAction = (path: string) => {
+    if ('vibrate' in navigator) navigator.vibrate(20);
     setIsOpen(false);
     navigate(path);
   };
 
-  const toggleOpen = () => {
-    if ('vibrate' in navigator) navigator.vibrate(50);
-    setIsOpen(!isOpen);
-  };
-
   return (
-    <div className="fixed bottom-24 right-6 md:bottom-8 md:right-8 z-50 flex flex-col-reverse items-end gap-3">
+    <div className="fixed bottom-24 right-4 md:bottom-8 md:right-8 z-50 flex flex-col items-end" ref={containerRef}>
       <AnimatePresence>
         {isOpen && (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 10, transition: { duration: 0.15 } }}
-            className="flex flex-col gap-3 mb-2"
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="mb-3 bg-white dark:bg-[#111] border border-black/10 dark:border-white/10 shadow-2xl rounded-xl flex flex-col p-1.5 min-w-[160px]"
           >
             {actions.map((action, idx) => (
-              <motion.button
+              <button
                 key={idx}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0, transition: { delay: idx * 0.05 } }}
-                onClick={() => {
-                  if ('vibrate' in navigator) navigator.vibrate(20);
-                  handleAction(action.path)
-                }}
-                className="flex items-center gap-3 bg-white dark:bg-[#111] border border-black/5 dark:border-white/10 px-4 py-3 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all text-left"
+                onClick={() => handleAction(action.path)}
+                className="flex items-center gap-3 w-full px-4 py-3 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-colors text-left group"
               >
-                <span className="text-sm font-bold capitalize text-zinc-900 dark:text-white whitespace-nowrap">{action.label}</span>
-                <div className={`h-8 w-8 rounded-full ${action.color} text-white flex items-center justify-center shrink-0`}>
-                  <action.icon className="h-4 w-4" />
-                </div>
-              </motion.button>
+                <action.icon className="w-4 h-4 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors" />
+                <span className="text-xs font-black tracking-widest text-zinc-900 dark:text-white uppercase mt-0.5">{action.label}</span>
+              </button>
             ))}
           </motion.div>
         )}
       </AnimatePresence>
+
       <button 
-        onClick={toggleOpen}
-        className="h-14 w-14 rounded-full bg-orange-500 text-white shadow-[0_8px_32px_rgba(234,88,12,0.4)] flex items-center justify-center hover:scale-110 active:scale-90 transition-all z-10"
+        onClick={() => {
+          if ('vibrate' in navigator) navigator.vibrate(50);
+          setIsOpen(!isOpen);
+        }}
+        className={cn(
+          "w-12 h-12 md:w-auto md:h-12 flex items-center justify-center md:px-5 rounded-full md:rounded-xl shadow-xl md:shadow-lg transition-all duration-300 border",
+          isOpen 
+            ? "bg-white dark:bg-[#111] text-zinc-900 dark:text-white border-black/10 dark:border-white/10" 
+            : "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 md:hover:-translate-y-0.5 border-transparent"
+        )}
       >
-        <motion.div animate={{ rotate: isOpen ? 135 : 0 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
-          <Plus className="h-7 w-7" />
-        </motion.div>
+        <span className="hidden md:inline mr-2 text-xs font-black tracking-widest uppercase pointer-events-none">Create</span>
+        <Plus strokeWidth={3} className={cn("w-5 h-5 md:w-4 md:h-4 transition-transform duration-300 pointer-events-none", isOpen && "rotate-45")} />
       </button>
     </div>
   );

@@ -1,5 +1,5 @@
 export type Action = 'create' | 'read' | 'update' | 'delete' | 'manage';
-export type Subject = 'inventory' | 'orders' | 'reports' | 'employees' | 'crm' | 'quality' | 'tasks' | 'settings' | 'all';
+export type Subject = 'inventory' | 'orders' | 'reports' | 'employees' | 'crm' | 'quality' | 'tasks' | 'settings' | 'labors' | 'all';
 
 export interface Permission {
   action: Action;
@@ -100,6 +100,49 @@ export interface Task {
   status: 'To Do' | 'In Progress' | 'Done';
   priority: 'High' | 'Medium' | 'Low';
   dueDate: string;
+}
+
+export interface Labor {
+  id: string;
+  name: string;
+  roleId?: string;
+  dailySalary: number;
+  phone?: string;
+  status: 'Active' | 'Inactive';
+  joinDate: string;
+  gender: 'Male' | 'Female';
+}
+
+export interface LaborAttendance {
+  id: string;
+  laborId: string;
+  date: string; // YYYY-MM-DD
+  status: 'Present' | 'Absent' | 'Half-Day';
+  overtimeHours: number; // For example 4
+  notes?: string;
+  clockIn?: string;
+  clockOut?: string;
+  manualHours?: number;
+  manualMinutes?: number;
+}
+
+export interface ActivityLog {
+  id: string;
+  userId: string;
+  userName: string;
+  action: string;
+  module: string;
+  details: string;
+  timestamp: string;
+}
+
+export interface InventoryUsage {
+  id: string;
+  inventoryId: string;
+  orderId: string;
+  customerName?: string;
+  amountKg: number;
+  date: string;
 }
 
 export interface QualityCheck {

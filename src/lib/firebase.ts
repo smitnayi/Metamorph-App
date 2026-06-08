@@ -13,7 +13,7 @@ export const app = initializeApp(firebaseConfig);
 // Initialize Firestore with offline persistence
 export const db = initializeFirestore(app, {
   localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()})
-}, firebaseConfig.firestoreDatabaseId);
+});
 
 export const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();

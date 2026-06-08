@@ -12,7 +12,8 @@ export default function Tasks() {
   const [searchTerm, setSearchTerm] = useState('');
   const [priorityFilter, setPriorityFilter] = useState<'All' | 'High' | 'Medium' | 'Low'>('All');
   const { tasks, setTasks, users, roles } = useDataStore();
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   // default user ID fallback if users list is empty
   const defaultUserId = users.length > 0 ? users[0].id : '';
@@ -26,27 +27,50 @@ export default function Tasks() {
     dueDate: new Date().toISOString().split('T')[0]
   });
 
-  const handleCreateTask = (e: React.FormEvent) => {
+  const handleOpenCreate = () => {
+    setEditingTask(null);
+    setNewTask({ title: '', description: '', status: 'To Do', priority: 'Medium', assigneeId: defaultUserId, dueDate: new Date().toISOString().split('T')[0] });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (task: Task) => {
+    setEditingTask(task);
+    setNewTask(task);
+    setIsModalOpen(true);
+  };
+
+  const handleSaveTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTask.title) {
       toast.error('Task title is required');
       return;
     }
     
-    const task: Task = {
-      id: Math.random().toString(36).substr(2, 9),
-      title: newTask.title,
-      description: newTask.description || '',
-      assigneeId: newTask.assigneeId!,
-      status: 'To Do',
-      priority: newTask.priority as any || 'Medium',
-      dueDate: newTask.dueDate || new Date().toISOString().split('T')[0]
-    };
+    if (editingTask) {
+      const updatedTasks = tasks.map(t => t.id === editingTask.id ? { ...newTask as Task } : t);
+      setTasks(updatedTasks);
+      toast.success('Task updated');
+    } else {
+      const task: Task = {
+        id: Math.random().toString(36).substr(2, 9),
+        title: newTask.title,
+        description: newTask.description || '',
+        assigneeId: newTask.assigneeId!,
+        status: newTask.status as any || 'To Do',
+        priority: newTask.priority as any || 'Medium',
+        dueDate: newTask.dueDate || new Date().toISOString().split('T')[0]
+      };
+      setTasks([...tasks, task]);
+      toast.success('Task created');
+    }
+    setIsModalOpen(false);
+  };
 
-    setTasks([...tasks, task]);
-    setIsCreateModalOpen(false);
-    toast.success(`Task created`);
-    setNewTask({ title: '', description: '', status: 'To Do', priority: 'Medium', assigneeId: defaultUserId, dueDate: new Date().toISOString().split('T')[0] });
+  const handleDeleteTask = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    setTasks(tasks.filter(t => t.id !== id));
+    toast.success('Task deleted');
+    if (editingTask?.id === id) setIsModalOpen(false);
   };
 
   const filteredTasks = tasks.filter(task => {
@@ -82,7 +106,7 @@ export default function Tasks() {
           <p className="text-zinc-600 dark:text-zinc-400 mt-2 font-medium text-sm">Track responsibilities, maintenance, and operational to-dos.</p>
         </div>
         <button 
-          onClick={() => setIsCreateModalOpen(true)}
+          onClick={handleOpenCreate}
           className="inline-flex items-center justify-center bg-orange-500 px-6 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-black hover:bg-orange-600 transition-colors shadow-lg active:scale-95"
         >
           <Plus className="h-5 w-5 mr-2" />
@@ -125,30 +149,16 @@ export default function Tasks() {
           {filteredTasks.map(task => {
             const assignee = users.find(u => u.id === task.assigneeId);
             return (
-              <div key={task.id} className="relative overflow-hidden rounded-[24px] bg-red-500 w-full">
-                 <div className="absolute inset-y-0 right-0 flex items-center pr-6 z-0 pointer-events-none">
-                   <span className="text-white font-black text-xs uppercase tracking-widest flex items-center"><Trash2 className="h-4 w-4 mr-2"/> Delete</span>
-                 </div>
-                 <motion.div 
-                   layout
-                   initial={{ opacity: 0, scale: 0.9, filter: "blur(4px)" }}
-                   animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                   exit={{ opacity: 0, scale: 0.9, filter: "blur(4px)" }}
-                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                   whileHover={{ y: -4 }}
-                   drag="x"
-                   dragConstraints={{ left: 0, right: 0 }}
-                   dragElastic={0.4}
-                   onDragEnd={(e, { offset }) => {
-                     if (offset.x < -100) {
-                        if ('vibrate' in navigator) navigator.vibrate([50, 50, 50]);
-                        const newTasks = tasks.filter(t => t.id !== task.id);
-                        setTasks(newTasks);
-                        toast.success('Task deleted');
-                     }
-                   }}
-                   className="bg-white/60 dark:bg-black/40 backdrop-blur-3xl border border-black/[0.04] dark:border-white/[0.06] rounded-[24px] p-5 shadow-sm hover:shadow-xl transition-shadow flex flex-col relative z-10 w-full h-full"
-                 >
+              <motion.div 
+                key={task.id}
+                layout
+                initial={{ opacity: 0, scale: 0.9, filter: "blur(4px)" }}
+                animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0, scale: 0.9, filter: "blur(4px)" }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                onClick={() => handleOpenEdit(task)}
+                className="bg-white/60 dark:bg-black/40 backdrop-blur-3xl border border-black/[0.04] dark:border-white/[0.06] rounded-[24px] p-5 shadow-sm hover:shadow-xl transition-all flex flex-col relative w-full h-full cursor-pointer hover:-translate-y-1 group"
+              >
                 <div className="flex justify-between items-start mb-4">
                   <div className={cn("px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest", getPriorityColor(task.priority))}>
                     {task.priority} Priority
@@ -159,8 +169,8 @@ export default function Tasks() {
                   </div>
                 </div>
                 
-                <h3 className="text-lg font-black text-zinc-900 dark:text-white mb-2 leading-tight">{task.title}</h3>
-                <p className="text-zinc-600 dark:text-zinc-400 font-medium text-sm mb-6 flex-1">{task.description}</p>
+                <h3 className="text-lg font-black text-zinc-900 dark:text-white mb-2 leading-tight group-hover:text-orange-500 transition-colors">{task.title}</h3>
+                <p className="text-zinc-600 dark:text-zinc-400 font-medium text-sm mb-6 flex-1 line-clamp-3">{task.description}</p>
                 
                 <div className="mt-auto pt-4 border-t border-black/5 dark:border-white/5 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
@@ -175,18 +185,26 @@ export default function Tasks() {
                     </div>
                   </div>
                   
-                  <select 
-                    value={task.status}
-                    onChange={(e) => setTasks(tasks.map(t => t.id === task.id ? {...t, status: e.target.value as any} : t))}
-                    className="bg-white dark:bg-black border border-black/5 dark:border-white/10 rounded-lg text-zinc-900 dark:text-white text-[10px] font-bold uppercase tracking-widest p-2 focus:outline-none focus:border-orange-500 appearance-none"
-                  >
-                    <option value="To Do">To Do</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Done">Done</option>
-                  </select>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => handleDeleteTask(e, task.id)}
+                      className="p-2 rounded-lg text-zinc-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                    <select 
+                      onClick={(e) => e.stopPropagation()}
+                      value={task.status}
+                      onChange={(e) => setTasks(tasks.map(t => t.id === task.id ? {...t, status: e.target.value as any} : t))}
+                      className="bg-white dark:bg-black border border-black/5 dark:border-white/10 rounded-lg text-zinc-900 dark:text-white text-[10px] font-bold uppercase tracking-widest p-2 focus:outline-none focus:border-orange-500 appearance-none cursor-pointer"
+                    >
+                      <option value="To Do">To Do</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Done">Done</option>
+                    </select>
+                  </div>
                 </div>
               </motion.div>
-             </div>
             );
           })}
         </AnimatePresence>
@@ -199,8 +217,8 @@ export default function Tasks() {
         )}
       </motion.div>
 
-      <Modal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} title="Create New Task">
-        <form onSubmit={handleCreateTask} className="space-y-5">
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingTask ? "Edit Task" : "Create New Task"}>
+        <form onSubmit={handleSaveTask} className="space-y-5">
           <div>
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Task Title</label>
             <input 
@@ -260,12 +278,23 @@ export default function Tasks() {
               })}
             </select>
           </div>
-          <button 
-            type="submit"
-            className="w-full bg-orange-500 text-black font-black uppercase tracking-widest py-4 rounded-xl mt-4 hover:bg-orange-600 transition-colors shadow-lg active:scale-[0.98]"
-          >
-            Create Task
-          </button>
+          <div className="flex flex-col gap-3 mt-6">
+            <button 
+              type="submit"
+              className="w-full bg-orange-500 flex items-center justify-center text-black font-black uppercase tracking-widest py-4 rounded-xl hover:bg-orange-600 transition-colors shadow-lg active:scale-[0.98]"
+            >
+              {editingTask ? 'Save Changes' : 'Create Task'}
+            </button>
+            {editingTask && (
+              <button 
+                type="button"
+                onClick={(e) => handleDeleteTask(e, editingTask.id)}
+                className="w-full bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-500 font-bold uppercase tracking-widest py-3.5 rounded-xl hover:bg-rose-100 dark:hover:bg-rose-500/20 transition-colors"
+              >
+                Delete Task
+              </button>
+            )}
+          </div>
         </form>
       </Modal>
     </div>

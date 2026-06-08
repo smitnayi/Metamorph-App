@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '../components/ui/Card';
 import { useDataStore } from '../store/data';
-import { ShieldAlert, CheckCircle, XCircle, Search, ClipboardSignature, ArrowLeft, Image as ImageIcon, Printer, Tag, Plus, Camera } from 'lucide-react';
+import { ShieldAlert, CheckCircle, XCircle, Search, ClipboardSignature, ArrowLeft, Image as ImageIcon, Printer, Tag, Plus, Camera, Mail } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { QualityCheck, Order } from '../types';
 import Modal from '../components/ui/Modal';
@@ -193,7 +193,7 @@ export default function Quality() {
       date: new Date().toISOString(),
       inspectorId: 'u1'
     };
-    setChecks([check, ...checks]);
+    setChecks(prev => [check, ...prev]);
     setReportGeneratedId(check.id);
     setIsAddingMode(false);
   };
@@ -304,6 +304,35 @@ export default function Quality() {
         </div>
         {!isAddingMode ? (
           <div className="flex flex-col sm:flex-row gap-4">
+            <button 
+              onClick={() => {
+                 const passNumber = checks.filter(c => c.overallResult === 'Pass').length;
+                 const failNumber = checks.filter(c => c.overallResult === 'Fail').length;
+                 const totalChecks = checks.length;
+                 const avgA = checks.length > 0 ? (checks.reduce((acc, curr) => acc + curr.adhesionScore, 0) / checks.length).toFixed(1) : 'N/A';
+                 const avgT = checks.length > 0 ? (checks.reduce((acc, curr) => acc + curr.thicknessMils, 0) / checks.length).toFixed(1) : 'N/A';
+                 const period = new Date().toLocaleDateString();
+                 
+                 const body = `Quality & Production Performance Report - ${period}
+                 
+Total Checks: ${totalChecks}
+Pass Rate: ${passRate} (${passNumber} passed)
+Failures: ${failNumber}
+
+Averages:
+- Adhesion: ${avgA}/10
+- Thickness: ${avgT} mils
+
+Best Regards,
+Quality Control Team`;
+
+                 window.open(`mailto:?subject=Weekly Performance Report&body=${encodeURIComponent(body)}`);
+              }}
+              className="inline-flex items-center justify-center border border-black/10 dark:border-white/20 bg-white dark:bg-black px-4 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-white hover:bg-white hover:text-black transition-colors shadow-lg active:scale-95"
+            >
+              <Mail className="h-5 w-5 md:mr-2" />
+              <span className="hidden md:inline">Email Report</span>
+            </button>
             <button 
               onClick={() => setIsStickerModalOpen(true)}
               className="inline-flex items-center justify-center border border-black/10 dark:border-white/20 bg-white dark:bg-black px-6 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-white hover:bg-white hover:text-black transition-colors shadow-lg active:scale-95"

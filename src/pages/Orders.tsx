@@ -120,11 +120,12 @@ const DraggableOrder: React.FC<DraggableOrderProps> = ({ order, setOrders, order
 
 export default function Orders() {
   const [searchTerm, setSearchTerm] = useState('');
-  const { orders, setOrders, costSettings, setCostSettings } = useDataStore();
+  const { orders, setOrders, costSettings, setCostSettings, inventory, addActivityLog, inventoryUsages, setInventoryUsages, setInventory } = useDataStore();
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCostConfigOpen, setIsCostConfigOpen] = useState(false);
   const [costingOrder, setCostingOrder] = useState<Order | null>(null);
+  const [selectedPowderId, setSelectedPowderId] = useState<string>('');
   const [estimationData, setEstimationData] = useState<OrderCostEstimation>({
     powderKg: 0,
     materialKg: 0,
@@ -170,10 +171,41 @@ export default function Orders() {
     setNewOrder({ status: 'Quoted', items: 100, totalValue: 5000, customerName: '', dueDate: new Date().toISOString().split('T')[0] });
   };
 
-  const filteredOrders = orders.filter(order => 
-    order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    order.customerName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const [showArchived, setShowArchived] = useState(false);
+
+  const filteredOrders = orders.filter(order => {
+    let match = order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                order.customerName.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Hide completed older than 7 days
+    if (order.status === 'Completed' && !showArchived) {
+      if (order.dueDate) {
+         const orderDate = new Date(order.dueDate).getTime();
+         const now = Date.now();
+         const daysDiff = (now - orderDate) / (1000 * 3600 * 24);
+         if (daysDiff > 7) {
+           match = false;
+         }
+      }
+    }
+    
+    return match;
+  });
+
+  const handleExportOrders = () => {
+    let csvContent = "Order ID,Order Number,Customer,Items(pcs),Value,Status,Due Date\n";
+    orders.forEach(o => {
+      csvContent += `${o.id},${o.orderNumber},${o.customerName},${o.items},${o.totalValue},${o.status},${new Date(o.dueDate).toLocaleDateString()}\n`;
+    });
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `orders-export-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success('Orders exported successfully');
+  };
 
   const handleDragStart = (event: any) => {
     setActiveOrder(event.active.data.current?.order);
@@ -218,8 +250,28 @@ export default function Orders() {
       calculatedProfit: profit
     };
 
-    setOrders(orders.map(o => o.id === costingOrder.id ? { ...o, costEstimation: finalData } : o));
+    setOrders(prev => prev.map(o => o.id === costingOrder.id ? { ...o, costEstimation: finalData } : o));
+    
+    if (selectedPowderId && estimationData.powderKg > 0) {
+      const usage = {
+        id: Math.random().toString(36).substring(2, 9),
+        inventoryId: selectedPowderId,
+        orderId: costingOrder.orderNumber,
+        customerName: costingOrder.customerName,
+        amountKg: estimationData.powderKg,
+        date: new Date().toISOString()
+      };
+      setInventoryUsages(prev => [...prev, usage]);
+      
+      const powderItem = inventory.find(i => i.id === selectedPowderId);
+      if (powderItem) {
+        setInventory(prev => prev.map(i => i.id === selectedPowderId ? { ...i, weightKg: Math.max(0, i.weightKg - estimationData.powderKg) } : i));
+        addActivityLog({ action: 'process', module: 'Inventory', details: `${estimationData.powderKg}kg of ${powderItem.name} used in order ${costingOrder.orderNumber}`, userId: 'user1', userName: 'Admin' });
+      }
+    }
+
     setCostingOrder(null);
+    setSelectedPowderId('');
     toast.success('Cost estimation saved');
   };
 
@@ -246,17 +298,25 @@ export default function Orders() {
             <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight mt-1 text-zinc-900 dark:text-white">Job Orders</h1>
             <p className="text-zinc-600 dark:text-zinc-400 mt-2 font-medium text-sm">Drag and drop or use the dropdown to manage production stages.</p>
           </div>
-          <div className="flex gap-2">
-            <button 
-              onClick={() => setIsCostConfigOpen(true)}
-              className="inline-flex items-center justify-center bg-white dark:bg-[#111] border border-black/5 dark:border-white/10 px-4 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-white hover:border-orange-500 transition-colors shadow-lg active:scale-95"
-            >
-              <Settings className="h-5 w-5 mr-2" />
-              Rates
-            </button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <div className="flex gap-2 w-full">
+              <button 
+                onClick={handleExportOrders}
+                className="flex-1 inline-flex items-center justify-center bg-white dark:bg-[#111] border border-black/5 dark:border-white/10 px-4 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-white hover:border-orange-500 transition-colors shadow-lg active:scale-95"
+              >
+                Export
+              </button>
+              <button 
+                onClick={() => setIsCostConfigOpen(true)}
+                className="flex-1 inline-flex items-center justify-center bg-white dark:bg-[#111] border border-black/5 dark:border-white/10 px-4 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-white hover:border-orange-500 transition-colors shadow-lg active:scale-95"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Rates
+              </button>
+            </div>
             <button 
               onClick={() => setIsCreateModalOpen(true)}
-              className="inline-flex items-center justify-center bg-orange-500 px-6 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-black hover:bg-orange-600 transition-colors shadow-lg active:scale-95"
+              className="w-full sm:w-auto inline-flex items-center justify-center bg-orange-500 px-6 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-black hover:bg-orange-600 transition-colors shadow-lg active:scale-95"
             >
               <Plus className="h-5 w-5 mr-2" />
               Create
@@ -264,7 +324,7 @@ export default function Orders() {
           </div>
         </div>
 
-        <div className="flex-shrink-0 flex items-center mb-4">
+        <div className="flex-shrink-0 flex sm:flex-row flex-col items-start sm:items-center justify-between mb-4 gap-4">
            <div className="relative w-full max-w-md">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-500" />
               <input
@@ -275,6 +335,10 @@ export default function Orders() {
                 className="w-full pl-12 pr-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors placeholder:text-zinc-600 font-medium"
               />
             </div>
+            <label className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-zinc-600 dark:text-zinc-400 cursor-pointer">
+              <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} className="accent-orange-500 w-4 h-4 rounded" />
+              Show older than 7d
+            </label>
         </div>
 
         <div className="flex-1 flex gap-4 md:gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x">
@@ -415,6 +479,13 @@ export default function Orders() {
       <Modal isOpen={!!costingOrder} onClose={() => setCostingOrder(null)} size="lg" title={`Costing: ${costingOrder?.orderNumber}`}>
         <form onSubmit={handleSaveCosting} className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+             <div className="col-span-2 md:col-span-3">
+               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Select Powder Used</label>
+               <select value={selectedPowderId} onChange={e => setSelectedPowderId(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none appearance-none font-medium">
+                 <option value="">None (Already deduced / Unknown)</option>
+                 {inventory.map(p => <option key={p.id} value={p.id}>{p.name} ({p.weightKg}kg left)</option>)}
+               </select>
+             </div>
              <div>
                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Powder (kg)</label>
                <input type="number" min="0" step="0.1" value={estimationData.powderKg || ''} onChange={e => setEstimationData({...estimationData, powderKg: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />

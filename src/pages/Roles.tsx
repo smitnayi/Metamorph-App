@@ -9,10 +9,10 @@ import Modal from '../components/ui/Modal';
 import { toast } from 'sonner';
 
 const allActions: Action[] = ['create', 'read', 'update', 'delete', 'manage'];
-const allSubjects: Subject[] = ['inventory', 'orders', 'reports', 'employees', 'crm', 'quality', 'tasks', 'settings'];
+const allSubjects: Subject[] = ['inventory', 'orders', 'reports', 'employees', 'crm', 'quality', 'tasks', 'settings', 'labors'];
 
 export default function Roles() {
-  const { roles, setRoles } = useDataStore();
+  const { roles, setRoles, users, labors } = useDataStore();
   const { currentUser } = useAuth();
   const { hasPermission } = useRoleAccess();
   
@@ -150,6 +150,17 @@ export default function Roles() {
               <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">{role.name}</h3>
               <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6 flex-grow">{role.description}</p>
               
+              <div className="flex gap-4 mb-6">
+                <div>
+                   <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1">Staff</div>
+                   <div className="text-lg font-black text-zinc-900 dark:text-white">{users.filter(u => u.roleId === role.id).length}</div>
+                </div>
+                <div>
+                   <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1">Labors</div>
+                   <div className="text-lg font-black text-zinc-900 dark:text-white">{labors.filter(l => l.roleId === role.id).length}</div>
+                </div>
+              </div>
+
               <div className="space-y-2 mt-auto">
                 <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Key Permissions</div>
                 <div className="flex flex-wrap gap-2">

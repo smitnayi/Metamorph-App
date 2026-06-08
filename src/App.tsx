@@ -10,6 +10,7 @@ import Quality from "./pages/Quality";
 import CRM from "./pages/CRM";
 import Employees from "./pages/Employees";
 import Roles from "./pages/Roles";
+import Labors from "./pages/Labors";
 import AdminDashboard from "./pages/AdminDashboard";
 import Login from "./pages/Login";
 import ExportInvoice from "./pages/ExportInvoice";
@@ -61,6 +62,7 @@ export default function App() {
             <Route path="quality" element={<Quality />} />
             <Route path="customers" element={<CRM />} />
             <Route path="employees" element={<Employees />} />
+            <Route path="labors" element={<Labors />} />
             <Route path="roles" element={<Roles />} />
             <Route path="admin" element={<AdminDashboard />} />
           </Route>

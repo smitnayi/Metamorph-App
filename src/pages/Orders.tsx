@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { DndContext, useDraggable, useDroppable, DragEndEvent, DragOverlay, closestCorners, useSensor, useSensors, PointerSensor, TouchSensor } from '@dnd-kit/core';
 import Modal from '../components/ui/Modal';
 
-const STAGES = ['Quoted', 'In Progress', 'Quality Check', 'Shipped', 'Completed'] as const;
+const STAGES = ['Quoted', 'Received at Company', 'Preprocessing', 'Powder Coating', 'Quality Check', 'Shipped', 'Completed'] as const;
 type Stage = typeof STAGES[number];
 
 interface DroppableStageProps {
@@ -16,10 +16,10 @@ interface DroppableStageProps {
   stageOrders: Order[];
   orders: Order[];
   setOrders: any;
-  onOpenCosting: (order: Order) => void;
+  onOpenPowderLog: (order: Order) => void;
 }
 
-const DroppableStage: React.FC<DroppableStageProps> = ({ id, stageOrders, orders, setOrders, onOpenCosting }) => {
+const DroppableStage: React.FC<DroppableStageProps> = ({ id, stageOrders, orders, setOrders, onOpenPowderLog }) => {
   const { setNodeRef, isOver } = useDroppable({
     id,
   });
@@ -27,21 +27,21 @@ const DroppableStage: React.FC<DroppableStageProps> = ({ id, stageOrders, orders
   return (
     <div 
       ref={setNodeRef}
-      className={`flex-shrink-0 w-[85vw] sm:w-80 max-w-[400px] flex flex-col bg-white/40 dark:bg-black/20 backdrop-blur-xl border rounded-[24px] shadow-[0_8px_40px_rgb(0,0,0,0.02)] dark:shadow-[0_8px_40px_rgb(0,0,0,0.1)] transition-colors snap-center ${isOver ? 'border-orange-500 bg-white/80 dark:bg-black/60 shadow-orange-500/10' : 'border-black/[0.04] dark:border-white/[0.06]'}`}
+      className={`flex-shrink-0 w-full xl:w-[320px] flex flex-col bg-white/40 dark:bg-black/20 border rounded-[24px] overflow-hidden transition-colors ${isOver ? 'border-orange-500 bg-white/80 dark:bg-black/60 shadow-orange-500/10' : 'border-black/[0.04] dark:border-white/[0.06]'}`}
     >
-      <div className="p-4 border-b border-black/[0.04] dark:border-white/[0.04] flex justify-between items-center rounded-t-[24px]">
+      <div className="p-4 border-b border-black/[0.04] dark:border-white/[0.04] flex justify-between items-center bg-black/[0.02] dark:bg-white/[0.02]">
         <h3 className="text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-zinc-100">{id}</h3>
         <span className="text-[10px] font-black bg-black/5 dark:bg-white/10 px-2.5 py-1 rounded-full text-zinc-900 dark:text-white shadow-inner">{stageOrders.length}</span>
       </div>
-      <div className="p-3 sm:p-4 flex-1 overflow-y-auto space-y-3">
-          {stageOrders.map(order => (
-             <DraggableOrder key={order.id} order={order} setOrders={setOrders} orders={orders} onOpenCosting={onOpenCosting} />
-          ))}
-          {stageOrders.length === 0 && (
-            <div className="text-center p-8 border border-dashed border-black/5 dark:border-white/5 rounded-xl text-zinc-600 text-xs font-bold uppercase tracking-widest">
-              Drop Here
-            </div>
-          )}
+      <div className={`p-4 ${stageOrders.length > 0 ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-1 gap-4' : 'flex-1 min-h-[150px]'}`}>
+        {stageOrders.map(order => (
+          <DraggableOrder key={order.id} order={order} setOrders={setOrders} orders={orders} onOpenPowderLog={onOpenPowderLog} />
+        ))}
+        {stageOrders.length === 0 && (
+          <div className="h-full w-full flex items-center justify-center p-8 border border-dashed border-black/5 dark:border-white/5 rounded-xl text-zinc-600 text-xs font-bold uppercase tracking-widest shadow-inner bg-black/[0.01] dark:bg-white/[0.01]">
+            Drop Here
+          </div>
+        )}
       </div>
     </div>
   );
@@ -49,33 +49,31 @@ const DroppableStage: React.FC<DroppableStageProps> = ({ id, stageOrders, orders
 
 interface DraggableOrderProps {
   order: Order;
-  setOrders: any;
   orders: Order[];
-  onOpenCosting: (order: Order) => void;
+  setOrders: any;
+  onOpenPowderLog: (order: Order) => void;
 }
 
-const DraggableOrder: React.FC<DraggableOrderProps> = ({ order, setOrders, orders, onOpenCosting }) => {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+const DraggableOrder: React.FC<DraggableOrderProps> = ({ order, orders, setOrders, onOpenPowderLog }) => {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: order.id,
     data: { order }
   });
   
-  const style = transform ? {
-    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-    zIndex: isDragging ? 50 : 1,
-    opacity: isDragging ? 0.5 : 1,
+  const style = isDragging ? {
+    opacity: 0.2, // Ghost style
   } : undefined;
 
   return (
     <div 
       ref={setNodeRef} 
       style={style}
-      className={`bg-white/80 dark:bg-[#111]/80 backdrop-blur-xl border rounded-[16px] p-4 hover:border-orange-500/50 hover:shadow-xl transition-all select-none ${isDragging ? 'border-orange-500 shadow-[0_20px_40px_rgba(234,88,12,0.15)] scale-[1.02]' : 'border-black/[0.06] dark:border-white/[0.08] shadow-sm'}`}
+      className={`bg-white/80 dark:bg-[#111]/80 backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] shadow-sm rounded-[16px] p-4 hover:border-orange-500/50 hover:shadow-xl transition-all touch-none select-none ${isDragging ? 'border-dashed border-zinc-400 bg-transparent dark:bg-transparent shadow-none' : ''}`}
     >
       <div 
         {...listeners} 
         {...attributes}
-        className="cursor-grab active:cursor-grabbing mb-3 touch-none select-none"
+        className="cursor-grab active:cursor-grabbing mb-3"
       >
         <div className="flex justify-between items-start mb-2">
           <div className="text-[10px] font-bold tracking-widest bg-orange-500/10 text-orange-400 px-2 py-0.5 rounded-sm">{order.orderNumber}</div>
@@ -83,7 +81,7 @@ const DraggableOrder: React.FC<DraggableOrderProps> = ({ order, setOrders, order
         </div>
         <div className="font-bold text-zinc-900 dark:text-white uppercase text-base sm:text-sm mb-1 leading-tight">{order.customerName}</div>
       </div>
-      <div className="flex justify-between items-end mt-4 mb-3">
+      <div className="flex justify-between items-end mt-4 mb-3 cursor-default">
         <div className="text-[10px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
           {new Date(order.dueDate).toLocaleDateString(undefined, {month:'short', day:'numeric'})}
@@ -93,27 +91,28 @@ const DraggableOrder: React.FC<DraggableOrderProps> = ({ order, setOrders, order
         </div>
       </div>
       
-      <div className="pt-3 border-t border-black/5 dark:border-white/5 flex gap-2">
+      <div className="pt-3 border-t border-black/5 dark:border-white/5 flex gap-2 cursor-default">
         <select 
           value={order.status}
           onPointerDown={(e) => e.stopPropagation()}
           onChange={(e) => setOrders(orders.map(o => o.id === order.id ? {...o, status: e.target.value as Stage} : o))}
-          className="flex-1 bg-[#1a1a1a] border border-black/5 dark:border-white/10 rounded-lg text-zinc-900 dark:text-white text-xs font-bold p-2.5 focus:outline-none focus:border-orange-500 appearance-none"
+          className="flex-1 bg-[#1a1a1a] border border-black/5 dark:border-white/10 rounded-lg text-zinc-900 dark:text-white text-xs font-bold p-2.5 focus:outline-none focus:border-orange-500 appearance-none cursor-pointer"
         >
           {STAGES.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
-        <button 
-           type="button"
-           onPointerDown={(e) => e.stopPropagation()}
-           onClick={(e) => {
-             e.preventDefault();
-             e.stopPropagation();
-             onOpenCosting(order);
-           }}
-           className="px-3 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-lg text-xs font-bold hover:bg-orange-500 hover:text-black transition-colors"
-        >
-           Costing
-        </button>
+        {['Quality Check'].includes(order.status) && (
+          <button 
+             type="button"
+             onPointerDown={(e) => e.stopPropagation()}
+             onClick={(e) => {
+               e.preventDefault();
+               onOpenPowderLog(order);
+             }}
+             className="px-3 py-1.5 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-orange-500 hover:text-black transition-colors cursor-pointer whitespace-nowrap"
+          >
+             Log Powder
+          </button>
+        )}
       </div>
     </div>
   );
@@ -126,19 +125,9 @@ export default function Orders() {
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCostConfigOpen, setIsCostConfigOpen] = useState(false);
-  const [costingOrder, setCostingOrder] = useState<Order | null>(null);
+  const [powderLogOrder, setPowderLogOrder] = useState<Order | null>(null);
   const [selectedPowderId, setSelectedPowderId] = useState<string>('');
-  const [estimationData, setEstimationData] = useState<OrderCostEstimation>({
-    powderKg: 0,
-    materialKg: 0,
-    labourAllocation: 0,
-    officeStaffAllocation: 0,
-    rentAllocation: 0,
-    electricityUsage: 0,
-    gasUsage: 0,
-    transportCost: 0,
-    miscCost: 0
-  });
+  const [powderAmountKg, setPowderAmountKg] = useState<number>(0);
 
   const [newOrder, setNewOrder] = useState<Partial<Order>>({
     status: 'Quoted',
@@ -223,82 +212,56 @@ export default function Orders() {
     }
   };
 
-  const handleSaveCosting = (e: React.FormEvent) => {
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 100, // Small delay allows scrolling on handle accidentally but is fast enough
+        tolerance: 8,
+      },
+    })
+  );
+
+  const handleSavePowderLog = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!costingOrder) return;
+    if (!powderLogOrder) return;
     
-    // Perform calculations
-    const powderRate = estimationData.materialKg ? estimationData.powderKg / estimationData.materialKg : 0;
-    const electricityCost = estimationData.electricityUsage * costSettings.electricityRate;
-    const gasCost = estimationData.gasUsage * costSettings.gasRate;
-    const processCharge = estimationData.materialKg * costSettings.processChargeRate;
-    
-    const totalCost = Number(estimationData.labourAllocation) + 
-                      Number(estimationData.officeStaffAllocation) + 
-                      Number(estimationData.rentAllocation) + 
-                      electricityCost + gasCost + processCharge + 
-                      Number(estimationData.transportCost) + 
-                      Number(estimationData.miscCost);
-                      
-    const profit = costingOrder.totalValue - totalCost;
-
-    const finalData = {
-      ...estimationData,
-      calculatedPowderRate: powderRate,
-      calculatedElectricityCost: electricityCost,
-      calculatedGasCost: gasCost,
-      calculatedProcessCharge: processCharge,
-      calculatedTotalCost: totalCost,
-      calculatedProfit: profit
-    };
-
-    setOrders(prev => prev.map(o => o.id === costingOrder.id ? { ...o, costEstimation: finalData } : o));
-    
-    if (selectedPowderId && estimationData.powderKg > 0) {
+    if (selectedPowderId && powderAmountKg > 0) {
       const usage = {
         id: Math.random().toString(36).substring(2, 9),
         inventoryId: selectedPowderId,
-        orderId: costingOrder.orderNumber,
-        customerName: costingOrder.customerName,
-        amountKg: estimationData.powderKg,
+        orderId: powderLogOrder.orderNumber,
+        customerName: powderLogOrder.customerName,
+        amountKg: powderAmountKg,
         date: new Date().toISOString()
       };
       setInventoryUsages(prev => [...prev, usage]);
       
       const powderItem = inventory.find(i => i.id === selectedPowderId);
       if (powderItem) {
-        setInventory(prev => prev.map(i => i.id === selectedPowderId ? { ...i, weightKg: Math.max(0, i.weightKg - estimationData.powderKg) } : i));
-        addActivityLog({ action: 'process', module: 'Inventory', details: `${estimationData.powderKg}kg of ${powderItem.name} used in order ${costingOrder.orderNumber}`, userId: 'user1', userName: 'Admin' });
+        setInventory(prev => prev.map(i => i.id === selectedPowderId ? { ...i, weightKg: Math.max(0, i.weightKg - powderAmountKg) } : i));
+        addActivityLog({ action: 'process', module: 'Inventory', details: `${powderAmountKg}kg of ${powderItem.name} used in order ${powderLogOrder.orderNumber}`, userId: 'user1', userName: 'Admin' });
       }
     }
 
-    setCostingOrder(null);
+    setPowderLogOrder(null);
     setSelectedPowderId('');
-    toast.success('Cost estimation saved');
+    setPowderAmountKg(0);
+    toast.success('Material usage logged successfully');
   };
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 0,
-        tolerance: 5,
-      },
-    })
-  );
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={closestCorners}>
-      <div className="h-full flex flex-col space-y-4 md:space-y-6 max-w-7xl mx-auto px-4 py-8 md:p-8">
+      <div className="h-full flex flex-col space-y-4 md:space-y-6 max-w-[1600px] mx-auto px-4 py-8 md:p-8">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 flex-shrink-0">
           <div>
             <label className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] text-orange-500">Workflow</label>
             <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight mt-1 text-zinc-900 dark:text-white">Job Orders</h1>
-            <p className="text-zinc-600 dark:text-zinc-400 mt-2 font-medium text-sm">Drag and drop or use the dropdown to manage production stages.</p>
+            <p className="text-zinc-600 dark:text-zinc-400 mt-2 font-medium text-sm">Manage production stages cleanly and efficiently.</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <div className="flex gap-2 w-full">
@@ -307,13 +270,6 @@ export default function Orders() {
                 className="flex-1 inline-flex items-center justify-center bg-white dark:bg-[#111] border border-black/5 dark:border-white/10 px-4 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-white hover:border-orange-500 transition-colors shadow-lg active:scale-95"
               >
                 Export
-              </button>
-              <button 
-                onClick={() => setIsCostConfigOpen(true)}
-                className="flex-1 inline-flex items-center justify-center bg-white dark:bg-[#111] border border-black/5 dark:border-white/10 px-4 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-white hover:border-orange-500 transition-colors shadow-lg active:scale-95"
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Rates
               </button>
             </div>
             <button 
@@ -343,37 +299,40 @@ export default function Orders() {
             </label>
         </div>
 
-        <div className="flex-1 flex gap-4 md:gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x">
+        <div className="flex-1 flex flex-col xl:flex-row gap-4 xl:gap-6 xl:overflow-x-auto pb-12">
           {STAGES.map(stage => {
             const stageOrders = filteredOrders.filter(o => o.status === stage);
+            
             return (
-              <DroppableStage key={stage} id={stage} stageOrders={stageOrders} orders={orders} setOrders={setOrders} onOpenCosting={(order) => {
-                setCostingOrder(order);
-                setEstimationData(order.costEstimation || {
-                  powderKg: 0,
-                  materialKg: 0,
-                  labourAllocation: 0,
-                  officeStaffAllocation: 0,
-                  rentAllocation: 0,
-                  electricityUsage: 0,
-                  gasUsage: 0,
-                  transportCost: 0,
-                  miscCost: 0
-                });
+              <DroppableStage key={stage} id={stage} stageOrders={stageOrders} orders={orders} setOrders={setOrders} onOpenPowderLog={(order) => {
+                setPowderLogOrder(order);
+                setSelectedPowderId('');
+                setPowderAmountKg(0);
               }} />
             );
           })}
         </div>
       </div>
       
-      <DragOverlay>
+      <DragOverlay modifiers={[]}>
         {activeOrder ? (
-           <div className="w-80 bg-white dark:bg-black border border-orange-500 shadow-2xl p-4 rotate-3">
-             <div className="flex justify-between items-start mb-3">
-               <div className="text-[10px] font-bold text-orange-500">{activeOrder.orderNumber}</div>
-               <div className="text-[10px] font-mono text-zinc-500">{activeOrder.items} pcs</div>
+           <div className="w-80 bg-white dark:bg-[#111] border border-orange-500/50 shadow-2xl p-4 rotate-3 rounded-[16px]">
+             <div className="mb-3">
+               <div className="flex justify-between items-start mb-2">
+                 <div className="text-[10px] font-bold tracking-widest bg-orange-500/10 text-orange-400 px-2 py-0.5 rounded-sm">{activeOrder.orderNumber}</div>
+                 <div className="text-[10px] font-mono font-bold text-zinc-500 bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-sm">{activeOrder.items} pcs</div>
+               </div>
+               <div className="font-bold text-zinc-900 dark:text-white uppercase text-base sm:text-sm mb-1 leading-tight">{activeOrder.customerName}</div>
              </div>
-             <div className="font-bold text-zinc-900 dark:text-white uppercase text-sm mb-1 line-clamp-1">{activeOrder.customerName}</div>
+             <div className="flex justify-between items-end mt-4">
+               <div className="text-[10px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest flex items-center gap-1.5">
+                 <span className="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
+                 {new Date(activeOrder.dueDate).toLocaleDateString(undefined, {month:'short', day:'numeric'})}
+               </div>
+               <div className="text-sm font-black text-emerald-400">
+                   ₹{activeOrder.totalValue.toLocaleString()}
+               </div>
+             </div>
            </div>
         ) : null}
       </DragOverlay>
@@ -391,7 +350,7 @@ export default function Orders() {
               placeholder="e.g. Acme Corp"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Items (Pcs)</label>
               <input 
@@ -415,7 +374,7 @@ export default function Orders() {
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Due Date</label>
               <input 
@@ -478,81 +437,24 @@ export default function Orders() {
         </form>
       </Modal>
 
-      <Modal isOpen={!!costingOrder} onClose={() => setCostingOrder(null)} size="lg" title={`Costing: ${costingOrder?.orderNumber}`}>
-        <form onSubmit={handleSaveCosting} className="space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-             <div className="col-span-2 md:col-span-3">
+      <Modal isOpen={!!powderLogOrder} onClose={() => setPowderLogOrder(null)} size="md" title={`Log Material Usage: ${powderLogOrder?.orderNumber}`}>
+        <form onSubmit={handleSavePowderLog} className="space-y-6">
+          <div className="space-y-4">
+             <div>
                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Select Powder Used</label>
-               <select value={selectedPowderId} onChange={e => setSelectedPowderId(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none appearance-none font-medium">
-                 <option value="">None (Already deduced / Unknown)</option>
+               <select required value={selectedPowderId} onChange={e => setSelectedPowderId(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none appearance-none font-medium">
+                 <option value="">Select Powder...</option>
                  {inventory.map(p => <option key={p.id} value={p.id}>{p.name} ({p.weightKg}kg left)</option>)}
                </select>
              </div>
              <div>
-               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Powder (kg)</label>
-               <input type="number" min="0" step="0.1" value={estimationData.powderKg || ''} onChange={e => setEstimationData({...estimationData, powderKg: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
-             </div>
-             <div>
-               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Material (kg)</label>
-               <input type="number" min="0" step="0.1" value={estimationData.materialKg || ''} onChange={e => setEstimationData({...estimationData, materialKg: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
-             </div>
-             <div>
-               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Labour (₹)</label>
-               <input type="number" min="0" step="0.1" value={estimationData.labourAllocation || ''} onChange={e => setEstimationData({...estimationData, labourAllocation: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
-             </div>
-             <div>
-               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Office Staff (₹)</label>
-               <input type="number" min="0" step="0.1" value={estimationData.officeStaffAllocation || ''} onChange={e => setEstimationData({...estimationData, officeStaffAllocation: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
-             </div>
-             <div>
-               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Rent (₹)</label>
-               <input type="number" min="0" step="0.1" value={estimationData.rentAllocation || ''} onChange={e => setEstimationData({...estimationData, rentAllocation: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
-             </div>
-             <div>
-               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Electricity Uses</label>
-               <input type="number" min="0" step="0.1" value={estimationData.electricityUsage || ''} onChange={e => setEstimationData({...estimationData, electricityUsage: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
-             </div>
-             <div>
-               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Gas Uses</label>
-               <input type="number" min="0" step="0.1" value={estimationData.gasUsage || ''} onChange={e => setEstimationData({...estimationData, gasUsage: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
-             </div>
-             <div>
-               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Transport (₹)</label>
-               <input type="number" min="0" step="0.1" value={estimationData.transportCost || ''} onChange={e => setEstimationData({...estimationData, transportCost: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
-             </div>
-             <div>
-               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Misc (₹)</label>
-               <input type="number" min="0" step="0.1" value={estimationData.miscCost || ''} onChange={e => setEstimationData({...estimationData, miscCost: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
+               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Powder Amount (kg)</label>
+               <input required type="number" min="0.1" step="0.1" value={powderAmountKg || ''} onChange={e => setPowderAmountKg(Number(e.target.value))} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
              </div>
           </div>
           
-          <div className="bg-[#f4f4f5] dark:bg-[#111] p-5 rounded-2xl border border-black/5 dark:border-white/5 space-y-3">
-             <div className="flex items-center justify-between border-b border-black/5 dark:border-white/5 pb-2 mb-2">
-               <h3 className="text-xs font-black uppercase tracking-widest text-zinc-900 dark:text-white flex items-center">
-                 <Calculator className="h-4 w-4 mr-2" /> Estimation
-               </h3>
-               {costingOrder?.costEstimation && (
-                 <button type="button" onClick={() => navigate(`/export/${costingOrder.id}`)} className="text-xs font-bold text-orange-500 hover:text-orange-600">
-                    Export Invoice
-                 </button>
-               )}
-             </div>
-             <div className="flex justify-between text-sm"><span className="text-zinc-500">Powder Rate</span><span className="font-bold text-zinc-900 dark:text-white">{estimationData.materialKg ? (estimationData.powderKg / estimationData.materialKg).toFixed(4) : 0}</span></div>
-             <div className="flex justify-between text-sm"><span className="text-zinc-500">Electricity (₹{costSettings.electricityRate})</span><span className="font-bold text-zinc-900 dark:text-white">₹{((estimationData.electricityUsage || 0) * costSettings.electricityRate).toFixed(0)}</span></div>
-             <div className="flex justify-between text-sm"><span className="text-zinc-500">Gas (₹{costSettings.gasRate})</span><span className="font-bold text-zinc-900 dark:text-white">₹{((estimationData.gasUsage || 0) * costSettings.gasRate).toFixed(0)}</span></div>
-             <div className="flex justify-between text-sm"><span className="text-zinc-500">Process Charge</span><span className="font-bold text-zinc-900 dark:text-white">₹{((estimationData.materialKg || 0) * costSettings.processChargeRate).toFixed(0)}</span></div>
-             <div className="flex justify-between text-sm"><span className="text-zinc-500">Revenue (Buyer Cost)</span><span className="font-bold text-emerald-500">₹{costingOrder?.totalValue.toLocaleString()}</span></div>
-             
-             <div className="pt-3 mt-2 border-t border-black/5 dark:border-white/5 flex justify-between items-end">
-               <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">Calculated Profit</span>
-               <span className={`text-xl font-black ${((costingOrder?.totalValue || 0) - (Number(estimationData.labourAllocation) + Number(estimationData.officeStaffAllocation) + Number(estimationData.rentAllocation) + (estimationData.electricityUsage * costSettings.electricityRate) + (estimationData.gasUsage * costSettings.gasRate) + (estimationData.materialKg * costSettings.processChargeRate) + Number(estimationData.transportCost) + Number(estimationData.miscCost))) > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                 ₹{((costingOrder?.totalValue || 0) - (Number(estimationData.labourAllocation) + Number(estimationData.officeStaffAllocation) + Number(estimationData.rentAllocation) + (estimationData.electricityUsage * costSettings.electricityRate) + (estimationData.gasUsage * costSettings.gasRate) + (estimationData.materialKg * costSettings.processChargeRate) + Number(estimationData.transportCost) + Number(estimationData.miscCost))).toFixed(0)}
-               </span>
-             </div>
-          </div>
-          
-          <button type="submit" className="w-full bg-orange-500 text-black font-black uppercase tracking-widest py-4 rounded-xl hover:bg-orange-600 transition-colors shadow-lg active:scale-[0.98]">
-            Save Estimation
+          <button type="submit" disabled={!selectedPowderId || powderAmountKg <= 0} className="w-full bg-orange-500 text-black font-black uppercase tracking-widest py-4 rounded-xl hover:bg-orange-600 transition-colors shadow-lg active:scale-[0.98] disabled:opacity-50">
+            Log Usage
           </button>
         </form>
       </Modal>

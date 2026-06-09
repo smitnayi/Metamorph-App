@@ -23,20 +23,39 @@ const sizeClasses = {
 
 export default function Modal({ isOpen, onClose, title, children, className, size = 'md' }: ModalProps) {
   const [mounted, setMounted] = useState(false);
+  const onCloseRef = React.useRef(onClose);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      // Push history state to intercept Android back button
+      window.history.pushState({ isModalOpen: true }, '');
+
+      const handlePopState = () => {
+        onCloseRef.current();
+      };
+
+      window.addEventListener('popstate', handlePopState);
+
+      return () => {
+        document.body.style.overflow = 'unset';
+        window.removeEventListener('popstate', handlePopState);
+        // If modal was closed via 'X' or submit, pop the extra history state
+        if (window.history.state?.isModalOpen) {
+          window.history.back();
+        }
+      };
     } else {
       document.body.style.overflow = 'unset';
     }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
   }, [isOpen]);
 
   const modalContent = (

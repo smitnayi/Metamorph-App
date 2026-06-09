@@ -9,16 +9,17 @@ import { motion } from 'motion/react';
 
 export default function Inventory() {
   const [searchTerm, setSearchTerm] = useState('');
-  const { inventory, setInventory, inventoryUsages, addActivityLog } = useDataStore();
+  const { inventory, setInventory, inventoryUsages, setInventoryUsages, addActivityLog } = useDataStore();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isRestockModalOpen, setIsRestockModalOpen] = useState(false);
+  const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
+  const [adjustAmount, setAdjustAmount] = useState<number>(0);
+  const [adjustType, setAdjustType] = useState<'add'|'remove'>('add');
+  const [adjustReason, setAdjustReason] = useState<string>('');
   const [activeItem, setActiveItem] = useState<InventoryItem | null>(null);
   
   const [newItem, setNewItem] = useState<Partial<InventoryItem>>({
     name: '', sku: '', finish: 'Matte', colorCode: '#000000', weightKg: 0, lowStockThreshold: 50, supplier: ''
   });
-  const [restockAmount, setRestockAmount] = useState<number>(0);
-
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [filterFinish, setFilterFinish] = useState<string>('All');
@@ -54,24 +55,52 @@ export default function Inventory() {
     setNewItem({ name: '', sku: '', finish: 'Matte', colorCode: '#000000', weightKg: 0, lowStockThreshold: 50, supplier: '' });
   };
 
-  const handleRestock = (e: React.FormEvent) => {
+  const handleAdjustStock = (e: React.FormEvent) => {
     e.preventDefault();
-    if (activeItem) {
+    if (activeItem && adjustAmount > 0) {
+      const amountChange = adjustType === 'add' ? Number(adjustAmount) : -Number(adjustAmount);
+      const newWeight = Math.max(0, activeItem.weightKg + amountChange);
+      
       setInventory(prev => prev.map(item => 
-        item.id === activeItem.id ? { ...item, weightKg: item.weightKg + Number(restockAmount) } : item
+        item.id === activeItem.id ? { ...item, weightKg: newWeight, lastUpdated: new Date().toISOString() } : item
       ));
-      addActivityLog({ action: 'restock', module: 'Inventory', details: `Restocked ${restockAmount}kg to ${activeItem.name}`, userId: 'user1', userName: 'Admin' });
-      toast.success(`Added ${restockAmount}kg to ${activeItem.name}`);
+
+      const actionText = adjustType === 'add' ? `Added ${adjustAmount}kg to` : `Removed ${adjustAmount}kg from`;
+      const reasonText = adjustReason ? ` (Reason: ${adjustReason})` : '';
+
+      addActivityLog({ 
+        action: 'update', 
+        module: 'Inventory', 
+        details: `${actionText} ${activeItem.name}${reasonText}`, 
+        userId: 'user1', 
+        userName: 'Admin' 
+      });
+      if (adjustType === 'remove') {
+        const usage = {
+          id: Math.random().toString(36).substring(2, 9),
+          inventoryId: activeItem.id,
+          orderId: adjustReason ? `Manual: ${adjustReason}` : 'Manual Adjustment',
+          customerName: '-',
+          amountKg: adjustAmount,
+          date: new Date().toISOString()
+        };
+        setInventoryUsages(prev => [...prev, usage]);
+      }
+
+      toast.success(`Adjusted stock for ${activeItem.name}`);
     }
-    setIsRestockModalOpen(false);
-    setRestockAmount(0);
+    setIsAdjustModalOpen(false);
+    setAdjustAmount(0);
+    setAdjustReason('');
     setActiveItem(null);
   };
 
-  const openRestock = (item: InventoryItem) => {
+  const openAdjust = (item: InventoryItem) => {
     setActiveItem(item);
-    setRestockAmount(100);
-    setIsRestockModalOpen(true);
+    setAdjustAmount(100);
+    setAdjustType('add');
+    setAdjustReason('');
+    setIsAdjustModalOpen(true);
   };
 
   const openEdit = (item: InventoryItem) => {
@@ -224,7 +253,7 @@ export default function Inventory() {
                 <button onClick={() => openEdit(item)} className="p-2 lg:p-3 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:text-white bg-black/5 dark:bg-white/5 rounded-lg active:scale-95 transition-transform">
                   <Edit2 className="h-4 w-4" />
                 </button>
-                <button onClick={() => openRestock(item)} className="px-4 py-2 bg-black/10 dark:bg-white/10 hover:bg-white text-zinc-900 dark:text-white hover:text-black rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors active:scale-95">
+                <button onClick={() => openAdjust(item)} className="px-4 py-2 bg-black/10 dark:bg-white/10 hover:bg-white text-zinc-900 dark:text-white hover:text-black rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors active:scale-95">
                   Restock
                 </button>
               </div>
@@ -299,10 +328,10 @@ export default function Inventory() {
                         <Edit2 className="h-4 w-4" />
                       </button>
                       <button 
-                        onClick={() => openRestock(item)}
+                        onClick={() => openAdjust(item)}
                         className="text-[10px] font-bold md:ml-3 text-zinc-900 dark:text-white border border-black/10 dark:border-white/20 px-3 py-1 uppercase hover:bg-white hover:text-black transition-colors"
                       >
-                        Restock
+                        Adjust
                       </button>
                     </div>
                   </td>
@@ -365,14 +394,22 @@ export default function Inventory() {
         </form>
       </Modal>
 
-      <Modal isOpen={isRestockModalOpen} onClose={() => setIsRestockModalOpen(false)} title={`Restock ${activeItem?.name || ''}`}>
-         <form onSubmit={handleRestock} className="space-y-5">
+      <Modal isOpen={isAdjustModalOpen} onClose={() => setIsAdjustModalOpen(false)} title={`Adjust Stock: ${activeItem?.name || ''}`}>
+         <form onSubmit={handleAdjustStock} className="space-y-5">
+            <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-xl">
+               <button type="button" onClick={() => setAdjustType('add')} className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-lg transition-colors ${adjustType==='add' ? 'bg-white dark:bg-[#111] shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500'}`}>Add Stock</button>
+               <button type="button" onClick={() => setAdjustType('remove')} className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-lg transition-colors ${adjustType==='remove' ? 'bg-white dark:bg-[#111] shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500'}`}>Remove Stock</button>
+            </div>
             <div>
-               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Amount to Add (Kg)</label>
-               <input type="number" required min="1" value={restockAmount} onChange={e => setRestockAmount(Number(e.target.value))} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium" />
+               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Amount (Kg)</label>
+               <input type="number" required min="0.1" step="0.1" value={adjustAmount || ''} onChange={e => setAdjustAmount(Number(e.target.value))} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium" />
+             </div>
+             <div>
+               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Reason / Order Ref (Optional)</label>
+               <input type="text" value={adjustReason} onChange={e => setAdjustReason(e.target.value)} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium" placeholder="E.g. Spilled, Order #102..." />
              </div>
              <button type="submit" className="w-full bg-white text-black font-black uppercase tracking-widest py-4 rounded-xl mt-4 hover:bg-zinc-200 transition-colors shadow-lg active:scale-[0.98]">
-               Confirm Restock
+               Confirm Adjust
              </button>
          </form>
       </Modal>

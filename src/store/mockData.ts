@@ -14,10 +14,10 @@ export const mockInventory: InventoryItem[] = [
 ];
 
 export const mockOrders: Order[] = [
-  { id: 'ord1', orderNumber: 'ORD-2026-1042', customerId: 'c1', customerName: 'Apex Machinery', status: 'In Progress', items: 450, dueDate: '2026-05-15', totalValue: 3450.00 },
+  { id: 'ord1', orderNumber: 'ORD-2026-1042', customerId: 'c1', customerName: 'Apex Machinery', status: 'Preprocessing', items: 450, dueDate: '2026-05-15', totalValue: 3450.00 },
   { id: 'ord2', orderNumber: 'ORD-2026-1043', customerId: 'c2', customerName: 'Urban Bikes', status: 'Quality Check', items: 120, dueDate: '2026-05-13', totalValue: 1250.50 },
   { id: 'ord3', orderNumber: 'ORD-2026-1044', customerId: 'c1', customerName: 'Apex Machinery', status: 'Quoted', items: 200, dueDate: '2026-05-20', totalValue: 1800.00 },
-  { id: 'ord4', orderNumber: 'ORD-2026-1045', customerId: 'c3', customerName: 'Structor Fencing', status: 'In Progress', items: 85, dueDate: '2026-05-14', totalValue: 980.00 },
+  { id: 'ord4', orderNumber: 'ORD-2026-1045', customerId: 'c3', customerName: 'Structor Fencing', status: 'Powder Coating', items: 85, dueDate: '2026-05-14', totalValue: 980.00 },
 ];
 
 export const mockCustomers: Customer[] = [

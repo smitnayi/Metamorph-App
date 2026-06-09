@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, Outlet, useLocation, useNavigate, useResolvedPath, useMatch } from "react-router-dom";
-import { ShieldCheck, LogOut, Home, BarChart2, Package, LayoutList, Shield, Users, Briefcase, CheckSquare, Key, LucideIcon, ShieldAlert, Moon, Sun, Menu, X, PanelLeftClose, PanelLeftOpen, Wifi, WifiOff, RefreshCw, Search, Clock, Beaker } from "lucide-react";
+import { ShieldCheck, LogOut, Home, BarChart2, Package, LayoutList, Shield, Users, Briefcase, CheckSquare, Key, LucideIcon, ShieldAlert, Moon, Sun, Menu, X, PanelLeftClose, PanelLeftOpen, Wifi, WifiOff, RefreshCw, Search, Clock, Beaker, Calculator } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "../contexts/AuthContext";
 import { useDataStore } from "../store/data";
@@ -25,6 +25,7 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { path: "/analytics", label: "Stats", icon: BarChart2, subject: "reports" },
   { path: "/inventory", label: "Stock", icon: Package, subject: "inventory" },
   { path: "/orders", label: "Jobs", icon: LayoutList, subject: "orders" },
+  { path: "/costing", label: "Costing", icon: Calculator, subject: "settings" },
   { path: "/tasks", label: "Tasks", icon: CheckSquare, subject: "tasks" },
   { path: "/quality", label: "QA", icon: Shield, subject: "quality" },
   { path: "/lab", label: "Lab", icon: Beaker, subject: "quality" },
@@ -114,6 +115,29 @@ export default function Layout() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+      window.history.pushState({ isMobileMenuOpen: true }, '');
+
+      const handlePopState = () => {
+        setMobileMenuOpen(false);
+      };
+
+      window.addEventListener('popstate', handlePopState);
+
+      return () => {
+        document.body.style.overflow = 'unset';
+        window.removeEventListener('popstate', handlePopState);
+        if (window.history.state?.isMobileMenuOpen) {
+          window.history.back();
+        }
+      };
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [mobileMenuOpen]);
+
   React.useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -151,8 +175,11 @@ export default function Layout() {
     navigate("/login");
   };
 
-  // Showing all Nav Items to ensure visibility of features requested
-  const navItems = ALL_NAV_ITEMS;
+  // Constrain sensitive tabs to admins/managers only to prevent regular employees from accessing Costings
+  const navItems = ALL_NAV_ITEMS.filter(item => {
+    if (item.path === '/costing' && currentUser?.roleId !== 'role-admin' && currentUser?.roleId !== 'role-manager') return false;
+    return true;
+  });
 
   if (!currentUser) return null;
 

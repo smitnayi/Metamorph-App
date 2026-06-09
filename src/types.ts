@@ -42,7 +42,7 @@ export interface Order {
   orderNumber: string;
   customerId: string;
   customerName: string;
-  status: 'Quoted' | 'In Progress' | 'Quality Check' | 'Shipped' | 'Completed';
+  status: 'Quoted' | 'Received at Company' | 'Preprocessing' | 'Powder Coating' | 'Quality Check' | 'Shipped' | 'Completed';
   items: number;
   dueDate: string;
   totalValue: number; // This is the Revenue

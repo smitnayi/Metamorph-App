@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import ResourceAnalytics from "./pages/ResourceAnalytics";
@@ -13,6 +13,7 @@ import Roles from "./pages/Roles";
 import Labors from "./pages/Labors";
 import Lab from "./pages/Lab";
 import AdminDashboard from "./pages/AdminDashboard";
+import Costing from "./pages/Costing";
 import Login from "./pages/Login";
 import ExportInvoice from "./pages/ExportInvoice";
 import ExportLabReport from "./pages/ExportLabReport";
@@ -40,10 +41,48 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+import { App as CapacitorApp } from '@capacitor/app';
+
+function NavigationHandler() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Add Capacitor Android back button listener
+    let listener: any = null;
+    const setupListener = async () => {
+      try {
+        listener = await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+          // If modals or menus have pushed state, browser history.back() will handle it naturally.
+          if (canGoBack) {
+            window.history.back();
+          } else if (location.pathname !== '/') {
+            // If we can't go back in browser history, but we aren't on the home screen, go home instead of exiting
+            navigate('/', { replace: true });
+          } else {
+            // Unavoidable, exit the app
+            CapacitorApp.exitApp();
+          }
+        });
+      } catch (e) {
+        // Not in capacitor environment, ignore
+      }
+    };
+    setupListener();
+
+    return () => {
+      if (listener?.remove) listener.remove();
+    };
+  }, [location.pathname, navigate]);
+
+  return null;
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <NavigationHandler />
         <Toaster theme="dark" position="top-right" />
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -69,6 +108,7 @@ export default function App() {
             <Route path="lab" element={<Lab />} />
             <Route path="roles" element={<Roles />} />
             <Route path="admin" element={<AdminDashboard />} />
+            <Route path="costing" element={<Costing />} />
           </Route>
         </Routes>
       </BrowserRouter>

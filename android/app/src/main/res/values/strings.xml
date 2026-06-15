@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Metamorph</string>
-    <string name="title_activity_main">Metamorph</string>
+    <string name="app_name">METAMORPH</string>
+    <string name="title_activity_main">METAMORPH</string>
     <string name="package_name">com.metamorph.app</string>
     <string name="custom_url_scheme">com.metamorph.app</string>
 </resources>

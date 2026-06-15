@@ -197,10 +197,10 @@ export default function Layout() {
       >
         <div className={cn("px-6 mb-8 flex flex-col gap-1 items-center md:items-start", isSidebarCollapsed && "items-center px-0")}>
           <div className={cn("flex items-center gap-3", isSidebarCollapsed ? "justify-center w-full" : "")}>
-             <div className="h-8 w-8 rounded-xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/20 shrink-0">
-                <img src="/logo.png" alt="Metamorph Logo" className="h-5 w-5 object-cover object-left filter brightness-0 invert" />
+             <div className="h-8 w-8 rounded-xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/20 shrink-0 overflow-hidden">
+                <img src="/logo.png" alt="Metamorph Logo" className="h-5 w-5 object-contain filter brightness-0 invert" />
              </div>
-             {!isSidebarCollapsed && <h1 className="text-xl font-black tracking-tighter uppercase italic">Metamorph</h1>}
+             {!isSidebarCollapsed && <img src="/wordmark.png" alt="Metamorph" className="h-[14px] object-contain dark:invert" />}
           </div>
         </div>
 
@@ -268,10 +268,10 @@ export default function Layout() {
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between h-16 px-4 bg-white/80 dark:bg-[#111]/80 backdrop-blur-md border-b border-black/5 dark:border-white/5 z-30 shrink-0">
           <div className="flex items-center gap-2">
-             <div className="h-8 w-8 rounded-[10px] bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/20">
-                <img src="/logo.png" alt="Metamorph Logo" className="h-4 w-4 filter brightness-0 invert" />
+             <div className="h-8 w-8 rounded-[10px] bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/20 overflow-hidden">
+                <img src="/logo.png" alt="Metamorph Logo" className="h-4 w-4 object-contain filter brightness-0 invert" />
              </div>
-             <h1 className="text-lg font-black tracking-tighter uppercase italic">Metamorph</h1>
+             <img src="/wordmark.png" alt="Metamorph" className="h-3 object-contain dark:invert" />
           </div>
           <div className="flex items-center gap-3">
              <div className={cn("flex h-2 w-2 rounded-full", isOnline ? "bg-emerald-500" : "bg-rose-500 animate-pulse")} title={isOnline ? "Online" : "Offline"} />

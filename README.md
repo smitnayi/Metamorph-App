@@ -1,4 +1,4 @@
-# 🏭 Metamorph Metals
+# 🏭 PowderCoat OS
 
 > Internal management system for powder coating businesses including inventory, orders, HR, CRM, and QA metrics.
 

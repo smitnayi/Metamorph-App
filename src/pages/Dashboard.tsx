@@ -227,7 +227,7 @@ export default function Dashboard() {
               <div className="text-[9px] font-bold border border-black/5 dark:border-white/10 rounded-lg px-2 py-1 uppercase text-zinc-500">30 Days</div>
             </div>
             <div className="h-[140px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                 <AreaChart data={firstPassYieldData} margin={{ top: 5, right: 0, left: -25, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(150,150,150,0.1)" />
                   <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: '#a1a1aa', fontSize: 9, fontWeight: 'bold'}} dy={5} />
@@ -246,7 +246,7 @@ export default function Dashboard() {
               <div className="text-[9px] font-bold border border-black/5 dark:border-white/10 rounded-lg px-2 py-1 uppercase text-zinc-500">Top 10</div>
             </div>
             <div className="h-[140px] w-full mt-auto">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                 <BarChart data={qaPerEmployee} margin={{ top: 5, right: 0, left: -25, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(150,150,150,0.1)" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#a1a1aa', fontSize: 9, fontWeight: 'bold'}} dy={5} />
@@ -269,7 +269,7 @@ export default function Dashboard() {
             <div className="text-[9px] sm:text-[10px] font-bold border border-black/5 dark:border-white/10 rounded-xl px-2 sm:px-3 py-1 uppercase text-zinc-600 dark:text-zinc-400 bg-white/50 dark:bg-white/5 backdrop-blur-sm shadow-sm">Last 7 Days</div>
           </div>
           <div className="h-[240px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
               <AreaChart data={activityData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(150,150,150,0.1)" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#a1a1aa', fontSize: 10, fontWeight: 'bold'}} dy={10} />
@@ -299,7 +299,7 @@ export default function Dashboard() {
         <motion.div variants={itemVariants} className="flex-1 p-6 md:p-8">
           <h2 className="text-[11px] font-black uppercase tracking-[0.2em] mb-6 text-zinc-500">Pipeline Volume</h2>
           <div className="h-[200px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
               <BarChart data={pipelineData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(150,150,150,0.1)" />
                 <XAxis dataKey="stage" axisLine={false} tickLine={false} tick={{fill: '#a1a1aa', fontSize: 10, fontWeight: 'bold'}} dy={10} />

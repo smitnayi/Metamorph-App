@@ -5,6 +5,7 @@ import { ShieldAlert, CheckCircle, XCircle, Search, ClipboardSignature, ArrowLef
 import { cn } from '../lib/utils';
 import { QualityCheck, Order } from '../types';
 import Modal from '../components/ui/Modal';
+import { toast } from 'sonner';
 
 export default function Quality() {
   const [isAddingMode, setIsAddingMode] = useState(false);
@@ -30,132 +31,15 @@ export default function Quality() {
   });
 
   const generateStickerPrint = () => {
-    const totalBundles = parseInt(stickerData.bundles) || 1;
-    const winPrint = window.open('', '', 'left=0,top=0,width=800,height=600,toolbar=0,scrollbars=0,status=0');
-    if (winPrint) {
-      winPrint.document.write('<!DOCTYPE html><html><head><title>Print Stickers</title>');
-      winPrint.document.write(`
-        <style>
-          @page { 
-            size: A4 portrait; 
-            margin: 0; 
-          }
-          body { 
-            font-family: Arial, sans-serif; 
-            margin: 0; 
-            padding: 0; 
-            background: #fff;
-            color: #000;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-          .page-table {
-            width: 210mm;
-            height: 297mm;
-            table-layout: fixed;
-            border-collapse: collapse;
-            page-break-after: always;
-            box-sizing: border-box;
-            margin: 0 auto;
-          }
-          .page-table:last-child {
-             page-break-after: auto;
-          }
-          .page-table td {
-            border: 1px solid #000;
-            width: 25%;
-            height: 16.666%;
-            box-sizing: border-box;
-            padding: 4mm;
-            vertical-align: top;
-            overflow: hidden;
-          }
-          .sticker-inner {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-          }
-          .logo-container {
-             display: flex;
-             justify-content: center;
-             align-items: center;
-             height: 20mm;
-             margin-bottom: 2mm;
-          }
-          .logo-container img {
-             max-width: 90%;
-             max-height: 100%;
-             object-fit: contain;
-          }
-          .data-table {
-             width: 100%;
-             font-size: 13px;
-             font-family: monospace, sans-serif;
-             border-collapse: collapse;
-          }
-          .data-table td {
-             padding: 1.5px 0;
-             vertical-align: top;
-             border: none;
-             height: auto;
-          }
-          .data-label { 
-            width: 55px;
-            text-transform: uppercase;
-            white-space: nowrap;
-          }
-          .data-colon {
-             width: 10px;
-             text-align: center;
-          }
-          .data-val { 
-            word-break: break-word;
-          }
-        </style>
-      `);
-      winPrint.document.write('</head><body>');
-      
-      let currentBundle = 1;
-
-      while (currentBundle <= totalBundles) {
-        winPrint.document.write('<table class="page-table">');
-        
-        for (let row = 0; row < 6; row++) {
-          winPrint.document.write('<tr>');
-          for (let col = 0; col < 4; col++) {
-             winPrint.document.write('<td><div class="sticker-inner">');
-             if (currentBundle <= totalBundles) {
-                winPrint.document.write(`
-                  <div class="logo-container">
-                    <img src="${window.location.origin}/logo.png" alt="METAMORPH logo" />
-                  </div>
-                  <table class="data-table">
-                    <tr><td class="data-label">MODEL</td><td class="data-colon">:</td><td class="data-val">${stickerData.model || ''}</td></tr>
-                    <tr><td class="data-label">SIZE</td><td class="data-colon">:</td><td class="data-val">${stickerData.size || ''}</td></tr>
-                    <tr><td class="data-label">OWNER</td><td class="data-colon">:</td><td class="data-val">${stickerData.customer || ''}</td></tr>
-                    <tr><td class="data-label">SHADE</td><td class="data-colon">:</td><td class="data-val">${stickerData.shade || ''}</td></tr>
-                    <tr><td class="data-label">PCS</td><td class="data-colon">:</td><td class="data-val">${stickerData.pieces || ''}</td></tr>
-                    <tr><td class="data-label">BUNDLE</td><td class="data-colon">:</td><td class="data-val">${currentBundle}/${totalBundles}</td></tr>
-                  </table>
-                `);
-                currentBundle++;
-             }
-             winPrint.document.write('</div></td>');
-          }
-          winPrint.document.write('</tr>');
-        }
-
-        winPrint.document.write('</table>');
-      }
-
-      winPrint.document.write('</body></html>');
-      winPrint.document.close();
-      winPrint.focus();
-      setTimeout(() => {
-        winPrint.print();
-        winPrint.close();
-      }, 500); // Give the logo a bit more time to load before printing
+    if (window.self !== window.top) {
+      toast.error("Printing is blocked in preview. Please open the app in a new tab (top right icon) to print.");
+      return;
     }
+    
+    // Give a tiny delay for React to ensure any state updates for bundles are flushed
+    setTimeout(() => {
+      window.print();
+    }, 100);
   };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -719,7 +603,7 @@ Quality Control Team`;
       )}
 
       <Modal isOpen={isStickerModalOpen} onClose={() => setIsStickerModalOpen(false)} title="Generate Packing Sticker">
-        <div className="space-y-4">
+        <div className="space-y-4 print-hidden">
           <div>
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Target Order (Optional)</label>
             <select 
@@ -807,6 +691,55 @@ Quality Control Team`;
         </div>
       </Modal>
 
+      {/* Hidden Print Layout */}
+      <div className="hidden print-only print-container">
+        {Array.from({ length: Math.ceil((parseInt(stickerData.bundles) || 1) / 16) }).map((_, pageIndex) => (
+          <div key={pageIndex} className="page-table-wrapper">
+             <table className="page-table">
+               <tbody>
+                 {Array.from({ length: 4 }).map((_, row) => (
+                   <tr key={row}>
+                     {Array.from({ length: 4 }).map((_, col) => {
+                        const bundleNo = pageIndex * 16 + row * 4 + col + 1;
+                        if (bundleNo <= (parseInt(stickerData.bundles) || 1)) {
+                          return (
+                            <td key={col} className="sticker-cell">
+                              <div className="sticker-inner">
+                                <div className="logo-group">
+                                  <img src="/logo.png" alt="Logo" className="logo-mark" />
+                                  <img src="/wordmark.png" alt="METAMORPH" className="wordmark-img max-w-[70%] object-contain" />
+                                </div>
+                                <div className="divider" />
+                                <div className="lbl" style={{ top: '25%' }}>Owner<span style={{ display: 'inline-block', marginLeft: '20px' }}>:</span></div>
+                                <div className="val" style={{ top: '25%' }}>{stickerData.customer || ''}</div>
+                                
+                                <div className="lbl" style={{ top: '36%' }}>Section No<span style={{ display: 'inline-block', marginLeft: '3px' }}>:</span></div>
+                                <div className="val" style={{ top: '36%' }}>{stickerData.model || ''}</div>
+                                
+                                <div className="lbl" style={{ top: '47%' }}>Size<span style={{ display: 'inline-block', marginLeft: '27px' }}>:</span></div>
+                                <div className="val" style={{ top: '47%' }}>{stickerData.size || ''}</div>
+                                
+                                <div className="lbl" style={{ top: '58%' }}>Shade<span style={{ display: 'inline-block', marginLeft: '17px' }}>:</span></div>
+                                <div className="val" style={{ top: '58%' }}>{stickerData.shade || ''}</div>
+                                
+                                <div className="lbl" style={{ top: '69%' }}>Pcs<span style={{ display: 'inline-block', marginLeft: '29.5px' }}>:</span></div>
+                                <div className="val" style={{ top: '69%' }}>{stickerData.pieces || ''}</div>
+                                
+                                <div className="lbl" style={{ top: '80%' }}>Bundle No<span style={{ display: 'inline-block', marginLeft: '7px' }}>:</span></div>
+                                <div className="val" style={{ top: '80%' }}>{bundleNo}/{parseInt(stickerData.bundles) || 1}</div>
+                              </div>
+                            </td>
+                          );
+                        }
+                        return <td key={col} className="empty-cell" />;
+                     })}
+                   </tr>
+                 ))}
+               </tbody>
+             </table>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

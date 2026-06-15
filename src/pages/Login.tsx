@@ -76,10 +76,8 @@ export default function Login() {
         {/* Left Side: Branding / Visuals */}
         <div className="hidden md:flex flex-col justify-between w-1/2 p-12 lg:p-20 border-r border-black/5 dark:border-white/10 bg-[#fafafa] dark:bg-[#0a0a0a]/50 backdrop-blur-xl">
           <div className="flex items-center gap-3">
-             <img src="/logo.png" alt="Metamorph Logo" className="h-8 w-8 object-cover object-left" />
-             <h1 className="text-2xl font-black tracking-tighter uppercase italic whitespace-nowrap">
-               METAMORPH
-             </h1>
+             <img src="/logo.png" alt="Metamorph Logo" className="h-8 w-8 object-contain" />
+             <img src="/wordmark.png" alt="METAMORPH" className="h-[22px] object-contain dark:invert" />
           </div>
           
           <div className="max-w-md">
@@ -115,10 +113,8 @@ export default function Login() {
         <div className="w-full md:w-1/2 flex items-center justify-center p-6 md:p-12 lg:p-24 bg-white dark:bg-[#0d0d0d]">
           <div className="w-full max-w-sm">
             <div className="md:hidden flex items-center justify-center gap-3 mb-12">
-               <img src="/logo.png" alt="Metamorph Logo" className="h-8 w-8 object-cover object-left" />
-               <h1 className="text-2xl font-black tracking-tighter uppercase italic whitespace-nowrap">
-                 METAMORPH
-               </h1>
+               <img src="/logo.png" alt="Metamorph Logo" className="h-8 w-8 object-contain" />
+               <img src="/wordmark.png" alt="METAMORPH" className="h-[22px] object-contain dark:invert" />
             </div>
 
             <div className="mb-10 text-center md:text-left">

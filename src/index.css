@@ -75,11 +75,11 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 0;
+    margin: 5mm;
   }
   
-  body * {
-    visibility: hidden;
+  #root {
+    display: none !important;
   }
   
   body {
@@ -93,9 +93,7 @@
   }
   
   .print-only {
-    position: absolute;
-    left: 0;
-    top: 0;
+    position: static;
     width: 100%;
     display: block !important;
   }
@@ -105,8 +103,8 @@
   }
 
   .page-table {
-    width: 210mm;
-    height: 297mm;
+    width: 195mm;
+    height: 280mm;
     table-layout: fixed;
     border-collapse: collapse;
     page-break-after: always;

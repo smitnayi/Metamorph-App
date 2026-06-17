@@ -91,7 +91,6 @@ export default function Labors() {
     const labor: Labor = {
       id: Math.random().toString(),
       name: newLabor.name,
-      roleId: newLabor.roleId,
       dailySalary: Number(newLabor.dailySalary),
       phone: newLabor.phone || '',
       status: 'Active',
@@ -102,7 +101,7 @@ export default function Labors() {
     setLabors(prev => [...prev, labor]);
     toast.success(`Labor ${labor.name} added successfully.`);
     setIsAddLaborModalOpen(false);
-    setNewLabor({ name: '', dailySalary: 700, phone: '', status: 'Active', gender: 'Male', roleId: '' });
+    setNewLabor({ name: '', dailySalary: 700, phone: '', status: 'Active', gender: 'Male' });
   };
 
   const toggleLaborStatus = (id: string, currentStatus: string) => {
@@ -313,20 +312,7 @@ export default function Labors() {
                 {labor.status}
               </button>
             </div>
-            
-            <div className="flex justify-between items-center bg-white dark:bg-black/50 p-2 rounded-xl border border-black/5 dark:border-white/5 mt-0 mb-2">
-                 <select
-                   value={labor.roleId || ''}
-                   onChange={(e) => setLabors(prev => prev.map(l => l.id === labor.id ? { ...l, roleId: e.target.value } : l))}
-                   className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-bold uppercase tracking-widest rounded-[6px] px-2 py-1 flex-1 focus:outline-none appearance-none cursor-pointer"
-                 >
-                    <option value="" className="text-zinc-900 bg-white">No Role Segment</option>
-                    {roles.map(r => (
-                      <option key={r.id} value={r.id} className="text-zinc-900 bg-white">{r.name}</option>
-                    ))}
-                 </select>
-            </div>
-
+                  
             <div className="flex items-center justify-between mt-2 pt-4 border-t border-black/5 dark:border-white/5">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block mb-1">Daily Fixed Salary</span>
@@ -417,15 +403,6 @@ export default function Labors() {
           <div>
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Phone Number</label>
             <input type="tel" value={newLabor.phone} onChange={e => setNewLabor({...newLabor, phone: e.target.value})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium placeholder:text-zinc-600" placeholder="+91..." />
-          </div>
-          <div>
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Role Segment</label>
-            <select value={newLabor.roleId || ''} onChange={e => setNewLabor({...newLabor, roleId: e.target.value})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium">
-              <option value="">No Role Segment</option>
-              {roles.map(r => (
-                 <option key={r.id} value={r.id}>{r.name}</option>
-              ))}
-            </select>
           </div>
           <button type="submit" className="w-full bg-white text-black font-black uppercase tracking-widest py-4 rounded-xl mt-4 hover:bg-zinc-200 transition-colors shadow-lg active:scale-[0.98]">
             Assign Labor

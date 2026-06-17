@@ -178,6 +178,9 @@ export default function Layout() {
   // Constrain sensitive tabs to admins/managers only to prevent regular employees from accessing Costings
   const navItems = ALL_NAV_ITEMS.filter(item => {
     if (item.path === '/costing' && currentUser?.roleId !== 'role-admin' && currentUser?.roleId !== 'role-manager') return false;
+    if (item.path === '/employees' && currentUser?.roleId !== 'role-admin') return false;
+    if (item.path === '/roles' && currentUser?.roleId !== 'role-admin') return false;
+    if (item.path === '/admin' && currentUser?.roleId !== 'role-admin') return false;
     return true;
   });
 

@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Card, CardContent } from '../components/ui/Card';
 import { useDataStore } from '../store/data';
 import { ShieldAlert, CheckCircle, XCircle, Search, ClipboardSignature, ArrowLeft, Image as ImageIcon, Printer, Tag, Plus, Camera, Mail } from 'lucide-react';
@@ -692,54 +693,57 @@ Quality Control Team`;
       </Modal>
 
       {/* Hidden Print Layout */}
-      <div className="hidden print-only print-container">
-        {Array.from({ length: Math.ceil((parseInt(stickerData.bundles) || 1) / 16) }).map((_, pageIndex) => (
-          <div key={pageIndex} className="page-table-wrapper">
-             <table className="page-table">
-               <tbody>
-                 {Array.from({ length: 4 }).map((_, row) => (
-                   <tr key={row}>
-                     {Array.from({ length: 4 }).map((_, col) => {
-                        const bundleNo = pageIndex * 16 + row * 4 + col + 1;
-                        if (bundleNo <= (parseInt(stickerData.bundles) || 1)) {
-                          return (
-                            <td key={col} className="sticker-cell">
-                              <div className="sticker-inner">
-                                <div className="logo-group">
-                                  <img src="/logo.png" alt="Logo" className="logo-mark" />
-                                  <img src="/wordmark.png" alt="METAMORPH" className="wordmark-img max-w-[70%] object-contain" />
+      {typeof document !== 'undefined' && createPortal(
+        <div className="hidden print-only print-container">
+          {Array.from({ length: Math.ceil((parseInt(stickerData.bundles) || 1) / 16) }).map((_, pageIndex) => (
+            <div key={pageIndex} className="page-table-wrapper">
+               <table className="page-table">
+                 <tbody>
+                   {Array.from({ length: 4 }).map((_, row) => (
+                     <tr key={row}>
+                       {Array.from({ length: 4 }).map((_, col) => {
+                          const bundleNo = pageIndex * 16 + row * 4 + col + 1;
+                          if (bundleNo <= (parseInt(stickerData.bundles) || 1)) {
+                            return (
+                              <td key={col} className="sticker-cell">
+                                <div className="sticker-inner">
+                                  <div className="logo-group">
+                                    <img src="/logo.png" alt="Logo" className="logo-mark" />
+                                    <img src="/wordmark.png" alt="METAMORPH" className="wordmark-img max-w-[70%] object-contain" />
+                                  </div>
+                                  <div className="divider" />
+                                  <div className="lbl" style={{ top: '25%' }}>Owner<span style={{ display: 'inline-block', marginLeft: '20px' }}>:</span></div>
+                                  <div className="val" style={{ top: '25%' }}>{stickerData.customer || ''}</div>
+                                  
+                                  <div className="lbl" style={{ top: '36%' }}>Section No<span style={{ display: 'inline-block', marginLeft: '3px' }}>:</span></div>
+                                  <div className="val" style={{ top: '36%' }}>{stickerData.model || ''}</div>
+                                  
+                                  <div className="lbl" style={{ top: '47%' }}>Size<span style={{ display: 'inline-block', marginLeft: '27px' }}>:</span></div>
+                                  <div className="val" style={{ top: '47%' }}>{stickerData.size || ''}</div>
+                                  
+                                  <div className="lbl" style={{ top: '58%' }}>Shade<span style={{ display: 'inline-block', marginLeft: '17px' }}>:</span></div>
+                                  <div className="val" style={{ top: '58%' }}>{stickerData.shade || ''}</div>
+                                  
+                                  <div className="lbl" style={{ top: '69%' }}>Pcs<span style={{ display: 'inline-block', marginLeft: '29.5px' }}>:</span></div>
+                                  <div className="val" style={{ top: '69%' }}>{stickerData.pieces || ''}</div>
+                                  
+                                  <div className="lbl" style={{ top: '80%' }}>Bundle No<span style={{ display: 'inline-block', marginLeft: '7px' }}>:</span></div>
+                                  <div className="val" style={{ top: '80%' }}>{bundleNo}/{parseInt(stickerData.bundles) || 1}</div>
                                 </div>
-                                <div className="divider" />
-                                <div className="lbl" style={{ top: '25%' }}>Owner<span style={{ display: 'inline-block', marginLeft: '20px' }}>:</span></div>
-                                <div className="val" style={{ top: '25%' }}>{stickerData.customer || ''}</div>
-                                
-                                <div className="lbl" style={{ top: '36%' }}>Section No<span style={{ display: 'inline-block', marginLeft: '3px' }}>:</span></div>
-                                <div className="val" style={{ top: '36%' }}>{stickerData.model || ''}</div>
-                                
-                                <div className="lbl" style={{ top: '47%' }}>Size<span style={{ display: 'inline-block', marginLeft: '27px' }}>:</span></div>
-                                <div className="val" style={{ top: '47%' }}>{stickerData.size || ''}</div>
-                                
-                                <div className="lbl" style={{ top: '58%' }}>Shade<span style={{ display: 'inline-block', marginLeft: '17px' }}>:</span></div>
-                                <div className="val" style={{ top: '58%' }}>{stickerData.shade || ''}</div>
-                                
-                                <div className="lbl" style={{ top: '69%' }}>Pcs<span style={{ display: 'inline-block', marginLeft: '29.5px' }}>:</span></div>
-                                <div className="val" style={{ top: '69%' }}>{stickerData.pieces || ''}</div>
-                                
-                                <div className="lbl" style={{ top: '80%' }}>Bundle No<span style={{ display: 'inline-block', marginLeft: '7px' }}>:</span></div>
-                                <div className="val" style={{ top: '80%' }}>{bundleNo}/{parseInt(stickerData.bundles) || 1}</div>
-                              </div>
-                            </td>
-                          );
-                        }
-                        return <td key={col} className="empty-cell" />;
-                     })}
-                   </tr>
-                 ))}
-               </tbody>
-             </table>
-          </div>
-        ))}
-      </div>
+                              </td>
+                            );
+                          }
+                          return <td key={col} className="empty-cell" />;
+                       })}
+                     </tr>
+                   ))}
+                 </tbody>
+               </table>
+            </div>
+          ))}
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

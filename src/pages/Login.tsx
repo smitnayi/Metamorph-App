@@ -25,6 +25,9 @@ export default function Login() {
       await login();
       toast.success('System Linked & Verified.');
     } catch (err: any) {
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+        return; // Silently ignore as user explicitly closed it
+      }
       if (err.message) {
         toast.error(err.message);
       } else {

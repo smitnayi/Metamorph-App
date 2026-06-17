@@ -1,18 +1,34 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '../components/ui/Card';
 import { useDataStore } from '../store/data';
-import { Shield, ShieldAlert, ShieldCheck, UserPlus, MoreVertical, Edit2 } from 'lucide-react';
+import { Shield, ShieldAlert, ShieldCheck, UserPlus, MoreVertical, Edit2, Lock } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';
 import Modal from '../components/ui/Modal';
 import { User } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Employees() {
   const { users, setUsers, roles } = useDataStore();
+  const { currentUser } = useAuth();
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [newUser, setNewUser] = useState<Partial<User>>({
     name: '', email: '', roleId: roles[0]?.id || '', department: 'Production', status: 'Active'
   });
+
+  const isAdmin = currentUser?.roleId === 'role-admin';
+
+  if (!isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[80vh] text-center px-4">
+        <Lock className="w-16 h-16 text-zinc-300 dark:text-zinc-700 mb-6" />
+        <h2 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tight mb-2">Access Denied</h2>
+        <p className="text-zinc-500 max-w-md mx-auto">
+          You do not have administrative privileges to view or manage the staff directory.
+        </p>
+      </div>
+    );
+  }
 
   const handleInvite = (e: React.FormEvent) => {
     e.preventDefault();

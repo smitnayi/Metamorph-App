@@ -105,7 +105,6 @@ export interface Task {
 export interface Labor {
   id: string;
   name: string;
-  roleId?: string;
   dailySalary: number;
   phone?: string;
   status: 'Active' | 'Inactive';

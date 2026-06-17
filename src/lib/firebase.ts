@@ -23,10 +23,11 @@ export async function loginWithGoogle() {
        const authResult = await signInWithCredential(auth, credential);
        return await processAuthResult(authResult.user);
     } else {
-       // For web, use popup which is generally safer for partitioned storage unless forced to redirect
-       const isIOSMobileWeb = !Capacitor.isNativePlatform() && /iPad|iPhone|iPod/.test(navigator.userAgent);
+       // Use redirect for mobile web, popup for desktop web. iOS Safari and Android PWAs 
+       // handles redirect much better than popup due to third-party cookie/tab policies.
+       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
        
-       if (isIOSMobileWeb) {
+       if (isMobile) {
          await signInWithRedirect(auth, googleProvider);
          return null;
        } else {
@@ -36,6 +37,9 @@ export async function loginWithGoogle() {
     }
   } catch (error: any) {
     console.error("Firebase Auth Error", error);
+    if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+      throw error; // Let caller handle silently
+    }
     toast.error(error.message || "Failed to log in");
     throw error;
   }

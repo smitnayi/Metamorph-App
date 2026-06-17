@@ -67,9 +67,9 @@ export default function Modal({ isOpen, onClose, title, children, className, siz
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-[100] bg-white/50 dark:bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] bg-white/50 dark:bg-black/60 backdrop-blur-sm print:hidden"
           />
-          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none print:hidden">
             <motion.div 
               style={{ maxHeight: '90dvh' }}
               initial={{ y: "100%", opacity: 0 }}

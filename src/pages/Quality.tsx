@@ -604,7 +604,7 @@ Quality Control Team`;
       )}
 
       <Modal isOpen={isStickerModalOpen} onClose={() => setIsStickerModalOpen(false)} title="Generate Packing Sticker">
-        <div className="space-y-4 print-hidden">
+        <div className="space-y-4 print:hidden">
           <div>
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Target Order (Optional)</label>
             <select 
@@ -694,7 +694,7 @@ Quality Control Team`;
 
       {/* Hidden Print Layout */}
       {typeof document !== 'undefined' && createPortal(
-        <div className="hidden print-only print-container">
+        <div className="hidden print:block print-container">
           {Array.from({ length: Math.ceil((parseInt(stickerData.bundles) || 1) / 16) }).map((_, pageIndex) => (
             <div key={pageIndex} className="page-table-wrapper">
                <table className="page-table">

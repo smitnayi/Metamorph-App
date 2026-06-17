@@ -88,17 +88,16 @@
     print-color-adjust: exact;
   }
   
-  .print-only, .print-only * {
-    visibility: visible;
-  }
-  
-  .print-only {
+  .print-container {
     position: static;
     width: 100%;
-    display: block !important;
   }
-
-  .print-hidden {
+  
+  /* Hide all portals, modals, overlays, and print-hidden elements during print */
+  [role="dialog"],
+  .fixed,
+  .print-hidden,
+  .print\:hidden {
     display: none !important;
   }
 

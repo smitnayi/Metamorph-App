@@ -1,9 +1,9 @@
 import { InventoryItem, Order, Customer, Task, User, QualityCheck } from '../types';
 
 export const mockUsers: User[] = [
-  { id: 'u1', name: 'John Doe', email: 'john@powderos.com', roleId: 'role-admin', department: 'Management', status: 'Active' },
-  { id: 'u2', name: 'Sarah Smith', email: 'sarah@powderos.com', roleId: 'role-manager', department: 'Production', status: 'Active' },
-  { id: 'u3', name: 'Mike Johnson', email: 'mike@powderos.com', roleId: 'role-employee', department: 'Coating', status: 'Active' },
+  { id: 'u1', name: 'John Doe', email: 'john@metamorphmetals.com', roleId: 'role-admin', department: 'Management', status: 'Active' },
+  { id: 'u2', name: 'Sarah Smith', email: 'sarah@metamorphmetals.com', roleId: 'role-manager', department: 'Production', status: 'Active' },
+  { id: 'u3', name: 'Mike Johnson', email: 'mike@metamorphmetals.com', roleId: 'role-employee', department: 'Coating', status: 'Active' },
 ];
 
 export const mockInventory: InventoryItem[] = [

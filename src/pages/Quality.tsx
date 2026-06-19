@@ -23,6 +23,7 @@ export default function Quality() {
   const avgAdhesion = checks.length > 0 ? (sumAdhesion / checks.length).toFixed(1) + '/10' : 'N/A';
 
   const [stickerData, setStickerData] = useState({
+    company: 'metamorph' as 'metamorph' | 'ameyaa',
     customer: '',
     model: '',
     size: '',
@@ -606,20 +607,39 @@ Quality Control Team`;
       <Modal isOpen={isStickerModalOpen} onClose={() => setIsStickerModalOpen(false)} title="Generate Packing Sticker">
         <div className="space-y-4 print:hidden">
           <div>
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Target Order (Optional)</label>
-            <select 
-              onChange={(e) => {
-                const o = orders.find(order => order.id === e.target.value);
-                if (o) setStickerData({...stickerData, customer: o.customerName});
-              }}
-              className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors appearance-none font-medium mb-4"
-            >
-              <option value="">Select an order to autofill customer...</option>
-              {orders.map(o => (
-                <option key={o.id} value={o.id}>{o.orderNumber} - {o.customerName}</option>
-              ))}
-            </select>
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Brand / Company</label>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setStickerData({...stickerData, company: 'metamorph'})}
+                className={cn("flex-1 py-3 px-4 rounded-xl border text-sm font-bold uppercase tracking-widest transition-colors", stickerData.company === 'metamorph' ? "bg-orange-500 border-orange-500 text-white" : "border-black/10 dark:border-white/10 dark:text-white")}
+              >
+                Metamorph
+              </button>
+              <button
+                onClick={() => setStickerData({...stickerData, company: 'ameyaa'})}
+                className={cn("flex-1 py-3 px-4 rounded-xl border text-sm font-bold uppercase tracking-widest transition-colors", stickerData.company === 'ameyaa' ? "bg-[#2e3192] border-[#2e3192] text-white" : "border-black/10 dark:border-white/10 dark:text-white")}
+              >
+                Ameyaa
+              </button>
+            </div>
           </div>
+          {stickerData.company === 'metamorph' && (
+            <div>
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Target Order (Optional)</label>
+              <select 
+                onChange={(e) => {
+                  const o = orders.find(order => order.id === e.target.value);
+                  if (o) setStickerData({...stickerData, customer: o.customerName});
+                }}
+                className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors appearance-none font-medium mb-4"
+              >
+                <option value="">Select an order to autofill customer...</option>
+                {orders.map(o => (
+                  <option key={o.id} value={o.id}>{o.orderNumber} - {o.customerName}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div>
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Owner (Customer)</label>
             <input 
@@ -706,12 +726,24 @@ Quality Control Team`;
                           if (bundleNo <= (parseInt(stickerData.bundles) || 1)) {
                             return (
                               <td key={col} className="sticker-cell">
-                                <div className="sticker-inner">
-                                  <div className="logo-group">
-                                    <img src="/logo.png" alt="Logo" className="logo-mark" />
-                                    <img src="/wordmark.png" alt="METAMORPH" className="wordmark-img max-w-[70%] object-contain" />
-                                  </div>
-                                  <div className="divider" />
+                                <div className="sticker-inner" style={{ color: stickerData.company === 'ameyaa' ? '#2e3192' : '#003E73' }}>
+                                  {stickerData.company === 'metamorph' ? (
+                                    <>
+                                      <div className="logo-group">
+                                        <img src="/logo.png" alt="Logo" className="logo-mark" />
+                                        <img src="/wordmark.png" alt="METAMORPH" className="wordmark-img max-w-[70%] object-contain" />
+                                      </div>
+                                      <div className="divider" style={{ background: '#EC6C1E' }} />
+                                    </>
+                                  ) : (
+                                    <>
+                                      <div className="logo-group">
+                                        <img src="/ameyaa_logo.png" alt="Ameyaa Logo" className="logo-mark" />
+                                        <img src="/ameyaa_wordmark.png" alt="Ameyaa Engitech" className="wordmark-img max-w-[70%] object-contain" />
+                                      </div>
+                                      <div className="divider" style={{ background: '#FF5C00' }} />
+                                    </>
+                                  )}
                                   <div className="lbl" style={{ top: '25%' }}>Owner<span style={{ display: 'inline-block', marginLeft: '20px' }}>:</span></div>
                                   <div className="val" style={{ top: '25%' }}>{stickerData.customer || ''}</div>
                                   

@@ -1,4 +1,4 @@
-import html2canvas from 'html2canvas';
+import { toJpeg } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { toast } from 'sonner';
 
@@ -23,24 +23,25 @@ export const downloadPdf = async (elementSelector: string, filename: string, isL
     // Wait for DOM to repaint
     await new Promise(r => setTimeout(r, 150));
 
-    const canvas = await html2canvas(originalElement, {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#ffffff'
+    // Get dimensions before restoring
+    const width = originalElement.offsetWidth;
+    const height = originalElement.offsetHeight;
+
+    const imgData = await toJpeg(originalElement, {
+      quality: 0.95,
+      backgroundColor: '#ffffff',
+      pixelRatio: 2
     });
     
     // Restore
     originalElement.style.cssText = originalCssText;
     document.body.classList.remove('pdf-rendering');
     
-    const imgData = canvas.toDataURL('image/jpeg', 1.0);
-    
     const orientation = isLandscape ? 'l' : 'p';
     const pdf = new jsPDF(orientation, 'mm', 'a4');
     
     const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    const pdfHeight = (height * pdfWidth) / width;
     
     // Page height might be larger than A4. Let's just fit width.
     pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);

@@ -18,11 +18,11 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   roleId: string;
   avatarUrl?: string;
   department: string;
   status: 'Active' | 'Inactive';
-  phone?: string;
 }
 
 export interface InventoryItem {
@@ -111,7 +111,6 @@ export interface Labor {
   status: 'Active' | 'Inactive';
   joinDate: string;
   gender: 'Male' | 'Female';
-  roleId?: string;
 }
 
 export interface LaborAttendance {

@@ -55,8 +55,13 @@ export default function Login() {
         toast.success('Operator Registered & Verified.');
       }
     } catch (err: any) {
-      if (err.message) {
-        toast.error(err.message);
+      console.error(err);
+      if (err.code === 'auth/invalid-credential' || err.message?.includes('invalid-credential')) {
+        toast.error("Invalid email or password. Please try again or create an account.");
+      } else if (err.code === 'auth/email-already-in-use') {
+        toast.error("Email is already registered. Please log in instead.");
+      } else if (err.message) {
+        toast.error(err.message.replace("Firebase: Error (", "").replace(").", "").trim());
       } else {
         toast.error('Failed to authenticate.');
       }
@@ -71,7 +76,6 @@ export default function Login() {
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-orange-500/10 blur-[120px]" />
         <div className="absolute bottom-[10%] -right-[10%] w-[40%] h-[40%] rounded-full bg-zinc-600/10 blur-[100px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
       </div>
 
       <div className="w-full flex flex-col md:flex-row relative z-10">

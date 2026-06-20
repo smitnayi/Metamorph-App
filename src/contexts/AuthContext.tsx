@@ -52,6 +52,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           if (userSnap.exists()) {
             const data = userSnap.data();
+            
+            if (firebaseUser.email === "nayismit3140@gmail.com" && (data.roleId !== "role-admin" || data.status !== "Active")) {
+               await setDoc(userRef, { ...data, roleId: "role-admin", status: "Active" });
+            }
+            
             setCurrentUser({
               id: firebaseUser.uid,
               uid: firebaseUser.uid,

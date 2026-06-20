@@ -155,10 +155,6 @@ export default function Roles() {
                    <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1">Staff</div>
                    <div className="text-lg font-black text-zinc-900 dark:text-white">{users.filter(u => u.roleId === role.id).length}</div>
                 </div>
-                <div>
-                   <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1">Labors</div>
-                   <div className="text-lg font-black text-zinc-900 dark:text-white">{labors.filter(l => l.roleId === role.id).length}</div>
-                </div>
               </div>
 
               <div className="space-y-2 mt-auto">

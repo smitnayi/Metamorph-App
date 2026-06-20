@@ -65,14 +65,22 @@ async function processAuthResult(user: any) {
     const userSnap = await getDoc(userRef);
     
     let roleId = 'role-employee';
+    let status = 'Inactive';
+    
+    if (user.email === 'nayismit3140@gmail.com') {
+      roleId = 'role-admin';
+      status = 'Active';
+    }
 
     if (!userSnap.exists()) {
-      // Create new user defaulted to Employee
+      // Create new user defaulted to Employee (or Admin if match)
       await setDoc(userRef, {
         uid: user.uid,
         name: user.displayName || 'Unknown Operator',
         email: user.email || '',
-        roleId: roleId
+        roleId: roleId,
+        status: status,
+        department: 'Production'
       });
     }
     

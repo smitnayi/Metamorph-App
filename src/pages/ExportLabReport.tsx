@@ -28,7 +28,7 @@ export default function ExportLabReport() {
   }, [labRoutineChecks, range]);
 
   const handlePrint = () => {
-    downloadPdf('.lab-report-container', `LabReport_${range}_${format(new Date(), 'yyyyMMdd')}.pdf`, true);
+    window.print();
   };
 
   return (

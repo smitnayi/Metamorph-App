@@ -92,23 +92,11 @@ export async function logoutUser() {
 }
 
 export async function loginWithEmail(email: string, pass: string) {
-  try {
-    const result = await signInWithEmailAndPassword(auth, email, pass);
-    return await processAuthResult(result.user);
-  } catch (error: any) {
-    console.error("Firebase Email Auth Error", error);
-    toast.error(error.message || "Failed to log in");
-    throw error;
-  }
+  const result = await signInWithEmailAndPassword(auth, email, pass);
+  return await processAuthResult(result.user);
 }
 
 export async function signupWithEmail(email: string, pass: string) {
-  try {
-    const result = await createUserWithEmailAndPassword(auth, email, pass);
-    return await processAuthResult(result.user);
-  } catch (error: any) {
-    console.error("Firebase Email Auth Error", error);
-    toast.error(error.message || "Failed to sign up");
-    throw error;
-  }
+  const result = await createUserWithEmailAndPassword(auth, email, pass);
+  return await processAuthResult(result.user);
 }

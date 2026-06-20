@@ -34,7 +34,7 @@ export default function ExportInvoice() {
   const profit = order.totalValue - totalCost;
 
   const handlePrint = () => {
-    downloadPdf('.invoice-container', `Invoice_${order.orderNumber}.pdf`);
+    window.print();
   };
 
   return (

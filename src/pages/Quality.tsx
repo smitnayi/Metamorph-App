@@ -34,13 +34,9 @@ export default function Quality() {
   });
 
   const generateStickerPrint = () => {
-    // Check if mobile, use PDF generator
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    if (true) { // Always use PDF generator for consistent output on all devices
-       setTimeout(() => {
-          downloadPdf('.print-container', `Stickers_${stickerData.customer}.pdf`);
-       }, 200);
-    }
+    setTimeout(() => {
+       window.print();
+    }, 200);
   };
 
   const fileInputRef = useRef<HTMLInputElement>(null);

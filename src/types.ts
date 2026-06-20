@@ -125,6 +125,15 @@ export interface LaborAttendance {
   manualMinutes?: number;
 }
 
+export interface UtilityMetric {
+  id: string;
+  date: string; // YYYY-MM
+  electricityKwh: number;
+  gasKg: number;
+  waterLiters: number;
+  notes?: string;
+}
+
 export interface ActivityLog {
   id: string;
   userId: string;

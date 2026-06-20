@@ -27,7 +27,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   
   useEffect(() => {
     if (currentUser) {
-      initStoreSync();
+      if (currentUser.status === 'Active') {
+        initStoreSync();
+      }
     } else {
       cleanupStoreSync();
     }
@@ -38,6 +40,22 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }, [currentUser]);
 
   if (!currentUser) return <Navigate to="/login" replace />;
+  
+  if (currentUser.status === 'Inactive') {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 bg-zinc-50 dark:bg-zinc-950 min-h-screen text-center">
+        <div className="w-16 h-16 bg-orange-500/10 text-orange-500 rounded-2xl flex items-center justify-center mb-6">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        </div>
+        <h2 className="text-2xl font-black text-zinc-900 dark:text-white mb-2">Account Pending Approval</h2>
+        <p className="text-zinc-600 dark:text-zinc-400 max-w-md mx-auto">
+          Your account has been created successfully but is currently waiting for administrator approval. Please contact management to verify your access.
+        </p>
+        <button onClick={() => window.location.reload()} className="mt-8 px-6 py-3 bg-zinc-900 dark:bg-white text-white dark:text-black font-bold uppercase tracking-widest text-sm rounded-xl">Refresh Status</button>
+      </div>
+    );
+  }
+
   return <>{children}</>;
 }
 

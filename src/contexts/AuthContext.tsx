@@ -9,6 +9,7 @@ export interface AuthUser {
   name: string;
   email: string;
   roleId: string;
+  status?: 'Active' | 'Inactive';
 }
 
 interface AuthContextType {
@@ -37,13 +38,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const userSnap = await getDoc(userRef);
           
           let finalRoleId = "role-employee";
+          let finalStatus = "Inactive";
 
           if (userSnap.exists()) {
             finalRoleId = userSnap.data().roleId || finalRoleId;
+            finalStatus = userSnap.data().status || finalStatus;
           }
           
           if (firebaseUser.email === "nayismit3140@gmail.com") {
              finalRoleId = "role-admin";
+             finalStatus = "Active";
           }
 
           if (userSnap.exists()) {
@@ -53,15 +57,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               uid: firebaseUser.uid,
               name: data.name || firebaseUser.displayName || "Unknown",
               email: data.email || firebaseUser.email || "",
-              roleId: finalRoleId
+              roleId: finalRoleId,
+              status: finalStatus as any
             });
           } else {
+             // Create the user in Firestore if they don't exist
+             const newUserData = {
+               name: firebaseUser.displayName || "Unknown",
+               email: firebaseUser.email || "",
+               roleId: finalRoleId,
+               department: "Production",
+               status: finalStatus
+             };
+             await setDoc(userRef, newUserData);
+             
              setCurrentUser({
                 id: firebaseUser.uid,
                 uid: firebaseUser.uid,
                 name: firebaseUser.displayName || "Unknown",
                 email: firebaseUser.email || "",
-                roleId: finalRoleId
+                roleId: finalRoleId,
+                status: finalStatus as any
              });
           }
         } catch (e) {

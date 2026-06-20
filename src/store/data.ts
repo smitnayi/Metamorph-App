@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { InventoryItem, Order, Customer, Task, User, QualityCheck, Role, CostSettings, Labor, LaborAttendance, ActivityLog, InventoryUsage, LabRoutineCheck, LabSpecialMeasure } from '../types';
+import { InventoryItem, Order, Customer, Task, User, QualityCheck, Role, CostSettings, Labor, LaborAttendance, ActivityLog, InventoryUsage, LabRoutineCheck, LabSpecialMeasure, UtilityMetric } from '../types';
 import { db } from '../lib/firebase';
 import { collection, onSnapshot, writeBatch, doc } from 'firebase/firestore';
 
@@ -67,6 +67,7 @@ interface AppState {
   inventoryUsages: InventoryUsage[];
   labRoutineChecks: LabRoutineCheck[];
   labSpecialMeasures: LabSpecialMeasure[];
+  utilityMetrics: UtilityMetric[];
   setUsers: (val: User[] | ((prev: User[]) => User[])) => void;
   setRoles: (val: Role[] | ((prev: Role[]) => Role[])) => void;
   setInventory: (val: InventoryItem[] | ((prev: InventoryItem[]) => InventoryItem[])) => void;
@@ -81,6 +82,7 @@ interface AppState {
   setInventoryUsages: (val: InventoryUsage[] | ((prev: InventoryUsage[]) => InventoryUsage[])) => void;
   setLabRoutineChecks: (val: LabRoutineCheck[] | ((prev: LabRoutineCheck[]) => LabRoutineCheck[])) => void;
   setLabSpecialMeasures: (val: LabSpecialMeasure[] | ((prev: LabSpecialMeasure[]) => LabSpecialMeasure[])) => void;
+  setUtilityMetrics: (val: UtilityMetric[] | ((prev: UtilityMetric[]) => UtilityMetric[])) => void;
   addActivityLog: (log: Omit<ActivityLog, 'id' | 'timestamp'>) => void;
 }
 
@@ -122,6 +124,7 @@ export const useDataStore = create<AppState>((set, get) => ({
   inventoryUsages: [],
   labRoutineChecks: [],
   labSpecialMeasures: [],
+  utilityMetrics: [],
   costSettings: { electricityRate: 150, gasRate: 20, processChargeRate: 2 },
   
   setUsers: (val) => {
@@ -193,6 +196,11 @@ export const useDataStore = create<AppState>((set, get) => ({
     syncToFirebase('labSpecialMeasures', get().labSpecialMeasures, next);
     set({ labSpecialMeasures: next });
   },
+  setUtilityMetrics: (val) => {
+    const next = typeof val === 'function' ? val(get().utilityMetrics) : val;
+    syncToFirebase('utilityMetrics', get().utilityMetrics, next);
+    set({ utilityMetrics: next });
+  },
   addActivityLog: (log) => {
     const newLog: ActivityLog = {
       ...log,
@@ -208,7 +216,7 @@ let unsubscribers: (() => void)[] = [];
 export function initStoreSync() {
   if (unsubscribers.length > 0) return;
 
-  const collections = ['users', 'roles', 'inventory', 'orders', 'customers', 'tasks', 'qualityChecks', 'labors', 'laborAttendances', 'activityLogs', 'inventoryUsages', 'labRoutineChecks', 'labSpecialMeasures'];
+  const collections = ['users', 'roles', 'inventory', 'orders', 'customers', 'tasks', 'qualityChecks', 'labors', 'laborAttendances', 'activityLogs', 'inventoryUsages', 'labRoutineChecks', 'labSpecialMeasures', 'utilityMetrics'];
   
   unsubscribers = collections.map(col => {
      return onSnapshot(collection(db, col), { includeMetadataChanges: true }, (snap) => {

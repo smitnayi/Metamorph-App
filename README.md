@@ -1,62 +1,104 @@
-# 🏭 Metamorph Metals
+<div align="center">
+  <br />
+  <img src="public/wordmark.png" alt="Metamorph" width="300" />
+  <br />
+  <br />
 
-> Internal management system for powder coating businesses including inventory, orders, HR, CRM, and QA metrics.
+  <h2>Manufacturing Operations System</h2>
+  <p>Enterprise Management System for Powder Coating & Metal Finishing Facilities</p>
 
-![React](https://img.shields.io/badge/React-19.0.1-blue?style=flat-square&logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.8.2-blue?style=flat-square&logo=typescript)
-![Tailwind](https://img.shields.io/badge/Tailwind_CSS-4.1.14-06B6D4?style=flat-square&logo=tailwind-css)
-![Capacitor](https://img.shields.io/badge/Capacitor-8.3.4-119EFF?style=flat-square&logo=capacitor)
-![Firebase](https://img.shields.io/badge/Firebase-12.13.0-FFCA28?style=flat-square&logo=firebase)
+  <p>
+    <a href="#overview">Overview</a> •
+    <a href="#core-modules">Core Modules</a> •
+    <a href="#technical-architecture">Architecture</a> •
+    <a href="#deployment--setup">Deployment</a>
+  </p>
+</div>
 
-Metamorph Metals is a robust, full-stack cross-platform application designed to streamline the complex operations of powder coating facilities. We've built this system to ensure that everything from job quoting to quality assurance happens in one organized, easy-to-use digital workspace.
+---
 
-## ✨ Features
+## Overview
 
-- **📦 Inventory Management**: Track powders, materials, and stock levels in real-time.
-- **🧾 Order Tracking**: Visual kanban-style drag-and-drop workflow for stages (Pre-processing, Coating, Quality Check, Shipped).
-- **👥 CRM & HR**: Manage customer relations and employee labor tracking.
-- **📊 Quality Assurance**: Integrated QA metrics and reporting.
-- **📱 Cross-Platform**: Works fully functionally on both the Web and as a native Android App via Capacitor.
-- **☁️ Firebase Backend**: Fully synced offline-first compatible architecture using Firebase.
+Metamorph is a comprehensive, full-stack Enterprise Resource Planning (ERP) platform purpose-built for the powder coating and metal finishing industry. It unifies operations across the shop floor, laboratory, quality assurance, and administrative departments into a single, cohesive interface.
 
-## 🚀 Quick Start (Web Development)
+Designed with a mobile-first, offline-ready architecture, the system guarantees continuity of operations throughout the manufacturing facility while maintaining real-time synchronization with cloud infrastructure.
 
-1. **Install Dependencies**
+## Core Modules
+
+The platform is divided into specialized operational domain contexts:
+
+- **Order Management:** Visual kanban-driven workflow tracking orders from pre-processing through coating, quality assurance, and final dispatch.
+- **Inventory & Supply Chain:** Real-time material tracking, consumption metrics, and powder stock management.
+- **Quality Assurance & Laboratory:** Strict QA tracking, laboratory routine checks, special parameter measurements, and automated, exportable reporting.
+- **Human Resources:** Labor attendance tracking, role-based access control (RBAC), and user permission governance.
+- **Costing & Resource Analytics:** Comprehensive utility tracking (power, gas, water consumption) mapped against operational output for precise cost-per-unit analysis.
+- **Administrative Portal:** Global search, system activity logging, CRM capabilities, and system configuration.
+
+## Technical Architecture
+
+Metamorph employs a modern, highly scalable stack optimized for performance and maintainability.
+
+| Layer | Component | Description |
+| :--- | :--- | :--- |
+| **Frontend** | React 19 / TypeScript | Strict type safety and component-driven architecture. |
+| **Styling** | Tailwind CSS v4 | Utility-first, responsive design with dark mode support. |
+| **State** | Zustand | Predictable, atomic state management with offline persistence. |
+| **Animation** | Motion | Fluid, performant transitions and layout animations. |
+| **Database** | Firebase Firestore | NoSQL document database with real-time listeners. |
+| **Cross-Platform** | Capacitor | Native wrapper for Android mobile deployment. |
+
+## Deployment & Setup
+
+### Prerequisites
+
+Ensure the following runtimes are installed within your environment:
+- Node.js (v18.0.0 or higher)
+- npm or yarn package manager
+- Android Studio (if compiling for native mobile deployment)
+
+### Local Development Environment
+
+1. **Initialize Project**
+   Clone the repository and install the required dependencies:
    ```bash
    npm install
    ```
 
-2. **Run the Development Server**
+2. **Launch Development Server**
+   Start the local Vite development server. The application will be accessible at `http://localhost:3000`.
    ```bash
    npm run dev
    ```
 
-3. **Build for Production**
+3. **Compile for Production**
+   Generate static assets optimized for production deployment:
    ```bash
    npm run build
    ```
 
-## 📱 Android App Setup (Capacitor)
+## Mobile Application Deployment
 
-This project uses [Capacitor](https://capacitorjs.com/) to build into a native Android APK.
+The system is configured to securely run natively on Android devices using Capacitor.
 
-1. **Build the Web Assets First**
+1. **Asset Generation**
+   Compile the latest web build:
    ```bash
    npm run build
    ```
 
-2. **Sync the Code to the Android Project**
+2. **Capacitor Synchronization**
+   Synchronize the compiled web assets into the native Android chassis:
    ```bash
    npx cap sync android
    ```
 
-3. **Build APK via Android Studio**
-   Open the `/android` folder in Android Studio and run a standard Gradle build, or use `gradlew assembleDebug` from the command line inside the `android/` folder.
-   
-## 📁 Tech Stack
+3. **Native Compilation**
+   Open the `/android` directory utilizing Android Studio to execute a standard Gradle build, or use the Command Line Interface:
+   ```bash
+   cd android
+   ./gradlew assembleDebug
+   ```
 
-- **Frontend**: React 19, Tailwind CSS v4, Motion (Animations)
-- **Routing & State**: React Router DOM v7, Zustand
-- **Drag & Drop**: @dnd-kit/core
-- **Backend & Auth**: Firebase / Express backend
-- **Mobile Runtime**: Capacitor (Android)
+## Governance & Security
+
+Metamorph integrates strict Role-Based Access Control (RBAC). Access to particular modules (e.g., Administration, Resource Analytics, Costing) requires elevated privileges dictated by the user's role configuration. Ensure Firebase Rules are properly structured to mirror these access restrictions at the database tier.

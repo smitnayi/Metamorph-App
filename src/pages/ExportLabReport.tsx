@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useDataStore } from '../store/data';
 import { format, subDays, isAfter, isSameDay, parseISO } from 'date-fns';
+import { downloadPdf } from '../lib/pdf';
 
 export default function ExportLabReport() {
   const [searchParams] = useSearchParams();
@@ -27,7 +28,7 @@ export default function ExportLabReport() {
   }, [labRoutineChecks, range]);
 
   const handlePrint = () => {
-    window.print();
+    downloadPdf('.lab-report-container', `LabReport_${range}_${format(new Date(), 'yyyyMMdd')}.pdf`, true);
   };
 
   return (
@@ -45,12 +46,12 @@ export default function ExportLabReport() {
           className="bg-orange-500 text-black px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-orange-600 transition-colors flex items-center gap-2 shadow-lg"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-          Print to PDF
+          Download PDF
         </button>
       </div>
 
-      <div className="flex justify-center w-full overflow-x-auto print:overflow-visible print:block pb-10 print:pb-0">
-        <div className="w-[1123px] min-h-[794px] bg-[#f5f4f0] p-16 relative flex flex-col justify-between shadow-2xl shrink-0 print:shadow-none print:w-full print:h-full print:min-h-0 print:bg-white origin-top">
+      <div className="flex justify-center w-full overflow-x-auto print:overflow-visible print:block pb-10 print:pb-0 relative">
+        <div className="lab-report-container w-[1123px] min-h-[794px] bg-[#f5f4f0] p-16 relative flex flex-col justify-between shadow-2xl shrink-0 print:shadow-none print:w-full print:h-full print:min-h-0 print:bg-white origin-top">
            <div className="flex-1">
               {/* HEADER */}
               <div className="flex justify-between items-start text-[10px] md:text-xs font-bold uppercase tracking-widest border-b-2 border-[#1a1a1a] pb-6 mb-12">

@@ -197,39 +197,39 @@ export default function Costing() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
              <div>
                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Powder (₹ computed via kg)</label>
-               <input type="number" min="0" step="0.1" value={estimationData.powderKg || ''} onChange={e => setEstimationData({...estimationData, powderKg: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
+               <input type="number" min="0" step="0.0001" onFocus={e => e.target.select()} value={estimationData.powderKg || ''} onChange={e => setEstimationData({...estimationData, powderKg: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
              </div>
              <div>
                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Material (kg)</label>
-               <input type="number" min="0" step="0.1" value={estimationData.materialKg || ''} onChange={e => setEstimationData({...estimationData, materialKg: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
+               <input type="number" min="0" step="0.0001" onFocus={e => e.target.select()} value={estimationData.materialKg || ''} onChange={e => setEstimationData({...estimationData, materialKg: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
              </div>
              <div>
                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Labour (₹)</label>
-               <input type="number" min="0" step="0.1" value={estimationData.labourAllocation || ''} onChange={e => setEstimationData({...estimationData, labourAllocation: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
+               <input type="number" min="0" step="0.0001" onFocus={e => e.target.select()} value={estimationData.labourAllocation || ''} onChange={e => setEstimationData({...estimationData, labourAllocation: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
              </div>
              <div>
                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Office Staff (₹)</label>
-               <input type="number" min="0" step="0.1" value={estimationData.officeStaffAllocation || ''} onChange={e => setEstimationData({...estimationData, officeStaffAllocation: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
+               <input type="number" min="0" step="0.0001" onFocus={e => e.target.select()} value={estimationData.officeStaffAllocation || ''} onChange={e => setEstimationData({...estimationData, officeStaffAllocation: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
              </div>
              <div>
                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Rent (₹)</label>
-               <input type="number" min="0" step="0.1" value={estimationData.rentAllocation || ''} onChange={e => setEstimationData({...estimationData, rentAllocation: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
+               <input type="number" min="0" step="0.0001" onFocus={e => e.target.select()} value={estimationData.rentAllocation || ''} onChange={e => setEstimationData({...estimationData, rentAllocation: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
              </div>
              <div>
                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Electricity Uses</label>
-               <input type="number" min="0" step="0.1" value={estimationData.electricityUsage || ''} onChange={e => setEstimationData({...estimationData, electricityUsage: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
+               <input type="number" min="0" step="0.0001" onFocus={e => e.target.select()} value={estimationData.electricityUsage || ''} onChange={e => setEstimationData({...estimationData, electricityUsage: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
              </div>
              <div>
                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Gas Uses</label>
-               <input type="number" min="0" step="0.1" value={estimationData.gasUsage || ''} onChange={e => setEstimationData({...estimationData, gasUsage: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
+               <input type="number" min="0" step="0.0001" onFocus={e => e.target.select()} value={estimationData.gasUsage || ''} onChange={e => setEstimationData({...estimationData, gasUsage: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
              </div>
              <div>
                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Transport (₹)</label>
-               <input type="number" min="0" step="0.1" value={estimationData.transportCost || ''} onChange={e => setEstimationData({...estimationData, transportCost: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
+               <input type="number" min="0" step="0.0001" onFocus={e => e.target.select()} value={estimationData.transportCost || ''} onChange={e => setEstimationData({...estimationData, transportCost: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
              </div>
              <div>
                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Misc (₹)</label>
-               <input type="number" min="0" step="0.1" value={estimationData.miscCost || ''} onChange={e => setEstimationData({...estimationData, miscCost: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
+               <input type="number" min="0" step="0.0001" onFocus={e => e.target.select()} value={estimationData.miscCost || ''} onChange={e => setEstimationData({...estimationData, miscCost: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none" />
              </div>
           </div>
           

@@ -12,13 +12,13 @@ export default function Inventory() {
   const { inventory, setInventory, inventoryUsages, setInventoryUsages, addActivityLog } = useDataStore();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
-  const [adjustAmount, setAdjustAmount] = useState<number>(0);
+  const [adjustAmount, setAdjustAmount] = useState<number | string>('');
   const [adjustType, setAdjustType] = useState<'add'|'remove'>('add');
   const [adjustReason, setAdjustReason] = useState<string>('');
   const [activeItem, setActiveItem] = useState<InventoryItem | null>(null);
   
   const [newItem, setNewItem] = useState<Partial<InventoryItem>>({
-    name: '', sku: '', finish: 'Matte', colorCode: '#000000', weightKg: 0, lowStockThreshold: 50, supplier: ''
+    name: '', sku: '', finish: 'Matte', colorCode: '#000000', weightKg: '' as any, lowStockThreshold: '' as any, supplier: ''
   });
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
@@ -42,8 +42,8 @@ export default function Inventory() {
       sku: newItem.sku!,
       finish: newItem.finish || 'Matte',
       colorCode: newItem.colorCode || '#ffffff',
-      weightKg: Number(newItem.weightKg) || 0,
-      lowStockThreshold: Number(newItem.lowStockThreshold) || 50,
+      weightKg: parseFloat(newItem.weightKg as any) || 0,
+      lowStockThreshold: parseFloat(newItem.lowStockThreshold as any) || 50,
       supplier: newItem.supplier || 'Unknown',
       location: newItem.location || 'Warehouse',
       lastUpdated: new Date().toISOString()
@@ -52,7 +52,7 @@ export default function Inventory() {
     addActivityLog({ action: 'create', module: 'Inventory', details: `Added new stock item: ${item.name}`, userId: 'user1', userName: 'Admin' });
     toast.success(`${item.name} added to inventory`);
     setIsAddModalOpen(false);
-    setNewItem({ name: '', sku: '', finish: 'Matte', colorCode: '#000000', weightKg: 0, lowStockThreshold: 50, supplier: '' });
+    setNewItem({ name: '', sku: '', finish: 'Matte', colorCode: '#000000', weightKg: '' as any, lowStockThreshold: '' as any, supplier: '' });
   };
 
   const handleAdjustStock = (e: React.FormEvent) => {
@@ -191,7 +191,7 @@ export default function Inventory() {
       {/* Mobile Card Layout */}
       <div className="md:hidden space-y-4">
         {filteredInventory.map((item) => (
-          <div key={item.id} className="relative overflow-hidden rounded-[24px] bg-red-500">
+          <div key={item.id} className="relative overflow-hidden rounded-[24px] bg-zinc-800 dark:bg-zinc-800">
              <div className="absolute inset-y-0 left-0 flex items-center pl-6 z-0 pointer-events-none">
                <span className="text-white font-black text-xs uppercase tracking-widest flex items-center"><Edit2 className="h-4 w-4 mr-2"/> Edit</span>
              </div>
@@ -362,14 +362,14 @@ export default function Inventory() {
                <input type="text" required value={newItem.sku} onChange={e => setNewItem({...newItem, sku: e.target.value})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium placeholder:text-zinc-600" placeholder="e.g. CBT-101" />
              </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+           <div className="grid grid-cols-2 gap-4">
              <div>
                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Initial Stock (Kg)</label>
-               <input type="number" required min="0" value={newItem.weightKg} onChange={e => setNewItem({...newItem, weightKg: Number(e.target.value)})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium" />
+               <input type="number" step="0.0001" required min="0" value={newItem.weightKg} onFocus={e => e.target.select()} onChange={e => setNewItem({...newItem, weightKg: e.target.value as any})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium" />
              </div>
              <div>
                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Low Alert (Kg)</label>
-               <input type="number" required min="0" value={newItem.lowStockThreshold} onChange={e => setNewItem({...newItem, lowStockThreshold: Number(e.target.value)})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium" />
+               <input type="number" step="0.0001" required min="0" value={newItem.lowStockThreshold} onFocus={e => e.target.select()} onChange={e => setNewItem({...newItem, lowStockThreshold: e.target.value as any})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium" />
              </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -402,7 +402,7 @@ export default function Inventory() {
             </div>
             <div>
                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Amount (Kg)</label>
-               <input type="number" required min="0.1" step="0.1" value={adjustAmount || ''} onChange={e => setAdjustAmount(Number(e.target.value))} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium" />
+               <input type="number" required min="0.0001" step="0.0001" value={adjustAmount} onFocus={e => e.target.select()} onChange={e => setAdjustAmount(e.target.value)} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium" />
              </div>
              <div>
                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Reason / Order Ref (Optional)</label>
@@ -430,7 +430,7 @@ export default function Inventory() {
             <div className="grid grid-cols-2 gap-4">
                <div>
                  <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Low Alert (Kg)</label>
-                 <input type="number" required min="0" value={editingItem?.lowStockThreshold || 0} onChange={e => setEditingItem(prev => prev ? {...prev, lowStockThreshold: Number(e.target.value)} : null)} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white" />
+                 <input type="number" step="0.0001" required min="0" value={editingItem?.lowStockThreshold === undefined ? '' : editingItem.lowStockThreshold} onFocus={e => e.target.select()} onChange={e => setEditingItem(prev => prev ? {...prev, lowStockThreshold: Number(e.target.value) || 0} : null)} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white" />
                </div>
                <div>
                  <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Finish</label>

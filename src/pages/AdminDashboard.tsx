@@ -63,14 +63,14 @@ export default function AdminDashboard() {
               <Users className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
               Registered Users
             </h2>
-            <div className="space-y-4">
-              {users.slice(0, 5).map(user => {
+            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+              {users.map(user => {
                 const role = roles.find(r => r.id === user.roleId)?.name || 'Unknown';
                 return (
                   <div key={user.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white dark:bg-black/50 rounded-xl border border-black/5 dark:border-white/5 gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="font-bold text-zinc-900 dark:text-white truncate">{user.name}</div>
-                      <div className="text-sm text-zinc-600 dark:text-zinc-400 truncate">{user.email}</div>
+                      <div className="text-sm text-zinc-600 dark:text-zinc-400 truncate">{user.email} <span className="opacity-50 mx-1">|</span> {user.phone || 'No Phone'}</div>
                     </div>
                     <div className="flex flex-row sm:flex-col sm:text-right items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-0 shrink-0">
                       <span className="inline-block px-3 py-1 bg-black/5 dark:bg-white/5 rounded-lg text-xs font-bold text-emerald-400 uppercase tracking-wider">
@@ -81,11 +81,6 @@ export default function AdminDashboard() {
                   </div>
                 );
               })}
-              {users.length > 5 && (
-                <div className="text-center pt-2">
-                  <span className="text-sm text-zinc-500 font-medium">+{users.length - 5} more users</span>
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>

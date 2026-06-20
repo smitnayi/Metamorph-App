@@ -95,6 +95,16 @@
     print-color-adjust: exact;
   }
   
+  body::before,
+  body::after {
+    display: none !important;
+  }
+  
+  body.pdf-rendering::before,
+  body.pdf-rendering::after {
+    display: none !important;
+  }
+  
   .print-container {
     position: static;
     width: 100%;

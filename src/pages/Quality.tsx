@@ -7,6 +7,7 @@ import { cn } from '../lib/utils';
 import { QualityCheck, Order } from '../types';
 import Modal from '../components/ui/Modal';
 import { toast } from 'sonner';
+import { downloadPdf } from '../lib/pdf';
 
 export default function Quality() {
   const [isAddingMode, setIsAddingMode] = useState(false);
@@ -33,15 +34,13 @@ export default function Quality() {
   });
 
   const generateStickerPrint = () => {
-    if (window.self !== window.top) {
-      toast.error("Printing is blocked in preview. Please open the app in a new tab (top right icon) to print.");
-      return;
+    // Check if mobile, use PDF generator
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (true) { // Always use PDF generator for consistent output on all devices
+       setTimeout(() => {
+          downloadPdf('.print-container', `Stickers_${stickerData.customer}.pdf`);
+       }, 200);
     }
-    
-    // Give a tiny delay for React to ensure any state updates for bundles are flushed
-    setTimeout(() => {
-      window.print();
-    }, 100);
   };
 
   const fileInputRef = useRef<HTMLInputElement>(null);

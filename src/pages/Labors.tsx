@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useDataStore } from '../store/data';
-import { Users, UserPlus, Clock, IndianRupee, FileText, Download } from 'lucide-react';
+import { Users, UserPlus, Clock, IndianRupee, FileText, Download, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import Modal from '../components/ui/Modal';
 import TimeWheelPicker from '../components/TimeWheelPicker';
@@ -195,7 +195,7 @@ export default function Labors() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 py-8 md:p-8">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
         <div>
           <label className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] text-orange-500">Personnel</label>
           <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight mt-1 text-zinc-900 dark:text-white">Labor Management</h1>
@@ -203,20 +203,32 @@ export default function Labors() {
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <button 
-            onClick={() => setIsAttendanceModalOpen(true)}
-            className="inline-flex items-center justify-center bg-[#111] dark:bg-white text-white dark:text-black px-6 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest hover:bg-black/80 dark:hover:bg-zinc-200 transition-colors shadow-lg active:scale-95"
-          >
-            <Clock className="h-5 w-5 mr-2" />
-            Mark Attendance
-          </button>
-          <button 
             onClick={() => setIsAddLaborModalOpen(true)}
-            className="inline-flex items-center justify-center bg-white px-6 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-black hover:bg-zinc-200 transition-colors shadow-lg active:scale-95 border border-black/5"
+            className="inline-flex items-center justify-center bg-white dark:bg-black px-6 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors shadow-lg active:scale-95 border border-black/5 dark:border-white/10"
           >
             <UserPlus className="h-5 w-5 mr-2" />
             Add Labor
           </button>
         </div>
+      </div>
+
+      {/* Attendance Quick Action Banner */}
+      <div className="bg-white dark:bg-[#111] rounded-2xl p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between shadow-sm border border-orange-500/20 mb-8 gap-4">
+        <div className="flex items-center gap-4">
+           <div className="h-12 w-12 rounded-full bg-orange-500/10 flex items-center justify-center shrink-0">
+             <Clock className="w-6 h-6 text-orange-500" />
+           </div>
+           <div>
+             <h2 className="text-zinc-900 dark:text-white text-lg font-black uppercase tracking-tight">Today's Attendance</h2>
+             <p className="text-zinc-500 dark:text-zinc-400 font-medium text-xs max-w-sm mt-0.5">Manage clock-ins and entries for {format(new Date(), 'MMM do, yyyy')}</p>
+           </div>
+        </div>
+        <button 
+          onClick={() => setIsAttendanceModalOpen(true)}
+          className="w-full md:w-auto bg-black dark:bg-white text-white dark:text-black px-6 py-3 rounded-xl font-black uppercase tracking-widest text-xs hover:opacity-80 active:scale-95 transition-all flex justify-center items-center gap-2"
+        >
+          Review & Mark <Clock className="w-4 h-4"/>
+        </button>
       </div>
 
       {/* Monthly Salary Report */}
@@ -325,31 +337,49 @@ export default function Labors() {
                 <span className="text-zinc-500 text-[10px] font-bold tracking-widest ml-1">/ hr</span>
               </div>
             </div>
-            <div className="mt-2 pt-4 border-t border-black/5 dark:border-white/5 flex gap-2">
-              <button
-                onClick={() => openTimeSelector(labor.id, 'in')}
-                disabled={isClockedIn || hasClockedOut}
-                className={cn(
-                  "flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
-                  (isClockedIn || hasClockedOut) 
-                    ? "bg-black/5 dark:bg-white/5 text-zinc-400 cursor-not-allowed" 
-                    : "bg-emerald-500 text-white hover:bg-emerald-600 shadow-md active:scale-95"
+            <div className="mt-2 pt-4 border-t border-black/5 dark:border-white/5 flex flex-col gap-3">
+              {/* Timestamp display block */}
+              {(isClockedIn || hasClockedOut) && (
+                <div className="flex justify-between items-center bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5">
+                   <div className="flex flex-col">
+                     <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-0.5">Clock In</span>
+                     <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-sm">
+                       {todaysAttendance?.clockIn ? format(parseISO(todaysAttendance.clockIn), 'hh:mm a') : '--:--'}
+                     </span>
+                   </div>
+                   <div className="flex flex-col text-right">
+                     <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-0.5">Clock Out</span>
+                     <span className="font-mono font-bold text-rose-600 dark:text-rose-400 text-sm">
+                       {todaysAttendance?.clockOut ? format(parseISO(todaysAttendance.clockOut), 'hh:mm a') : '--:--'}
+                     </span>
+                   </div>
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div className="flex gap-3">
+                {!isClockedIn && !hasClockedOut && (
+                  <button
+                    onClick={() => openTimeSelector(labor.id, 'in')}
+                    className="flex-1 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    <Clock className="w-4 h-4"/> Clock In
+                  </button>
                 )}
-              >
-                {todaysAttendance?.clockIn ? `In at ${format(parseISO(todaysAttendance.clockIn), 'HH:mm')}` : 'Clock In'}
-              </button>
-              <button
-                onClick={() => openTimeSelector(labor.id, 'out')}
-                disabled={!isClockedIn}
-                className={cn(
-                  "flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
-                  !isClockedIn
-                    ? "bg-black/5 dark:bg-white/5 text-zinc-400 cursor-not-allowed"
-                     : "bg-orange-500 text-white hover:bg-orange-600 shadow-md active:scale-95"
+                {isClockedIn && !hasClockedOut && (
+                  <button
+                    onClick={() => openTimeSelector(labor.id, 'out')}
+                    className="flex-1 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all bg-rose-500 text-white hover:bg-rose-600 shadow-lg shadow-rose-500/20 active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    <Clock className="w-4 h-4"/> Clock Out
+                  </button>
                 )}
-              >
-                {todaysAttendance?.clockOut ? `Out at ${format(parseISO(todaysAttendance.clockOut), 'HH:mm')}` : 'Clock Out'}
-              </button>
+                {hasClockedOut && (
+                  <div className="flex-1 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest text-center text-zinc-500 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 flex items-center justify-center gap-2">
+                     <CheckCircle className="w-4 h-4 text-emerald-500"/> Shift Complete
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )})}

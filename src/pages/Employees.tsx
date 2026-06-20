@@ -85,7 +85,7 @@ export default function Employees() {
                   </div>
                   <div>
                     <div className="font-bold text-zinc-900 dark:text-white uppercase text-sm mb-0.5">{user.name}</div>
-                    <div className="text-zinc-500 text-[10px] font-bold tracking-widest">{user.email}</div>
+                    <div className="text-zinc-500 text-[10px] font-bold tracking-widest">{user.email} <span className="opacity-50">|</span> {user.phone || 'No Phone'}</div>
                   </div>
                 </div>
                 <button 
@@ -142,7 +142,7 @@ export default function Employees() {
                         </div>
                         <div>
                           <div className="font-bold text-zinc-900 dark:text-white uppercase text-sm mb-0.5">{user.name}</div>
-                          <div className="text-zinc-500 text-[10px] font-bold tracking-widest">{user.email}</div>
+                          <div className="text-zinc-500 text-[10px] font-bold tracking-widest">{user.email} <span className="opacity-50">|</span> {user.phone || 'No Phone'}</div>
                         </div>
                       </div>
                     </td>
@@ -150,8 +150,9 @@ export default function Employees() {
                       <div className="flex items-center gap-2">
                         <select
                           value={user.roleId}
+                          disabled={!isAdmin}
                           onChange={(e) => setUsers(users.map(u => u.id === user.id ? { ...u, roleId: e.target.value } : u))}
-                          className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-bold uppercase tracking-widest rounded-lg px-2 py-1.5 focus:outline-none appearance-none cursor-pointer"
+                          className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-bold uppercase tracking-widest rounded-lg px-2 py-1.5 focus:outline-none appearance-none cursor-pointer disabled:opacity-50"
                         >
                           {roles.map(r => (
                             <option key={r.id} value={r.id} className="text-zinc-900 bg-white">{r.name}</option>
@@ -195,14 +196,20 @@ export default function Employees() {
       </div>
 
       <Modal isOpen={isInviteModalOpen} onClose={() => setIsInviteModalOpen(false)} title="Invite Staff Member">
-         <form onSubmit={handleInvite} className="space-y-5">
+         <form onSubmit={handleInvite} className="space-y-4">
            <div>
              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Full Name</label>
              <input type="text" required value={newUser.name} onChange={e => setNewUser({...newUser, name: e.target.value})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium placeholder:text-zinc-600" placeholder="e.g. John Doe" />
            </div>
-           <div>
-             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Email Address</label>
-             <input type="email" required value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium placeholder:text-zinc-600" placeholder="john@company.com" />
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <div>
+               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Email Address</label>
+               <input type="email" required value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium placeholder:text-zinc-600" placeholder="john@company.com" />
+             </div>
+             <div>
+               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Phone Number</label>
+               <input type="tel" value={newUser.phone || ''} onChange={e => setNewUser({...newUser, phone: e.target.value})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium placeholder:text-zinc-600" placeholder="+91..." />
+             </div>
            </div>
            <div className="grid grid-cols-2 gap-4">
              <div>

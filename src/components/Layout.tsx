@@ -250,7 +250,7 @@ export default function Layout() {
            <div className="flex items-center gap-4">
               {/* Global Search Hint */}
               <button 
-                onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
+                onClick={() => document.dispatchEvent(new CustomEvent('open-global-search'))}
                 className="flex items-center gap-2 bg-white/60 dark:bg-[#111]/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-black/5 dark:border-white/5 shadow-sm text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
               >
                 <Search className="h-3.5 w-3.5" />
@@ -277,6 +277,9 @@ export default function Layout() {
              <img src="/wordmark.png" alt="Metamorph" className="h-3 object-contain dark:invert" />
           </div>
           <div className="flex items-center gap-3">
+             <button onClick={() => document.dispatchEvent(new CustomEvent('open-global-search'))} className="flex h-9 w-9 items-center justify-center rounded-full bg-black/5 dark:bg-white/5">
+                <Search className="h-[18px] w-[18px] text-zinc-600 dark:text-zinc-400" />
+             </button>
              <div className={cn("flex h-2 w-2 rounded-full", isOnline ? "bg-emerald-500" : "bg-rose-500 animate-pulse")} title={isOnline ? "Online" : "Offline"} />
              <button onClick={toggleTheme} className="flex h-9 w-9 items-center justify-center rounded-full bg-black/5 dark:bg-white/5">
                 {isDark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px] text-zinc-600" />}
@@ -302,17 +305,25 @@ export default function Layout() {
 
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-4 left-4 right-4 rounded-[20px] bg-white/90 dark:bg-[#1a1a1a]/90 flex items-center justify-between px-2 h-[68px] z-50 shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-xl border border-white/50 dark:border-white/10">
-        {navItems.slice(0, 4).map(item => {
+        {navItems.slice(0, 3).map(item => {
           const today = new Date().toISOString().split('T')[0];
           const isLabAlert = item.path === '/lab' && !labRoutineChecks.some(c => c.date === today);
           return <NavItemLink key={item.path} item={item} mobile hasAlert={isLabAlert} />
         })}
         <button
-          onClick={() => setMobileMenuOpen(true)}
-          className="flex flex-col items-center justify-center min-w-[56px] px-1 py-1 transition-colors rounded-xl text-zinc-500 hover:text-zinc-700 dark:text-zinc-300"
+          onClick={() => document.dispatchEvent(new CustomEvent('open-global-search'))}
+          className="flex flex-col items-center justify-center min-w-[56px] px-1 py-1 transition-colors rounded-xl text-zinc-500 hover:text-zinc-700 dark:text-zinc-300 relative group"
         >
-          <div className="flex items-center justify-center h-8 w-8 rounded-full mb-1 transition-all bg-transparent">
-            <Menu className="h-[22px] w-[22px] stroke-2" />
+          <div className="flex items-center justify-center h-8 w-8 rounded-full mb-1 transition-all bg-transparent group-hover:bg-orange-500/10 group-active:scale-95">
+            <Search className="h-[22px] w-[22px] stroke-2 group-hover:text-orange-500" />
+          </div>
+        </button>
+        <button
+          onClick={() => setMobileMenuOpen(true)}
+          className="flex flex-col items-center justify-center min-w-[56px] px-1 py-1 transition-colors rounded-xl text-zinc-500 hover:text-zinc-700 dark:text-zinc-300 group"
+        >
+          <div className="flex items-center justify-center h-8 w-8 rounded-full mb-1 transition-all bg-transparent group-hover:bg-orange-500/10 group-active:scale-95">
+            <Menu className="h-[22px] w-[22px] stroke-2 group-hover:text-orange-500" />
           </div>
         </button>
       </div>

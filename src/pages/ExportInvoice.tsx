@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDataStore } from '../store/data';
+import { downloadPdf } from '../lib/pdf';
 
 export default function ExportInvoice() {
   const { orderId } = useParams();
@@ -33,7 +34,7 @@ export default function ExportInvoice() {
   const profit = order.totalValue - totalCost;
 
   const handlePrint = () => {
-    window.print();
+    downloadPdf('.invoice-container', `Invoice_${order.orderNumber}.pdf`);
   };
 
   return (
@@ -51,12 +52,12 @@ export default function ExportInvoice() {
           className="bg-orange-600 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-orange-700 transition-colors flex items-center gap-2 shadow-lg"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-          Print to PDF
+          Download PDF
         </button>
       </div>
 
-      <div className="flex justify-center w-full overflow-x-auto print:overflow-visible print:block pb-10 print:pb-0">
-        <div className="w-[794px] min-h-[1123px] mx-auto bg-[#f0ece1] p-12 md:p-16 relative flex flex-col justify-between shadow-2xl shrink-0 print:shadow-none print:w-[100%] print:min-h-auto">
+      <div className="flex justify-center w-full overflow-x-auto print:overflow-visible print:block pb-10 print:pb-0 relative">
+        <div className="invoice-container w-[794px] min-h-[1123px] mx-auto bg-[#f0ece1] p-12 md:p-16 relative flex flex-col justify-between shadow-2xl shrink-0 print:shadow-none print:w-[100%] print:min-h-auto">
           <div className="flex-1">
            {/* Top Header */}
            <div className="flex justify-between items-start mb-20 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed border-b-2 border-black pb-6">

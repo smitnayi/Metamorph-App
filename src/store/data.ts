@@ -211,7 +211,7 @@ export const useDataStore = create<AppState>((set, get) => ({
     get().setActivityLogs([...get().activityLogs, newLog]);
   },
   clearTransactionalData: () => {
-    // Clear only transactional records, keep users, roles, inventory, customers, settings, labors
+    // Clear transactional records, as well as inventory, labors, and customers for a full reset
     get().setOrders([]);
     get().setTasks([]);
     get().setQualityChecks([]);
@@ -221,6 +221,9 @@ export const useDataStore = create<AppState>((set, get) => ({
     get().setLabRoutineChecks([]);
     get().setLabSpecialMeasures([]);
     get().setUtilityMetrics([]);
+    get().setInventory([]);
+    get().setLabors([]);
+    get().setCustomers([]);
   }
 }));
 

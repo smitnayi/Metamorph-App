@@ -85,20 +85,20 @@ export default function Employees() {
         {users.map((user) => {
           return (
             <div key={user.id} className="bg-[#f4f4f5] dark:bg-[#111] border border-black/5 dark:border-white/5 rounded-2xl p-4 flex flex-col gap-4">
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center font-semibold text-zinc-900 dark:text-white text-lg">
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-12 w-12 shrink-0 rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center font-semibold text-zinc-900 dark:text-white text-lg">
                     {user.name.charAt(0)}
                   </div>
-                  <div>
-                    <div className="font-semibold text-zinc-900 dark:text-white uppercase text-sm mb-0.5">{user.name}</div>
-                    <div className="text-zinc-500 text-xs font-semibold tracking-widest">{user.email} <span className="opacity-50">|</span> {user.phone || 'No Phone'}</div>
+                  <div className="min-w-0">
+                    <div className="font-semibold text-zinc-900 dark:text-white uppercase text-sm mb-0.5 truncate">{user.name}</div>
+                    <div className="text-zinc-500 text-xs font-semibold tracking-widest truncate">{user.email} <span className="opacity-50">|</span> {user.phone || 'No Phone'}</div>
                   </div>
                 </div>
                 <button 
                   onClick={() => toggleStatus(user.id, user.status)}
                   className={cn(
-                    "inline-flex items-center px-2 py-1 rounded-[6px] text-xs font-semibold border",
+                    "shrink-0 inline-flex items-center px-2 py-1 rounded-[6px] text-xs font-semibold border",
                     user.status === 'Active' ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400" : "bg-black/10 dark:bg-white/10 border-black/10 dark:border-white/20 text-zinc-600 dark:text-zinc-400"
                   )}
                 >
@@ -106,17 +106,17 @@ export default function Employees() {
                 </button>
               </div>
 
-              <div className="flex justify-between items-center bg-white dark:bg-black/50 p-2 rounded-xl border border-black/5 dark:border-white/5 mt-2">
+              <div className="flex justify-between items-center bg-white dark:bg-black/50 p-2 rounded-xl border border-black/5 dark:border-white/5 mt-2 gap-2">
                 <select
                   value={user.roleId}
                   onChange={(e) => setUsers(users.map(u => u.id === user.id ? { ...u, roleId: e.target.value } : u))}
-                  className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-semibold rounded-[6px] px-2 py-1 flex-1 focus:outline-none appearance-none max-w-[120px]"
+                  className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-semibold rounded-[6px] px-2 py-1 min-w-0 truncate focus:outline-none appearance-none flex-shrink"
                 >
                    {roles.map(r => (
                      <option key={r.id} value={r.id} className="text-zinc-900 bg-white">{r.name}</option>
                    ))}
                 </select>
-                <span className="text-zinc-700 dark:text-zinc-300 font-semibold uppercase text-xs tracking-wider px-2">
+                <span className="text-zinc-700 dark:text-zinc-300 font-semibold uppercase text-xs tracking-wider px-2 shrink-0 truncate max-w-[140px] text-right">
                   {user.department}
                 </span>
               </div>

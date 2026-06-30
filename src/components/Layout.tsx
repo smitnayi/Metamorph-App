@@ -52,17 +52,17 @@ const NavItemLink: React.FC<NavItemLinkProps> = ({ item, mobile = false, collaps
       <NavLink
         to={item.path}
         className={cn(
-          "flex flex-col items-center justify-center min-w-[56px] px-1 py-1 transition-colors rounded-xl relative",
-          isActive ? "text-orange-600 pointer-events-none" : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-300 active:bg-black/5 dark:bg-white/5"
+          "flex-1 flex flex-col items-center justify-center h-full relative",
+          isActive ? "text-orange-600 pointer-events-none" : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 active:bg-black/5 dark:bg-white/5 transition-colors"
         )}
       >
-        <div className="flex items-center justify-center h-8 w-8 rounded-full mb-1 transition-all z-10 w-full relative">
-          <motion.div whileTap={{ scale: 0.85 }} className="flex justify-center items-center h-full w-full relative">
-             <item.icon className={cn("h-[22px] w-[22px]", isActive ? "stroke-[2.5px] drop-shadow-md" : "")} />
-             {hasAlert && <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-[#0a0a0a]" />}
+        <div className="flex items-center justify-center h-full w-full relative z-10">
+          <motion.div whileTap={{ scale: 0.85 }} className="flex justify-center items-center relative">
+             <item.icon className={cn("h-[22px] w-[22px]", isActive ? "stroke-[2.5px]" : "stroke-[2px]")} />
+             {hasAlert && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white dark:border-[#1a1a1a]" />}
           </motion.div>
           {isActive && (
-            <motion.div layoutId="mobile-nav-bg" transition={{ type: "spring", stiffness: 350, damping: 25 }} className="absolute inset-0 m-auto h-10 w-10 md:h-11 md:w-11 rounded-full bg-orange-100 dark:bg-orange-500/20 z-[-1]" />
+            <motion.div layoutId="mobile-nav-bg" transition={{ type: "spring", stiffness: 350, damping: 25 }} className="absolute inset-0 m-auto h-[44px] w-[44px] rounded-[16px] bg-orange-100 dark:bg-orange-500/20 z-[-1]" />
           )}
         </div>
       </NavLink>
@@ -310,18 +310,20 @@ export default function Layout() {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-4 left-4 right-4 rounded-[20px] bg-white/90 dark:bg-[#1a1a1a]/90 flex items-center justify-between px-2 h-[68px] z-50 shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-xl border border-white/50 dark:border-white/10 print:hidden">
-        {navItems.slice(0, 3).map(item => {
+      <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[400px] rounded-[24px] bg-white/95 dark:bg-[#1a1a1a]/95 flex items-center justify-between px-1.5 h-[64px] z-50 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.15)] dark:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.5)] backdrop-blur-xl border border-white/50 dark:border-white/10 print:hidden">
+        {navItems.slice(0, 4).map(item => {
           const today = new Date().toISOString().split('T')[0];
           const isLabAlert = item.path === '/lab' && !labRoutineChecks.some(c => c.date === today);
           return <NavItemLink key={item.path} item={item} mobile hasAlert={isLabAlert} />
         })}
         <button
           onClick={() => setMobileMenuOpen(true)}
-          className="flex flex-col items-center justify-center min-w-[56px] px-1 py-1 transition-colors rounded-xl text-zinc-500 hover:text-zinc-700 dark:text-zinc-300 group"
+          className="flex-1 flex flex-col items-center justify-center h-full relative text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 active:bg-black/5 dark:bg-white/5 rounded-[16px] transition-colors group"
         >
-          <div className="flex items-center justify-center h-8 w-8 rounded-full mb-1 transition-all bg-transparent group-hover:bg-orange-500/10 group-active:scale-95">
-            <Menu className="h-[22px] w-[22px] stroke-2 group-hover:text-orange-500" />
+          <div className="flex items-center justify-center h-full w-full relative z-10">
+            <motion.div whileTap={{ scale: 0.85 }} className="flex justify-center items-center relative">
+               <Menu className="h-[22px] w-[22px] stroke-[2px] group-hover:text-orange-500" />
+            </motion.div>
           </div>
         </button>
       </div>

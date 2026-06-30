@@ -5,7 +5,11 @@ import { useDataStore } from '../store/data';
 import { toast } from 'sonner';
 import Modal from '../components/ui/Modal';
 import { InventoryItem } from '../types';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
+import { getHexFromRal } from '../lib/ralToHex';
+import { cn } from '../lib/utils';
+
+import { SwipeAction } from '../components/ui/SwipeAction';
 
 export default function Inventory() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,7 +29,7 @@ export default function Inventory() {
   const [filterFinish, setFilterFinish] = useState<string>('All');
 
   const filteredInventory = inventory.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) || item.sku.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) || item.sku.toLowerCase().includes(searchTerm.toLowerCase()) || item.colorCode.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterFinish === 'All' || item.finish === filterFinish;
     return matchesSearch && matchesFilter;
   });
@@ -36,6 +40,8 @@ export default function Inventory() {
       toast.error('Name and SKU required');
       return;
     }
+    const colorHex = getHexFromRal(newItem.colorCode || '') || newItem.colorCode || '#ffffff';
+    
     const item: InventoryItem = {
       id: Math.random().toString(36).substr(2, 9),
       name: newItem.name!,
@@ -81,7 +87,7 @@ export default function Inventory() {
           inventoryId: activeItem.id,
           orderId: adjustReason ? `Manual: ${adjustReason}` : 'Manual Adjustment',
           customerName: '-',
-          amountKg: adjustAmount,
+          amountKg: Number(adjustAmount),
           date: new Date().toISOString()
         };
         setInventoryUsages(prev => [...prev, usage]);
@@ -136,328 +142,392 @@ export default function Inventory() {
     toast.success('Inventory stock successfully exported as CSV.');
   };
 
+  const finishes = ['All', 'Matte', 'Gloss', 'Satin', 'Texture', 'Structure', 'Metallic', 'Clear'];
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-4 py-8 md:p-8">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6 max-w-7xl mx-auto px-4 py-8 md:p-8"
+    >
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
         <div>
-          <label className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] text-orange-500">Module</label>
-          <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight mt-1 text-zinc-900 dark:text-white">Powder Inventory</h1>
-          <p className="text-zinc-600 dark:text-zinc-400 mt-2 font-medium text-sm">Manage powder stock, thresholds, and suppliers.</p>
+          <label className="text-xs md:text-xs font-semibold text-orange-500">Module</label>
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight mt-1 text-zinc-900 dark:text-white">Powder Stock</h1>
+          <p className="text-zinc-600 dark:text-zinc-400 mt-2 font-medium text-sm">Manage powder inventory, thresholds, and suppliers with ease.</p>
         </div>
-        <div className="flex gap-2">
-          <button 
+        <div className="flex gap-4">
+          <motion.button 
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={handleExportStock}
-            className="inline-flex items-center justify-center bg-white dark:bg-[#111] border border-black/5 dark:border-white/10 px-4 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-white hover:border-orange-500 transition-colors shadow-lg active:scale-95"
+            className="inline-flex items-center justify-center bg-white/60 dark:bg-black/40 backdrop-blur-md border border-black/10 dark:border-white/10 px-5 py-3 md:py-4 rounded-xl text-xs font-semibold text-zinc-900 dark:text-white hover:bg-white dark:hover:bg-black transition-all shadow-sm active:scale-95"
           >
-            <DownloadCloud className="h-5 w-5 md:mr-2" />
+            <DownloadCloud className="h-4 w-4 md:mr-2 text-zinc-500" />
             <span className="hidden md:inline">Export</span>
-          </button>
-          <button 
+          </motion.button>
+          <motion.button 
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center justify-center bg-orange-500 px-6 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-black hover:bg-orange-600 transition-colors shadow-lg active:scale-95"
+            className="inline-flex items-center justify-center bg-orange-600 px-5 py-2.5 rounded-lg text-sm font-medium text-white hover:bg-orange-700 transition-colors shadow-sm active:scale-95"
           >
-            <Plus className="h-5 w-5 mr-2" />
+            <Plus className="h-4 w-4 mr-2" />
             Add Stock
-          </button>
+          </motion.button>
         </div>
       </div>
 
-      <div className="bg-[#f4f4f5] dark:bg-[#111] rounded-2xl border border-black/5 dark:border-white/5 p-4 sm:p-6 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full sm:w-96">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-500" />
-            <input
-              type="text"
-              placeholder="Search SKU or Name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors placeholder:text-zinc-600 font-medium"
-            />
-          </div>
-          <select
-            value={filterFinish}
-            onChange={(e) => setFilterFinish(e.target.value)}
-            className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black px-4 py-4 text-sm font-bold uppercase tracking-widest text-zinc-900 dark:text-white transition-colors appearance-none focus:outline-none focus:border-orange-500 cursor-pointer"
-          >
-            <option value="All">All Finishes</option>
-            <option value="Matte">Matte</option>
-            <option value="Gloss">Gloss</option>
-            <option value="Texture">Texture</option>
-            <option value="Satin">Satin</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Mobile Card Layout */}
-      <div className="md:hidden space-y-4">
-        {filteredInventory.map((item) => (
-          <div key={item.id} className="relative overflow-hidden rounded-[24px] bg-zinc-800 dark:bg-zinc-800">
-             <div className="absolute inset-y-0 left-0 flex items-center pl-6 z-0 pointer-events-none">
-               <span className="text-white font-black text-xs uppercase tracking-widest flex items-center"><Edit2 className="h-4 w-4 mr-2"/> Edit</span>
-             </div>
-             <div className="absolute inset-y-0 right-0 flex items-center pr-6 z-0 pointer-events-none">
-               <span className="text-white font-black text-xs uppercase tracking-widest flex items-center"><Trash2 className="h-4 w-4 mr-2"/> Delete</span>
-             </div>
-             <motion.div 
-               drag="x"
-               dragConstraints={{ left: 0, right: 0 }}
-               dragElastic={0.4}
-               onDragEnd={(e, { offset }) => {
-                 if (offset.x > 80) openEdit(item);
-                 if (offset.x < -80) {
-                    if ('vibrate' in navigator) navigator.vibrate([50, 50, 50]);
-                    setInventory(prev => prev.filter(i => i.id !== item.id));
-                    toast.success('Item deleted');
-                 }
-               }}
-               className="bg-white/60 dark:bg-[#1a1a1a]/80 backdrop-blur-3xl border border-black/[0.04] dark:border-white/[0.06] rounded-[24px] p-4 flex flex-col gap-4 relative z-10 w-full shadow-sm"
-             >
-            <div className="flex justify-between items-start">
-              <div>
-                <div className="font-bold text-base uppercase text-zinc-900 dark:text-white leading-tight flex items-center gap-2">
-                   {item.name}
-                   {(item as any)._hasPendingWrites && (
-                     <div className="flex animate-pulse text-amber-500" title="Queued for Sync">
-                       <RefreshCw className="h-3 w-3" />
-                     </div>
-                   )}
-                </div>
-                <div className="text-zinc-500 text-xs mt-1 font-mono">{item.sku}</div>
-              </div>
-              <div 
-                className="w-8 h-8 rounded-full border-2 border-black/5 dark:border-white/10 shrink-0"
-                style={{ backgroundColor: item.colorCode }}
+      <div className="bg-white/40 dark:bg-black/20 backdrop-blur-xl border border-black/5 dark:border-white/5 rounded-[24px] shadow-sm p-6 flex flex-col md:flex-row gap-6 justify-between items-center mb-8">
+            <div className="relative w-full md:max-w-md">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
+              <input
+                type="text"
+                placeholder="Search by name, SKU, or RAL..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-11 pr-4 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-black/40 backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium placeholder:text-zinc-500"
               />
             </div>
             
-            <div className="flex justify-between items-center bg-white dark:bg-black/50 p-3 rounded-xl border border-black/5 dark:border-white/5">
-              <div className="text-xs text-zinc-600 dark:text-zinc-400 font-bold uppercase tracking-widest">{item.finish}</div>
-              <div className="flex flex-col items-end">
-                <div className="flex items-center gap-1.5">
-                  {item.weightKg <= item.lowStockThreshold && (
-                    <AlertCircle className="h-3.5 w-3.5 text-rose-500" />
+            <div className="flex w-full md:w-auto gap-2 overflow-x-auto pb-2 md:pb-0 custom-scrollbar">
+              {finishes.map(finish => (
+                <button
+                  key={finish}
+                  onClick={() => setFilterFinish(finish)}
+                  className={cn(
+                    "px-5 py-3 rounded-lg text-xs font-semibold text-zinc-500 whitespace-nowrap transition-all border border-transparent",
+                    filterFinish === finish 
+                      ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm border-black/10 dark:border-white/10" 
+                      : "bg-black/5 dark:bg-white/5 text-zinc-500 hover:bg-black/10 dark:hover:bg-white/10 hover:text-zinc-700 dark:hover:text-zinc-300"
                   )}
-                  <span className={`font-mono text-lg font-black ${item.weightKg <= item.lowStockThreshold ? 'text-rose-500' : 'text-emerald-400'}`}>
-                    {item.weightKg.toLocaleString()} <span className="text-[10px] text-zinc-500">KG</span>
-                  </span>
-                </div>
-                <div className="w-full h-1 bg-black/10 dark:bg-white/10 mt-1.5 rounded-full overflow-hidden min-w-[60px]">
-                  <div className={`h-full ${item.weightKg <= item.lowStockThreshold ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: `${Math.min(100, (item.weightKg / (item.lowStockThreshold * 3)) * 100)}%` }}></div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center gap-2 pt-2 border-t border-black/5 dark:border-white/5">
-              <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest line-clamp-1">{item.supplier}</div>
-              <div className="flex gap-2">
-                <button onClick={() => openEdit(item)} className="p-2 lg:p-3 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:text-white bg-black/5 dark:bg-white/5 rounded-lg active:scale-95 transition-transform">
-                  <Edit2 className="h-4 w-4" />
+                >
+                  {finish}
                 </button>
-                <button onClick={() => openAdjust(item)} className="px-4 py-2 bg-black/10 dark:bg-white/10 hover:bg-white text-zinc-900 dark:text-white hover:text-black rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors active:scale-95">
-                  Restock
-                </button>
-              </div>
+              ))}
             </div>
-           </motion.div>
-          </div>
-        ))}
-        {filteredInventory.length === 0 && (
-          <div className="p-12 text-center text-zinc-500 font-bold uppercase tracking-widest border border-dashed border-black/5 dark:border-white/10 rounded-2xl">
-            No items found
-          </div>
-        )}
       </div>
 
-      {/* Desktop Table Layout */}
-      <Card className="hidden md:block bg-[#f4f4f5] dark:bg-[#111] border-black/5 dark:border-white/5 rounded-2xl overflow-hidden w-full">
-        <div className="overflow-x-auto w-full">
-          <table className="w-full text-left font-sans whitespace-nowrap min-w-[900px]">
-            <thead className="bg-[#f4f4f5] dark:bg-[#111] text-zinc-500 text-[10px] font-black uppercase tracking-widest border-b border-black/10 dark:border-white/20">
-              <tr>
-                <th className="px-6 py-4 w-1/3">SKU / Name</th>
-                <th className="px-6 py-4 hidden md:table-cell">Finish</th>
-                <th className="px-6 py-4">Color</th>
-                <th className="px-6 py-4 text-right">Stock (Kg)</th>
-                <th className="px-6 py-4 hidden lg:table-cell">Supplier</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/10 text-zinc-900 dark:text-white">
-              {filteredInventory.map((item) => (
-                <tr key={item.id} className="hover:bg-black/5 dark:bg-white/5 transition-colors group">
-                  <td className="px-6 py-5 w-1/3">
-                    <div className="font-bold text-sm uppercase text-zinc-900 dark:text-white">{item.name}</div>
-                    <div className="text-zinc-500 text-xs mt-1 font-mono">{item.sku}</div>
-                  </td>
-                  <td className="px-6 py-5 hidden md:table-cell">
-                    <span className="inline-flex items-center px-2 py-1 text-[10px] font-bold uppercase tracking-widest bg-black/10 dark:bg-white/10 border border-black/10 dark:border-white/20">
-                      {item.finish}
-                    </span>
-                  </td>
-                  <td className="px-6 py-5">
-                    <div className="flex items-center gap-3">
-                      <div 
-                        className="w-6 h-6 border border-black/10 dark:border-white/20"
-                        style={{ backgroundColor: item.colorCode }}
-                      />
-                      <span className="font-mono text-xs text-zinc-600 dark:text-zinc-400">{item.colorCode}</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        <AnimatePresence>
+          {filteredInventory.map((item, index) => (
+            <motion.div
+              layout
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ delay: index * 0.05 }}
+              key={item.id}
+              className="group bg-white/40 dark:bg-black/20 backdrop-blur-xl border border-black/5 dark:border-white/5 rounded-2xl md:rounded-[32px] hover:shadow-xl hover:bg-white/60 dark:hover:bg-black/40 hover:border-orange-500/30 transition-all relative overflow-hidden"
+            >
+              <div className="hidden md:block p-8">
+                <div className="absolute top-0 right-0 p-6 flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0">
+                  <button onClick={() => openEdit(item)} className="p-3 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-lg hover:text-orange-500 shadow-sm transition-colors border border-black/5 dark:border-white/5">
+                    <Edit2 className="h-4 w-4" />
+                  </button>
+                  <button onClick={() => {
+                     if(confirm('Delete this stock item?')) {
+                        setInventory(prev => prev.filter(i => i.id !== item.id));
+                     }
+                  }} className="p-3 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-lg hover:text-rose-500 shadow-sm transition-colors border border-black/5 dark:border-white/5">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="flex items-start gap-5 mb-8">
+                  <div 
+                    className="w-16 h-16 rounded-xl border-[4px] border-white dark:border-zinc-800 shadow-lg shrink-0 transition-transform group-hover:scale-110 group-hover:rotate-3"
+                    style={{ backgroundColor: getHexFromRal(item.colorCode) || item.colorCode }}
+                  />
+                  <div className="flex-1 pr-20">
+                    <h3 className="font-semibold tracking-tight text-xl text-zinc-900 dark:text-white leading-tight mb-2">{item.name}</h3>
+                    <div className="flex items-center gap-2 text-xs font-semibold text-zinc-500">
+                      <span className="font-mono">{item.sku}</span>
+                      <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+                      <span>{item.colorCode}</span>
                     </div>
-                  </td>
-                  <td className="px-6 py-5 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      {item.weightKg <= item.lowStockThreshold && (
-                        <AlertCircle className="h-4 w-4 text-rose-500" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                  <div className="bg-white/60 dark:bg-black/40 rounded-xl p-4 border border-black/5 dark:border-white/5 backdrop-blur-md">
+                    <div className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] mb-1">Finish</div>
+                    <div className="font-semibold text-sm text-zinc-900 dark:text-white">{item.finish}</div>
+                  </div>
+                  <div className="bg-white/60 dark:bg-black/40 rounded-xl p-4 border border-black/5 dark:border-white/5 backdrop-blur-md">
+                    <div className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] mb-1">Supplier</div>
+                    <div className="font-semibold text-sm text-zinc-900 dark:text-white truncate">{item.supplier}</div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex justify-between items-end">
+                    <div className="text-sm font-semibold text-zinc-500 uppercase tracking-[0.2em]">Available Stock</div>
+                    <div className={cn(
+                      "text-3xl font-semibold tracking-tight",
+                      item.weightKg <= item.lowStockThreshold ? 'text-rose-500' : 'text-emerald-500'
+                    )}>
+                      {item.weightKg.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 })}<span className="text-sm text-zinc-400 ml-1">kg</span>
+                    </div>
+                  </div>
+                  
+                  <div className="h-2 w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(100, (item.weightKg / (item.lowStockThreshold * 4)) * 100)}%` }}
+                      className={cn(
+                        "h-full rounded-full",
+                        item.weightKg <= item.lowStockThreshold ? 'bg-rose-500' : 'bg-emerald-500'
                       )}
-                      <span className={`font-mono text-lg font-bold ${item.weightKg <= item.lowStockThreshold ? 'text-rose-500' : 'text-emerald-400'}`}>
-                        {item.weightKg.toLocaleString()}
-                      </span>
+                    />
+                  </div>
+                  
+                  {item.weightKg <= item.lowStockThreshold && (
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-rose-500 mt-2">
+                      <AlertCircle className="h-4 w-4" /> Low Stock Alert
                     </div>
-                    <div className="w-full h-1 bg-black/10 dark:bg-white/10 mt-2 max-w-[100px] ml-auto">
-                      <div className={`h-full ${item.weightKg <= item.lowStockThreshold ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: `${Math.min(100, (item.weightKg / (item.lowStockThreshold * 3)) * 100)}%` }}></div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5 hidden lg:table-cell text-zinc-600 dark:text-zinc-400 font-bold uppercase text-xs tracking-wider">
-                    {item.supplier}
-                  </td>
-                  <td className="px-6 py-5 text-right">
-                    <div className="flex justify-end gap-2">
-                       <button 
-                        onClick={() => openEdit(item)}
-                        className="text-[10px] font-bold text-zinc-500 hover:text-zinc-900 dark:text-white transition-colors"
-                      >
+                  )}
+                </div>
+
+                <button 
+                  onClick={() => openAdjust(item)}
+                  className="w-full mt-8 py-4 px-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-black/40 hover:bg-white dark:hover:bg-black text-xs font-semibold transition-all flex items-center justify-center gap-3 shadow-sm active:scale-95 text-zinc-900 dark:text-white"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Adjust Stock
+                </button>
+              </div>
+
+              {/* Mobile List View */}
+              <div className="md:hidden">
+                <SwipeAction 
+                  bgClassName="bg-zinc-100/50 dark:bg-zinc-800/50"
+                  rightActions={
+                    <div className="flex items-center justify-end gap-2 pr-4 pl-2 h-full">
+                      <button onClick={() => openEdit(item)} className="w-10 h-10 flex items-center justify-center bg-black/5 dark:bg-white/5 text-zinc-700 dark:text-zinc-200 rounded-full hover:bg-black/10 transition-colors">
                         <Edit2 className="h-4 w-4" />
                       </button>
-                      <button 
-                        onClick={() => openAdjust(item)}
-                        className="text-[10px] font-bold md:ml-3 text-zinc-900 dark:text-white border border-black/10 dark:border-white/20 px-3 py-1 uppercase hover:bg-white hover:text-black transition-colors"
-                      >
-                        Adjust
+                      <button onClick={() => {
+                         if(confirm('Delete this stock item?')) {
+                            setInventory(prev => prev.filter(i => i.id !== item.id));
+                         }
+                      }} className="w-10 h-10 flex items-center justify-center bg-rose-500/10 text-rose-600 rounded-full hover:bg-rose-500/20 transition-colors">
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
-                  </td>
-                </tr>
-              ))}
-              
-              {filteredInventory.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-zinc-500 font-bold uppercase tracking-widest">
-                    No powder stock items found matching "{searchTerm}"
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+                  }
+                  leftActions={
+                    <div className="flex items-center justify-start gap-2 pl-4 pr-2 h-full">
+                      <button onClick={() => openAdjust(item)} className="w-10 h-10 flex items-center justify-center bg-emerald-500/10 text-emerald-600 rounded-full hover:bg-emerald-500/20 transition-colors">
+                        <RefreshCw className="h-4 w-4" />
+                      </button>
+                    </div>
+                  }
+                  rightActionWidth={110}
+                  leftActionWidth={70}
+                >
+                  <div className={cn(
+                    "flex items-center justify-between gap-4 p-5 h-full transition-colors",
+                    item.weightKg <= item.lowStockThreshold ? "bg-rose-50 dark:bg-[#2c1418]" : "bg-white dark:bg-[#111]"
+                  )}>
+                    <div className="relative shrink-0">
+                      <div 
+                        className="w-14 h-14 rounded-2xl shadow-sm border border-black/5 dark:border-white/5 shrink-0"
+                        style={{ backgroundColor: getHexFromRal(item.colorCode) || item.colorCode }}
+                      />
+                      {item.weightKg <= item.lowStockThreshold && (
+                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full border-2 border-white dark:border-[#111]" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                      <h3 className="font-semibold text-[15px] text-zinc-900 dark:text-white leading-tight truncate tracking-tight">{item.name}</h3>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">{item.sku}</span>
+                        <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+                        <span className={cn("text-[13px] font-bold tracking-tight", item.weightKg <= item.lowStockThreshold ? 'text-rose-500' : 'text-emerald-500')}>
+                          {item.weightKg.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 })}kg
+                        </span>
+                      </div>
+                    </div>
+                    {/* Visual cue for swipe */}
+                    <div className="shrink-0 flex flex-col gap-1 items-center justify-center opacity-20 px-2 py-4">
+                      <div className="w-1 h-1 rounded-full bg-black dark:bg-white" />
+                      <div className="w-1 h-1 rounded-full bg-black dark:bg-white" />
+                      <div className="w-1 h-1 rounded-full bg-black dark:bg-white" />
+                    </div>
+                  </div>
+                </SwipeAction>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
 
-      <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Add Stock Element">
-        <form onSubmit={handleAddItem} className="space-y-5">
+      {filteredInventory.length === 0 && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex flex-col items-center justify-center py-24 text-center"
+        >
+          <div className="w-24 h-24 mb-6 rounded-3xl bg-orange-500/10 text-orange-500 flex items-center justify-center border border-orange-500/20">
+            <Search className="h-10 w-10" />
+          </div>
+          <h3 className="text-xl font-semibold text-zinc-900 dark:text-white mb-2">No Powder Stock Found</h3>
+          <p className="text-zinc-500 max-w-md mx-auto">We couldn't find any inventory matching your search. Try adjusting your filters or adding new stock.</p>
+        </motion.div>
+      )}
+
+      {/* Add Stock Modal */}
+      <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Add Powder Stock">
+        <form onSubmit={handleAddItem} className="space-y-6">
+          <div className="flex items-center gap-4 p-4 bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 rounded-xl mb-2">
+             <div 
+                className="w-12 h-12 rounded-lg border-2 border-white shadow-sm transition-colors"
+                style={{ backgroundColor: getHexFromRal(newItem.colorCode || '') || newItem.colorCode || '#ffffff' }}
+             />
+             <div>
+                <p className="text-xs font-semibold text-zinc-900 dark:text-orange-400">Color Preview</p>
+                <p className="text-xs font-medium text-zinc-500">Enter a RAL code or Hex color to see it here.</p>
+             </div>
+          </div>
           <div className="grid grid-cols-2 gap-4">
              <div>
-               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Name</label>
-               <input type="text" required value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium placeholder:text-zinc-600" placeholder="e.g. Cobalt Blue" />
+               <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Powder Name</label>
+               <input type="text" required value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" placeholder="e.g. Jet Black" />
              </div>
              <div>
-               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">SKU</label>
-               <input type="text" required value={newItem.sku} onChange={e => setNewItem({...newItem, sku: e.target.value})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium placeholder:text-zinc-600" placeholder="e.g. CBT-101" />
+               <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">SKU</label>
+               <input type="text" required value={newItem.sku} onChange={e => setNewItem({...newItem, sku: e.target.value})} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" placeholder="e.g. JB-9005" />
              </div>
           </div>
            <div className="grid grid-cols-2 gap-4">
              <div>
-               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Initial Stock (Kg)</label>
-               <input type="number" step="0.0001" required min="0" value={newItem.weightKg} onFocus={e => e.target.select()} onChange={e => setNewItem({...newItem, weightKg: e.target.value as any})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium" />
+               <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Initial Stock (Kg)</label>
+               <input type="number" step="0.1" required min="0" value={newItem.weightKg} onFocus={e => e.target.select()} onChange={e => setNewItem({...newItem, weightKg: e.target.value as any})} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" />
              </div>
              <div>
-               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Low Alert (Kg)</label>
-               <input type="number" step="0.0001" required min="0" value={newItem.lowStockThreshold} onFocus={e => e.target.select()} onChange={e => setNewItem({...newItem, lowStockThreshold: e.target.value as any})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium" />
+               <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Low Alert (Kg)</label>
+               <input type="number" step="0.1" required min="0" value={newItem.lowStockThreshold} onFocus={e => e.target.select()} onChange={e => setNewItem({...newItem, lowStockThreshold: e.target.value as any})} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" />
              </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
              <div>
-               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Finish</label>
-               <select value={newItem.finish} onChange={e => setNewItem({...newItem, finish: e.target.value})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors appearance-none font-medium">
-                 <option>Matte</option><option>Gloss</option><option>Satin</option><option>Texture</option>
+               <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Finish</label>
+               <select value={newItem.finish} onChange={e => setNewItem({...newItem, finish: e.target.value})} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors appearance-none font-semibold cursor-pointer shadow-sm">
+                 {finishes.filter(f => f !== 'All').map(f => <option key={f}>{f}</option>)}
                </select>
              </div>
              <div>
-               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Color Code (Hex)</label>
-               <input type="text" value={newItem.colorCode} onChange={e => setNewItem({...newItem, colorCode: e.target.value})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium" />
+               <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">RAL / Color Code</label>
+               <input type="text" value={newItem.colorCode} onChange={e => setNewItem({...newItem, colorCode: e.target.value})} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" placeholder="RAL 9005 or #000000" />
              </div>
           </div>
-          <div>
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Supplier</label>
-            <input type="text" value={newItem.supplier} onChange={e => setNewItem({...newItem, supplier: e.target.value})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium placeholder:text-zinc-600" placeholder="e.g. Chemcorp" />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Per KG Rate (₹)</label>
+              <input type="number" step="0.01" value={newItem.perKgRate || ''} onFocus={e => e.target.select()} onChange={e => setNewItem({...newItem, perKgRate: Number(e.target.value)})} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" placeholder="e.g. 250" />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Supplier (Optional)</label>
+              <input type="text" value={newItem.supplier} onChange={e => setNewItem({...newItem, supplier: e.target.value})} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold placeholder:text-zinc-500 shadow-sm" placeholder="e.g. Chemcorp" />
+            </div>
           </div>
-          <button type="submit" className="w-full bg-orange-500 text-black font-black uppercase tracking-widest py-4 rounded-xl mt-4 hover:bg-orange-600 transition-colors shadow-lg active:scale-[0.98]">
-            Add Element
+          <button type="submit" className="w-full bg-orange-500 text-white font-semibold py-5 rounded-xl mt-8 hover:bg-orange-400 transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] active:scale-[0.98] text-sm">
+            Save Powder Item
           </button>
         </form>
       </Modal>
 
+      {/* Adjust Stock Modal */}
       <Modal isOpen={isAdjustModalOpen} onClose={() => setIsAdjustModalOpen(false)} title={`Adjust Stock: ${activeItem?.name || ''}`}>
-         <form onSubmit={handleAdjustStock} className="space-y-5">
-            <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-xl">
-               <button type="button" onClick={() => setAdjustType('add')} className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-lg transition-colors ${adjustType==='add' ? 'bg-white dark:bg-[#111] shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500'}`}>Add Stock</button>
-               <button type="button" onClick={() => setAdjustType('remove')} className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-lg transition-colors ${adjustType==='remove' ? 'bg-white dark:bg-[#111] shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500'}`}>Remove Stock</button>
+         <form onSubmit={handleAdjustStock} className="space-y-6">
+            <div className="flex bg-black/5 dark:bg-white/5 p-1.5 rounded-lg border border-black/5 dark:border-white/5">
+               <button type="button" onClick={() => setAdjustType('add')} className={`flex-1 py-3 text-xs font-semibold text-zinc-500 rounded-lg transition-all ${adjustType==='add' ? 'bg-white dark:bg-zinc-800 shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}>+ Receive</button>
+               <button type="button" onClick={() => setAdjustType('remove')} className={`flex-1 py-3 text-xs font-semibold text-zinc-500 rounded-lg transition-all ${adjustType==='remove' ? 'bg-white dark:bg-zinc-800 shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}>- Consume</button>
             </div>
             <div>
-               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Amount (Kg)</label>
-               <input type="number" required min="0.0001" step="0.0001" value={adjustAmount} onFocus={e => e.target.select()} onChange={e => setAdjustAmount(e.target.value)} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium" />
+               <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Amount (Kg)</label>
+               <input type="number" required min="0.1" step="0.1" value={adjustAmount} onFocus={e => e.target.select()} onChange={e => setAdjustAmount(e.target.value)} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold text-lg shadow-sm" />
              </div>
              <div>
-               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Reason / Order Ref (Optional)</label>
-               <input type="text" value={adjustReason} onChange={e => setAdjustReason(e.target.value)} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium" placeholder="E.g. Spilled, Order #102..." />
+               <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Reason / Reference (Optional)</label>
+               <input type="text" value={adjustReason} onChange={e => setAdjustReason(e.target.value)} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" placeholder="E.g. Spilled, Order #102..." />
              </div>
-             <button type="submit" className="w-full bg-white text-black font-black uppercase tracking-widest py-4 rounded-xl mt-4 hover:bg-zinc-200 transition-colors shadow-lg active:scale-[0.98]">
-               Confirm Adjust
+             <button type="submit" className="w-full bg-orange-500 text-white font-semibold text-sm uppercase tracking-[0.1em] py-5 rounded-xl mt-8 hover:bg-orange-400 transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] active:scale-95">
+               Confirm Adjustment
              </button>
          </form>
       </Modal>
 
+      {/* Edit Modal */}
       <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title={`Edit ${editingItem?.name || ''}`}>
         <div className="space-y-6">
           <form onSubmit={handleEditItem} className="space-y-5">
+            <div className="flex items-center gap-4 p-4 bg-zinc-50 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl mb-2">
+               <div 
+                  className="w-12 h-12 rounded-lg border-2 border-white dark:border-zinc-800 shadow-sm transition-colors"
+                  style={{ backgroundColor: getHexFromRal(editingItem?.colorCode || '') || editingItem?.colorCode || '#ffffff' }}
+               />
+               <div>
+                  <p className="text-xs font-semibold text-zinc-900 dark:text-white">Color Preview</p>
+                  <p className="text-xs font-medium text-zinc-500">Live preview of selected RAL/Hex.</p>
+               </div>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Name</label>
-                <input type="text" required value={editingItem?.name || ''} onChange={e => setEditingItem(prev => prev ? {...prev, name: e.target.value} : null)} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white" />
+                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Name</label>
+                <input type="text" required value={editingItem?.name || ''} onChange={e => setEditingItem(prev => prev ? {...prev, name: e.target.value} : null)} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" />
               </div>
               <div>
-                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">SKU</label>
-                <input type="text" required value={editingItem?.sku || ''} onChange={e => setEditingItem(prev => prev ? {...prev, sku: e.target.value} : null)} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white" />
+                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">SKU</label>
+                <input type="text" required value={editingItem?.sku || ''} onChange={e => setEditingItem(prev => prev ? {...prev, sku: e.target.value} : null)} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
                <div>
-                 <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Low Alert (Kg)</label>
-                 <input type="number" step="0.0001" required min="0" value={editingItem?.lowStockThreshold === undefined ? '' : editingItem.lowStockThreshold} onFocus={e => e.target.select()} onChange={e => setEditingItem(prev => prev ? {...prev, lowStockThreshold: Number(e.target.value) || 0} : null)} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white" />
+                 <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Low Alert (Kg)</label>
+                 <input type="number" step="0.1" required min="0" value={editingItem?.lowStockThreshold === undefined ? '' : editingItem.lowStockThreshold} onFocus={e => e.target.select()} onChange={e => setEditingItem(prev => prev ? {...prev, lowStockThreshold: Number(e.target.value) || 0} : null)} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" />
                </div>
                <div>
-                 <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Finish</label>
-                 <select value={editingItem?.finish || 'Matte'} onChange={e => setEditingItem(prev => prev ? {...prev, finish: e.target.value as any} : null)} className="w-full px-4 py-3 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white">
-                   <option>Matte</option><option>Gloss</option><option>Satin</option><option>Texture</option>
+                 <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Finish</label>
+                 <select value={editingItem?.finish || 'Matte'} onChange={e => setEditingItem(prev => prev ? {...prev, finish: e.target.value as any} : null)} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm appearance-none cursor-pointer">
+                   {finishes.filter(f => f !== 'All').map(f => <option key={f}>{f}</option>)}
                  </select>
                </div>
             </div>
-            <button type="submit" className="w-full bg-white text-black font-black uppercase tracking-widest py-3 rounded-xl mt-2 hover:bg-zinc-200 transition-colors shadow-lg active:scale-[0.98]">
+            <div>
+              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Color Code (RAL or Hex)</label>
+              <input type="text" value={editingItem?.colorCode || ''} onChange={e => setEditingItem(prev => prev ? {...prev, colorCode: e.target.value} : null)} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" placeholder="e.g. #000000 or RAL 9005" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Per KG Rate (₹)</label>
+                <input type="number" step="0.01" value={editingItem?.perKgRate || ''} onFocus={e => e.target.select()} onChange={e => setEditingItem(prev => prev ? {...prev, perKgRate: Number(e.target.value)} : null)} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" placeholder="e.g. 250" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Supplier</label>
+                <input type="text" value={editingItem?.supplier || ''} onChange={e => setEditingItem(prev => prev ? {...prev, supplier: e.target.value} : null)} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold placeholder:text-zinc-500 shadow-sm" />
+              </div>
+            </div>
+            <button type="submit" className="w-full bg-orange-500 text-white font-semibold text-sm uppercase tracking-[0.1em] py-5 rounded-xl mt-8 hover:bg-orange-400 transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] active:scale-95">
               Save Changes
             </button>
           </form>
           
           <div className="pt-6 border-t border-black/10 dark:border-white/10">
-            <h4 className="text-sm font-black uppercase tracking-widest mb-4">Usage History</h4>
-            <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+            <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] mb-3">Usage History</h4>
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
               {inventoryUsages.filter(u => u.inventoryId === editingItem?.id).length === 0 ? (
-                <p className="text-xs text-zinc-500 font-medium italic">No usage recorded yet.</p>
+                <p className="text-xs font-semibold text-zinc-500 text-zinc-500">No usage recorded yet.</p>
               ) : (
                 inventoryUsages.filter(u => u.inventoryId === editingItem?.id).map(usage => (
-                  <div key={usage.id} className="bg-zinc-50 dark:bg-zinc-900/50 rounded-lg p-3 flex justify-between items-center text-xs border border-white/5">
+                  <div key={usage.id} className="bg-white/40 dark:bg-black/20 backdrop-blur-md rounded-xl p-4 flex justify-between items-center border border-black/5 dark:border-white/5">
                      <div>
-                       <span className="font-bold block">{usage.amountKg}kg Used</span>
-                       <span className="text-zinc-500">Order: {usage.orderId} - {usage.customerName}</span>
+                       <span className="text-sm font-semibold tracking-tight block text-zinc-900 dark:text-white">{usage.amountKg}kg Consumed</span>
+                       <span className="text-xs font-semibold text-zinc-500 tracking-widest mt-0.5 inline-block">Order: {usage.orderId} - {usage.customerName}</span>
                      </div>
-                     <div className="text-zinc-400 font-mono">
-                       {new Date(usage.date).toLocaleDateString()}
+                     <div className="text-xs text-zinc-400 font-semibold">
+                       {new Date(usage.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                      </div>
                   </div>
                 ))
@@ -467,6 +537,7 @@ export default function Inventory() {
         </div>
       </Modal>
 
-    </div>
+    </motion.div>
   );
 }
+

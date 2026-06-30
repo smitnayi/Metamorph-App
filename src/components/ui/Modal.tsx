@@ -10,7 +10,7 @@ interface ModalProps {
   title: string;
   children: React.ReactNode;
   className?: string;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
 }
 
 const sizeClasses = {
@@ -18,6 +18,7 @@ const sizeClasses = {
   md: 'max-w-md',
   lg: 'max-w-lg',
   xl: 'max-w-2xl',
+  '2xl': 'max-w-4xl',
   full: 'max-w-[90vw]'
 };
 
@@ -84,14 +85,14 @@ export default function Modal({ isOpen, onClose, title, children, className, siz
                   onClose();
                 }
               }}
-              className={cn("bg-[#f4f4f5] dark:bg-[#111] border border-black/5 dark:border-white/10 w-full shadow-2xl flex flex-col rounded-t-[32px] sm:rounded-2xl pointer-events-auto", sizeClasses[size], className)}
+              className={cn("bg-white/90 dark:bg-[#0a0a0a]/90 backdrop-blur-2xl border border-black/10 dark:border-white/10 w-full shadow-[0_0_40px_rgba(0,0,0,0.1)] dark:shadow-[0_0_40px_rgba(0,0,0,0.5)] flex flex-col rounded-t-[32px] sm:rounded-[32px] pointer-events-auto", sizeClasses[size], className)}
               onClick={e => e.stopPropagation()}
             >
               <div className="w-full flex justify-center pt-3 pb-2 sm:hidden cursor-grab active:cursor-grabbing">
                  <div className="w-12 h-1.5 bg-black/10 dark:bg-white/10 rounded-full shrink-0" />
               </div>
               <div className="flex items-center justify-between px-5 pb-3 pt-1 sm:pt-5 border-b border-black/5 dark:border-white/5 shrink-0">
-                <h2 className="text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-white">{title}</h2>
+                <h2 className="text-xs font-semibold text-zinc-900 dark:text-white">{title}</h2>
                 <button 
                   onClick={onClose} 
                   className="text-zinc-500 hover:text-zinc-900 dark:text-white transition-colors p-3 sm:p-2 -mr-3 sm:-mr-2 bg-black/5 dark:bg-white/5 rounded-full"

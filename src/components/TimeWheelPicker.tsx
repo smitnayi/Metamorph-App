@@ -30,7 +30,7 @@ export default function TimeWheelPicker({ value, onChange }: Props) {
         value={hours || '00'}
         onChange={handleHourChange}
       />
-      <span className="text-3xl font-black text-orange-500 pb-1 z-10 animate-pulse">:</span>
+      <span className="text-3xl font-semibold text-orange-500 pb-1 z-10 animate-pulse">:</span>
       <WheelScroll 
         items={Array.from({length: 60}, (_, i) => i.toString().padStart(2, '0'))}
         value={minutes || '00'}
@@ -88,7 +88,7 @@ function WheelScroll({ items, value, onChange }: { items: string[], value: strin
         <div 
           key={item} 
           className={cn(
-            "h-14 flex items-center justify-center text-4xl sm:text-5xl font-black snap-center transition-all duration-300 cursor-pointer",
+            "h-14 flex items-center justify-center text-4xl sm:text-5xl font-semibold snap-center transition-all duration-300 cursor-pointer",
             item === value 
                ? "text-zinc-900 dark:text-white scale-110" 
                : "text-zinc-300 dark:text-zinc-700 scale-90 opacity-50 hover:opacity-100 hover:scale-100"

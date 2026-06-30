@@ -84,6 +84,7 @@ interface AppState {
   setLabSpecialMeasures: (val: LabSpecialMeasure[] | ((prev: LabSpecialMeasure[]) => LabSpecialMeasure[])) => void;
   setUtilityMetrics: (val: UtilityMetric[] | ((prev: UtilityMetric[]) => UtilityMetric[])) => void;
   addActivityLog: (log: Omit<ActivityLog, 'id' | 'timestamp'>) => void;
+  clearTransactionalData: () => void;
 }
 
 const syncToFirebase = async <T extends { id: string }>(collectionName: string, currentItems: T[], nextItems: T[]) => {
@@ -208,6 +209,18 @@ export const useDataStore = create<AppState>((set, get) => ({
       timestamp: new Date().toISOString()
     };
     get().setActivityLogs([...get().activityLogs, newLog]);
+  },
+  clearTransactionalData: () => {
+    // Clear only transactional records, keep users, roles, inventory, customers, settings, labors
+    get().setOrders([]);
+    get().setTasks([]);
+    get().setQualityChecks([]);
+    get().setLaborAttendances([]);
+    get().setActivityLogs([]);
+    get().setInventoryUsages([]);
+    get().setLabRoutineChecks([]);
+    get().setLabSpecialMeasures([]);
+    get().setUtilityMetrics([]);
   }
 }));
 

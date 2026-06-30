@@ -6,6 +6,8 @@ import { FileText, Beaker, Plus, Droplet, Scale, Activity, Save, ClipboardCheck,
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { LabRoutineCheck, LabSpecialMeasure } from '../types';
+import { motion } from 'motion/react';
+import { cn } from '../lib/utils';
 
 export default function Lab() {
   const [activeTab, setActiveTab] = useState<'routine' | 'special'>('routine');
@@ -23,56 +25,58 @@ export default function Lab() {
   }
 
   return (
-    <div className="h-full flex flex-col pt-4 md:pt-8 md:p-8 max-w-7xl mx-auto w-full">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="h-full flex flex-col pt-4 md:pt-8 md:p-8 max-w-7xl mx-auto w-full space-y-8"
+    >
       {!hasRoutineToday && (
-         <div className="mx-4 md:mx-0 mb-6 bg-rose-500/10 border border-rose-500/20 rounded-[20px] p-4 flex items-start sm:items-center gap-4">
-            <div className="h-12 w-12 bg-rose-500/20 rounded-full flex items-center justify-center shrink-0 text-rose-600 dark:text-rose-400">
+         <div className="mx-4 md:mx-0 bg-rose-500/10 border border-rose-500/20 rounded-[24px] p-6 flex items-start sm:items-center gap-5 backdrop-blur-md">
+            <div className="h-12 w-12 bg-rose-500/20 rounded-xl flex items-center justify-center shrink-0 text-rose-600 dark:text-rose-400">
                <AlertTriangle className="h-5 w-5" />
             </div>
             <div className="flex-1">
-               <h3 className="text-xs font-black uppercase tracking-widest text-rose-600 dark:text-rose-400 mb-0.5 mt-1 sm:mt-0">Missing Daily Report</h3>
+               <h3 className="text-xs font-semibold text-rose-600 dark:text-rose-400 mb-1 mt-1 sm:mt-0">Missing Daily Report</h3>
                <p className="text-sm font-medium text-rose-700/80 dark:text-rose-300 text-balance leading-tight">Today's chemical process control sheet has not been filled out yet. Please complete the routine checks.</p>
             </div>
             <div className="hidden sm:block shrink-0">
-               <button onClick={() => setActiveTab('routine')} className="bg-rose-500 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-rose-600 transition-colors shadow-sm">
+               <button onClick={() => setActiveTab('routine')} className="bg-rose-500 text-black px-6 py-4 rounded-xl text-xs font-semibold hover:bg-rose-400 transition-colors shadow-sm active:scale-95">
                  Fill Now
                </button>
             </div>
          </div>
       )}
 
-      <div className="px-4 md:px-0 mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="px-4 md:px-0 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="h-10 w-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
-              <Beaker className="h-5 w-5 text-orange-500" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white">Chemical Lab</h1>
-              <p className="text-zinc-600 dark:text-zinc-400 font-medium text-sm">Process control sheets and chemical checks</p>
-            </div>
+          <label className="text-xs md:text-xs font-semibold text-orange-500">Quality</label>
+          <div className="flex items-center gap-3 mt-1">
+            <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-zinc-900 dark:text-white">Chemical Lab</h1>
           </div>
+          <p className="text-zinc-600 dark:text-zinc-400 font-medium text-sm mt-2">Process control sheets and chemical checks.</p>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-xl">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex bg-white/60 dark:bg-black/40 backdrop-blur-md p-1.5 rounded-xl border border-black/10 dark:border-white/10 shadow-sm">
             <button
               onClick={() => setActiveTab('routine')}
-              className={`flex-1 md:flex-none px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
+              className={cn(
+                "flex-1 md:flex-none px-6 py-3 rounded-lg text-xs font-semibold text-zinc-500 transition-all",
                 activeTab === 'routine' 
-                  ? 'bg-white dark:bg-black text-zinc-900 dark:text-white shadow-sm' 
-                  : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
-              }`}
+                  ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm border border-black/5 dark:border-white/5" 
+                  : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+              )}
             >
               Routine Checks
             </button>
             <button
               onClick={() => setActiveTab('special')}
-              className={`flex-1 md:flex-none px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
+              className={cn(
+                "flex-1 md:flex-none px-6 py-3 rounded-lg text-xs font-semibold text-zinc-500 transition-all",
                 activeTab === 'special' 
-                  ? 'bg-white dark:bg-black text-zinc-900 dark:text-white shadow-sm' 
-                  : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
-              }`}
+                  ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm border border-black/5 dark:border-white/5" 
+                  : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+              )}
             >
               Special Measures
             </button>
@@ -81,19 +85,19 @@ export default function Lab() {
           <div className="relative">
             <button 
               onClick={() => setShowExportMenu(!showExportMenu)}
-              className="w-full sm:w-auto bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-zinc-900 dark:text-white px-4 py-3 sm:py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
+              className="w-full sm:w-auto bg-white/60 dark:bg-black/40 backdrop-blur-md border border-black/10 dark:border-white/10 hover:bg-white dark:hover:bg-black text-zinc-900 dark:text-white px-6 py-4 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-3 shadow-sm active:scale-95"
             >
-              <Download className="h-4 w-4" /> Export Report
+              <Download className="h-4 w-4 text-zinc-500" /> Export
             </button>
             
             {showExportMenu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowExportMenu(false)} />
-                <div className="absolute right-0 mt-2 w-full sm:w-48 bg-white dark:bg-[#111] border border-black/5 dark:border-white/5 shadow-xl rounded-2xl p-2 z-50">
-                  <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-3 py-2 mb-1">Select Range</div>
-                  <button onClick={() => handleExport('1d')} className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold hover:bg-orange-500/10 hover:text-orange-600 dark:text-white dark:hover:text-orange-400">1 Day (Today)</button>
-                  <button onClick={() => handleExport('1w')} className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold hover:bg-orange-500/10 hover:text-orange-600 dark:text-white dark:hover:text-orange-400">1 Week</button>
-                  <button onClick={() => handleExport('1m')} className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold hover:bg-orange-500/10 hover:text-orange-600 dark:text-white dark:hover:text-orange-400">1 Month</button>
+                <div className="absolute right-0 mt-2 w-full sm:w-56 bg-white/90 dark:bg-[#111]/90 backdrop-blur-xl border border-black/10 dark:border-white/10 shadow-2xl rounded-[24px] p-2 z-50">
+                  <div className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.2em] px-4 py-3 mb-1">Select Range</div>
+                  <button onClick={() => handleExport('1d')} className="w-full text-left px-4 py-3 rounded-xl text-xs font-semibold hover:bg-orange-500/10 hover:text-orange-600 dark:text-white dark:hover:text-orange-400 transition-colors">1 Day (Today)</button>
+                  <button onClick={() => handleExport('1w')} className="w-full text-left px-4 py-3 rounded-xl text-xs font-semibold hover:bg-orange-500/10 hover:text-orange-600 dark:text-white dark:hover:text-orange-400 transition-colors">1 Week</button>
+                  <button onClick={() => handleExport('1m')} className="w-full text-left px-4 py-3 rounded-xl text-xs font-semibold hover:bg-orange-500/10 hover:text-orange-600 dark:text-white dark:hover:text-orange-400 transition-colors">1 Month</button>
                 </div>
               </>
             )}
@@ -101,10 +105,10 @@ export default function Lab() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto px-4 md:px-0 scrollbar-hide pb-24 md:pb-8">
+      <div className="flex-1 overflow-auto px-4 md:px-0 custom-scrollbar pb-24 md:pb-8">
         {activeTab === 'routine' ? <RoutineChecksTab /> : <SpecialMeasuresTab />}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -164,13 +168,13 @@ function RoutineChecksTab() {
     return (
       <div className="bg-white/60 dark:bg-[#111]/60 backdrop-blur-3xl rounded-[24px] border border-black/5 dark:border-white/5 shadow-sm p-5 md:p-8 max-w-4xl">
         <div className="flex flex-col mb-8 gap-4">
-          <h2 className="text-lg md:text-xl font-black uppercase tracking-tight">{editingId ? "Edit Control Check Sheet" : "New Control Check Sheet"}</h2>
+          <h2 className="text-lg md:text-xl font-semibold uppercase tracking-tight">{editingId ? "Edit Control Check Sheet" : "New Control Check Sheet"}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
-             <input type="date" value={newCheck.date} onChange={e => setNewCheck({...newCheck, date: e.target.value})} className="w-full bg-white dark:bg-black border border-black/5 dark:border-white/5 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all font-mono" />
-             <button onClick={() => { setIsAdding(false); setEditingId(null); }} className="w-full bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-zinc-900 dark:text-white px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
+             <input type="date" value={newCheck.date} onChange={e => setNewCheck({...newCheck, date: e.target.value})} className="w-full bg-white dark:bg-black border border-black/5 dark:border-white/5 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
+             <button onClick={() => { setIsAdding(false); setEditingId(null); }} className="w-full bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-zinc-900 dark:text-white px-4 py-3 rounded-xl text-xs font-semibold text-zinc-500 transition-colors flex items-center justify-center gap-2">
                <X className="h-4 w-4" /> Cancel
              </button>
-             <button onClick={handleSave} className="w-full bg-orange-500 text-black px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-orange-600 transition-colors flex items-center justify-center gap-2 shadow-sm">
+             <button onClick={handleSave} className="w-full bg-orange-500 text-white px-4 py-3 rounded-xl text-xs font-semibold text-zinc-500 hover:bg-orange-600 transition-colors flex items-center justify-center gap-2 shadow-sm">
                <Save className="h-4 w-4" /> {editingId ? "Update" : "Save"}
              </button>
           </div>
@@ -215,7 +219,7 @@ function RoutineChecksTab() {
           </Section>
 
           <div>
-             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Inspector Note / Remark</label>
+             <label className="text-xs font-semibold text-zinc-500 block mb-2 px-1">Inspector Note / Remark</label>
              <textarea 
                value={newCheck.notes} 
                onChange={e => setNewCheck({...newCheck, notes: e.target.value})}
@@ -230,13 +234,13 @@ function RoutineChecksTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h2 className="text-lg font-black uppercase tracking-tight">Recent Check Sheets</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <h2 className="text-xs font-semibold">Recent Check Sheets</h2>
         <button onClick={() => {
             setNewCheck({ date: new Date().toISOString().split('T')[0] });
             setEditingId(null);
             setIsAdding(true);
-        }} className="bg-orange-500 text-black px-4 py-2 rounded-xl text-sm font-black uppercase tracking-widest hover:bg-orange-600 transition-colors shadow-sm w-full sm:w-auto inline-flex items-center justify-center gap-2">
+        }} className="bg-orange-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors shadow-sm w-full sm:w-auto inline-flex items-center justify-center gap-3 active:scale-95">
            <Plus className="h-4 w-4" /> New Sheet
         </button>
       </div>
@@ -246,8 +250,8 @@ function RoutineChecksTab() {
            <div key={check.id} onClick={() => handleEdit(check)} className="bg-white/60 dark:bg-black/40 backdrop-blur-3xl border border-black/[0.04] dark:border-white/[0.06] rounded-[24px] p-6 shadow-sm flex flex-col cursor-pointer hover:shadow-md transition-shadow">
              <div className="flex items-start justify-between mb-4">
                <div>
-                 <div className="text-[10px] font-bold uppercase tracking-widest text-orange-500 mb-1">Process Check</div>
-                 <div className="text-lg font-black text-zinc-900 dark:text-white leading-tight">{format(new Date(check.date), 'MMM dd, yyyy')}</div>
+                 <div className="text-xs font-semibold text-orange-500 mb-1">Process Check</div>
+                 <div className="text-lg font-semibold text-zinc-900 dark:text-white leading-tight">{format(new Date(check.date), 'MMM dd, yyyy')}</div>
                </div>
                <div className="h-10 w-10 bg-orange-500/10 rounded-full flex items-center justify-center text-orange-600">
                  <FileText className="h-4 w-4" />
@@ -267,7 +271,7 @@ function RoutineChecksTab() {
         {labRoutineChecks.length === 0 && (
            <div className="col-span-full py-12 flex flex-col items-center justify-center text-center bg-black/5 dark:bg-white/5 rounded-3xl border border-dashed border-black/10 dark:border-white/10">
               <ClipboardCheck className="h-12 w-12 text-zinc-400 mb-4" />
-              <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-zinc-300">No Routine Checks</h3>
+              <h3 className="text-lg font-semibold uppercase tracking-tight text-zinc-900 dark:text-zinc-300">No Routine Checks</h3>
               <p className="text-sm font-medium text-zinc-500 mt-1 max-w-sm">Create a daily process control check sheet to track chemical concentrations.</p>
            </div>
         )}
@@ -279,7 +283,7 @@ function RoutineChecksTab() {
 function Section({ title, children }: { title: string, children: React.ReactNode }) {
   return (
     <div className="border border-black/5 dark:border-white/5 rounded-2xl p-5 bg-black/[0.02] dark:bg-white/[0.01]">
-      <h3 className="text-sm font-black uppercase tracking-widest mb-4 border-b border-black/5 dark:border-white/5 pb-2 text-zinc-800 dark:text-zinc-200">{title}</h3>
+      <h3 className="text-xs font-semibold mb-4 border-b border-black/5 dark:border-white/5 pb-2 text-zinc-800 dark:text-zinc-200">{title}</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {children}
       </div>
@@ -290,12 +294,12 @@ function Section({ title, children }: { title: string, children: React.ReactNode
 function Field({ label, value, onChange }: { label: string, value: any, onChange: (v: string) => void }) {
   return (
     <div>
-       <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider block mb-1.5 px-1">{label}</label>
+       <label className="text-xs font-semibold text-zinc-500 block mb-1.5 px-1">{label}</label>
        <input 
          type="number" step="any"
          value={value || ''} 
          onChange={e => onChange(e.target.value)}
-         className="w-full bg-white dark:bg-black border border-black/5 dark:border-white/5 rounded-lg px-3 py-2 text-sm font-bold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all font-mono"
+         className="w-full bg-white dark:bg-black border border-black/5 dark:border-white/5 rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
          placeholder="0.0"
        />
     </div>
@@ -344,42 +348,42 @@ function SpecialMeasuresTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h2 className="text-lg font-black uppercase tracking-tight">Special Measurements</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <h2 className="text-xs font-semibold">Special Measurements</h2>
         <button onClick={() => {
             setNewMeasure({ date: new Date().toISOString().split('T')[0], measureType: 'Etch Rate' });
             setEditingId(null);
             setIsAdding(true);
-        }} className="bg-orange-500 text-black px-4 py-2 rounded-xl text-sm font-black uppercase tracking-widest hover:bg-orange-600 transition-colors shadow-sm w-full sm:w-auto inline-flex items-center justify-center gap-2">
+        }} className="bg-orange-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors shadow-sm w-full sm:w-auto inline-flex items-center justify-center gap-3 active:scale-95">
            <Plus className="h-4 w-4" /> Add Record
         </button>
       </div>
 
       {isAdding && (
-        <div className="bg-white/60 dark:bg-black/40 backdrop-blur-3xl border border-orange-500/20 rounded-[24px] p-6 shadow-sm max-w-xl">
-           <div className="space-y-4">
+        <div className="bg-white/60 dark:bg-black/40 backdrop-blur-3xl border border-orange-500/20 rounded-[32px] p-8 shadow-sm max-w-xl">
+           <div className="space-y-6">
               <div className="flex flex-col gap-1">
-                 <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-1">Date</label>
-                 <input type="date" value={newMeasure.date} onChange={e => setNewMeasure({...newMeasure, date: e.target.value})} className="bg-white dark:bg-[#111] border border-black/10 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-orange-500" />
+                 <label className="text-xs font-semibold text-zinc-500 px-1 mb-2">Date</label>
+                 <input type="date" value={newMeasure.date} onChange={e => setNewMeasure({...newMeasure, date: e.target.value})} className="bg-white/60 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-xl px-5 py-4 text-sm font-medium focus:outline-none focus:border-orange-500 transition-colors" />
               </div>
               <div className="flex flex-col gap-1">
-                 <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-1">Measure Type</label>
-                 <select value={newMeasure.measureType} onChange={e => setNewMeasure({...newMeasure, measureType: e.target.value as any})} className="bg-white dark:bg-[#111] border border-black/10 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-orange-500 appearance-none cursor-pointer">
+                 <label className="text-xs font-semibold text-zinc-500 px-1 mb-2">Measure Type</label>
+                 <select value={newMeasure.measureType} onChange={e => setNewMeasure({...newMeasure, measureType: e.target.value as any})} className="bg-white/60 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-xl px-5 py-4 text-sm font-medium focus:outline-none focus:border-orange-500 appearance-none cursor-pointer transition-colors">
                    <option value="Etch Rate">Etch Rate</option>
                    <option value="Oil Content">Oil Content</option>
                    <option value="Chrome Weight">Chrome Weight</option>
                  </select>
               </div>
               <div className="flex flex-col gap-1">
-                 <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-1">Measured Value</label>
-                 <input type="number" step="any" value={newMeasure.value || ''} onChange={e => setNewMeasure({...newMeasure, value: Number(e.target.value)})} className="bg-white dark:bg-[#111] border border-black/10 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-orange-500 font-mono" placeholder="0.00" />
+                 <label className="text-xs font-semibold text-zinc-500 px-1 mb-2">Measured Value</label>
+                 <input type="number" step="any" value={newMeasure.value || ''} onChange={e => setNewMeasure({...newMeasure, value: Number(e.target.value)})} className="bg-white/60 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-xl px-5 py-4 text-sm font-medium focus:outline-none focus:border-orange-500 transition-colors" placeholder="0.00" />
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:justify-end gap-3 pt-4">
-                 <button onClick={() => {setIsAdding(false); setEditingId(null);}} className="bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-zinc-900 dark:text-white px-4 h-11 sm:h-10 rounded-xl text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
+              <div className="flex flex-col sm:flex-row sm:justify-end gap-4 pt-6">
+                 <button onClick={() => {setIsAdding(false); setEditingId(null);}} className="bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-zinc-900 dark:text-white px-6 h-14 sm:h-12 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 w-full sm:w-auto active:scale-95">
                    <X className="h-4 w-4" /> <span>Cancel</span>
                  </button>
-                 <button onClick={handleSave} className="bg-orange-500 hover:bg-orange-600 text-black px-6 h-11 sm:h-10 rounded-xl text-xs font-black uppercase tracking-widest transition-colors shadow-lg flex items-center justify-center gap-2 w-full sm:w-auto">
+                 <button onClick={handleSave} className="bg-orange-500 hover:bg-orange-600 text-white px-8 h-14 sm:h-12 rounded-xl text-xs font-semibold transition-all shadow-lg flex items-center justify-center gap-2 w-full sm:w-auto active:scale-95">
                    <Save className="h-4 w-4" /> <span>{editingId ? 'Update Record' : 'Save Record'}</span>
                  </button>
               </div>
@@ -389,19 +393,19 @@ function SpecialMeasuresTab() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {labSpecialMeasures.map(measure => (
-            <div key={measure.id} onClick={() => handleEdit(measure)} className="bg-white/60 dark:bg-black/40 backdrop-blur-3xl border border-black/[0.04] dark:border-white/[0.06] rounded-[24px] p-6 shadow-sm flex items-center justify-between hover:shadow-md cursor-pointer transition-all">
-               <div className="flex items-center gap-4">
-                 <div className="h-12 w-12 rounded-[16px] bg-orange-500/10 flex items-center justify-center text-orange-500">
-                    {measure.measureType === 'Etch Rate' ? <Activity className="h-5 w-5" /> : measure.measureType === 'Oil Content' ? <Droplet className="h-5 w-5" /> : <Scale className="h-5 w-5" />}
+            <div key={measure.id} onClick={() => handleEdit(measure)} className="bg-white/60 dark:bg-black/40 backdrop-blur-3xl border border-black/[0.04] dark:border-white/[0.06] rounded-[32px] p-8 shadow-sm flex items-center justify-between hover:shadow-md cursor-pointer transition-all hover:scale-[1.02]">
+               <div className="flex items-center gap-5">
+                 <div className="h-14 w-14 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 border border-orange-500/20">
+                    {measure.measureType === 'Etch Rate' ? <Activity className="h-6 w-6" /> : measure.measureType === 'Oil Content' ? <Droplet className="h-6 w-6" /> : <Scale className="h-6 w-6" />}
                  </div>
                  <div>
-                   <h3 className="text-sm font-black uppercase tracking-wide text-zinc-900 dark:text-white">{measure.measureType}</h3>
-                   <div className="text-[11px] font-bold tracking-widest text-zinc-500 uppercase mt-0.5">{format(new Date(measure.date), 'MMM dd, yyyy')}</div>
+                   <h3 className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-white">{measure.measureType}</h3>
+                   <div className="text-sm font-semibold tracking-widest text-zinc-500 uppercase mt-1">{format(new Date(measure.date), 'MMM dd, yyyy')}</div>
                  </div>
                </div>
                <div className="text-right">
-                  <div className="text-2xl font-black text-orange-600 font-mono">{measure.value}</div>
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                  <div className="text-3xl font-semibold text-orange-600 tracking-tight">{measure.value}</div>
+                  <div className="text-xs font-semibold text-zinc-400 mt-1">
                     {measure.measureType === 'Etch Rate' ? 'Rate' : measure.measureType === 'Oil Content' ? 'g/l' : 'g/m2'}
                   </div>
                </div>

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Card, CardContent } from '../components/ui/Card';
 import { useDataStore } from '../store/data';
 import { useRoleAccess } from '../hooks/useRoleAccess';
 import { useAuth } from '../contexts/AuthContext';
@@ -104,129 +103,129 @@ export default function Roles() {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center space-y-4">
-          <Shield className="w-16 h-16 text-red-500 mx-auto" />
-          <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">Access Denied</h2>
-          <p className="text-zinc-600 dark:text-zinc-400">You do not have permission to manage roles.</p>
+          <Shield className="w-16 h-16 text-rose-500 mx-auto" />
+          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white uppercase tracking-tight">Access Denied</h2>
+          <p className="text-zinc-600 dark:text-zinc-400 font-medium">You do not have permission to manage roles.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-4">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Role Management</h1>
-          <p className="text-zinc-600 dark:text-zinc-400">Configure access control levels</p>
+          <label className="text-xs md:text-xs font-semibold text-orange-500">Security & Access</label>
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight mt-1 text-zinc-900 dark:text-white">Role Management</h1>
+          <p className="text-zinc-600 dark:text-zinc-400 mt-2 font-medium text-sm">Configure access control levels across the organization.</p>
         </div>
         <button
           onClick={() => handleOpenModal()}
-          className="bg-emerald-600 hover:bg-emerald-500 text-zinc-900 dark:text-white px-4 py-2 rounded-xl flex items-center gap-2 font-medium transition-colors w-full sm:w-auto justify-center"
+          className="bg-orange-600 hover:bg-orange-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors w-full sm:w-auto inline-flex items-center justify-center gap-2 shadow-sm active:scale-95"
         >
-          <Plus size={20} />
+          <Plus className="w-4 h-4" />
           Create Custom Role
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {roles.map(role => (
-          <Card key={role.id} className="bg-[#f4f4f5] dark:bg-[#111] border-black/5 dark:border-white/5 flex flex-col h-full hover:border-black/5 dark:border-white/10 transition-colors">
-            <CardContent className="p-6 flex flex-col h-full">
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-3 bg-black/5 dark:bg-white/5 rounded-xl text-emerald-500">
+          <div key={role.id} className="bg-white/40 dark:bg-black/20 backdrop-blur-xl border border-black/5 dark:border-white/5 rounded-[32px] p-8 shadow-sm flex flex-col h-full hover:shadow-xl hover:bg-white/60 dark:hover:bg-black/40 hover:border-orange-500/30 transition-all group">
+              <div className="flex justify-between items-start mb-6">
+                <div className="p-4 bg-orange-500/10 rounded-xl text-orange-500 border border-orange-500/20">
                   <Shield size={24} />
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={() => handleOpenModal(role)} className="p-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:text-white transition-colors">
+                <div className="flex gap-2 bg-white/60 dark:bg-black/40 backdrop-blur-md p-1.5 rounded-lg border border-black/10 dark:border-white/10 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => handleOpenModal(role)} className="p-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors rounded-md hover:bg-black/5 dark:hover:bg-white/5">
                     <Edit2 size={16} />
                   </button>
                   {!role.isSystem && (
-                    <button onClick={() => handleDelete(role.id, role.isSystem)} className="p-2 text-red-400 hover:text-red-300 transition-colors">
+                    <button onClick={() => handleDelete(role.id, role.isSystem)} className="p-2 text-rose-500 hover:text-rose-600 transition-colors rounded-md hover:bg-rose-500/10">
                       <Trash2 size={16} />
                     </button>
                   )}
                 </div>
               </div>
-              <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">{role.name}</h3>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6 flex-grow">{role.description}</p>
               
-              <div className="flex gap-4 mb-6">
+              <h3 className="text-xl font-semibold uppercase tracking-tight text-zinc-900 dark:text-white mb-2">{role.name}</h3>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-8 flex-grow font-medium leading-relaxed">{role.description}</p>
+              
+              <div className="flex gap-6 mb-8 pb-8 border-b border-black/5 dark:border-white/5">
                 <div>
-                   <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1">Staff</div>
-                   <div className="text-lg font-black text-zinc-900 dark:text-white">{users.filter(u => u.roleId === role.id).length}</div>
+                   <div className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] mb-1">Staff Members</div>
+                   <div className="text-2xl font-semibold text-zinc-900 dark:text-white tracking-tight">{users.filter(u => u.roleId === role.id).length}</div>
                 </div>
               </div>
 
-              <div className="space-y-2 mt-auto">
-                <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Key Permissions</div>
+              <div className="space-y-4 mt-auto">
+                <div className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em]">Key Permissions</div>
                 <div className="flex flex-wrap gap-2">
                   {role.permissions.slice(0, 3).map((p, i) => (
-                    <span key={i} className="text-xs bg-black/5 dark:bg-white/5 text-zinc-700 dark:text-zinc-300 px-2 py-1 rounded-md">
+                    <span key={i} className="text-xs font-semibold bg-white/60 dark:bg-white/10 border border-black/5 dark:border-white/5 text-zinc-700 dark:text-zinc-300 px-3 py-1.5 rounded-md uppercase tracking-[0.1em]">
                       {p.action} {p.subject}
                     </span>
                   ))}
                   {role.permissions.length > 3 && (
-                    <span className="text-xs bg-black/5 dark:bg-white/5 text-zinc-500 px-2 py-1 rounded-md">
+                    <span className="text-xs font-semibold bg-black/5 dark:bg-black/40 text-zinc-500 px-3 py-1.5 rounded-md uppercase tracking-[0.1em]">
                       +{role.permissions.length - 3} more
                     </span>
                   )}
                 </div>
               </div>
-            </CardContent>
-          </Card>
+          </div>
         ))}
       </div>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingRole ? 'Edit Role' : 'Create Role'} size="xl">
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              <div>
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Role Name</label>
+                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-3 px-1">Role Name</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={e => setFormData({...formData, name: e.target.value})}
-                  className="w-full bg-white dark:bg-black border border-black/5 dark:border-white/10 rounded-xl px-4 py-3 text-zinc-900 dark:text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                  className="w-full bg-white/60 dark:bg-black/40 backdrop-blur-md border border-black/10 dark:border-white/10 rounded-xl px-5 py-4 text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium placeholder:text-zinc-500"
                   placeholder="e.g. Senior Technician"
                 />
              </div>
              <div>
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Description</label>
+                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-3 px-1">Description</label>
                 <input
                   type="text"
                   value={formData.description}
                   onChange={e => setFormData({...formData, description: e.target.value})}
-                  className="w-full bg-white dark:bg-black border border-black/5 dark:border-white/10 rounded-xl px-4 py-3 text-zinc-900 dark:text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                  className="w-full bg-white/60 dark:bg-black/40 backdrop-blur-md border border-black/10 dark:border-white/10 rounded-xl px-5 py-4 text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium placeholder:text-zinc-500"
                   placeholder="Brief description of this role"
                 />
              </div>
           </div>
 
           <div>
-             <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest block mb-4 px-1">Permissions Matrix</label>
-             <div className="bg-white dark:bg-black/50 rounded-xl border border-black/5 dark:border-white/10 overflow-x-auto w-full">
+             <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-4 px-1">Permissions Matrix</label>
+             <div className="bg-white/60 dark:bg-black/40 backdrop-blur-md rounded-[24px] border border-black/10 dark:border-white/10 overflow-x-auto w-full custom-scrollbar">
                 <table className="w-full text-sm text-left whitespace-nowrap min-w-[700px]">
                   <thead className="bg-black/5 dark:bg-white/5 text-zinc-600 dark:text-zinc-400">
                     <tr>
-                      <th className="px-4 py-3 font-medium rounded-tl-xl">Module</th>
+                      <th className="px-6 py-4 font-semibold text-xs rounded-tl-[24px]">Module</th>
                       {allActions.map(action => (
-                         <th key={action} className="px-4 py-3 font-medium text-center capitalize">{action}</th>
+                         <th key={action} className="px-6 py-4 font-semibold text-xs text-center">{action}</th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-black/5 dark:divide-white/5">
                     {allSubjects.map(subject => (
-                      <tr key={subject}>
-                        <td className="px-4 py-3 text-zinc-900 dark:text-white font-medium capitalize">{subject}</td>
+                      <tr key={subject} className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
+                        <td className="px-6 py-4 text-zinc-900 dark:text-white font-semibold text-sm">{subject}</td>
                         {allActions.map(action => (
-                          <td key={action} className="px-4 py-3 text-center">
+                          <td key={action} className="px-6 py-4 text-center">
                             <button
                                onClick={() => togglePermission(action, subject)}
-                               className={`w-6 h-6 rounded flex items-center justify-center mx-auto transition-colors ${
-                                 hasPerm(action, subject) ? 'bg-emerald-500/20 text-emerald-500' : 'bg-black/5 dark:bg-white/5 text-zinc-600 hover:bg-black/10 dark:bg-white/10'
+                               className={`w-8 h-8 rounded-[10px] flex items-center justify-center mx-auto transition-all active:scale-90 ${
+                                 hasPerm(action, subject) ? 'bg-orange-500 text-white shadow-sm' : 'bg-black/5 dark:bg-white/5 text-zinc-400 hover:bg-black/10 dark:hover:bg-white/10'
                                }`}
                             >
-                               {hasPerm(action, subject) ? <CheckCircle size={14} /> : <XCircle size={14} />}
+                               {hasPerm(action, subject) ? <CheckCircle className="w-4 h-4 stroke-[3]" /> : <XCircle className="w-4 h-4 stroke-[3]" />}
                             </button>
                           </td>
                         ))}
@@ -237,16 +236,16 @@ export default function Roles() {
              </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-black/5 dark:border-white/10">
+          <div className="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-black/5 dark:border-white/10">
             <button
               onClick={() => setIsModalOpen(false)}
-              className="px-6 py-2.5 rounded-xl font-medium text-zinc-900 dark:text-white hover:bg-black/5 dark:bg-white/5 transition-colors"
+              className="bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-zinc-900 dark:text-white px-8 py-4 rounded-xl text-xs font-semibold transition-all w-full sm:w-auto"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className="bg-emerald-600 hover:bg-emerald-500 text-zinc-900 dark:text-white px-6 py-2.5 rounded-xl font-medium transition-colors"
+              className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-xl text-xs font-semibold transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] w-full sm:w-auto active:scale-95"
             >
               Save Role
             </button>

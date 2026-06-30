@@ -36,14 +36,14 @@ export default function ExportLabReport() {
       <div className="print:hidden fixed top-4 right-4 md:top-8 md:right-8 z-50 flex gap-3">
         <button 
           onClick={() => navigate(-1)} 
-          className="bg-white/10 backdrop-blur-md text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white/20 transition-colors flex items-center gap-2 shadow-lg border border-white/10"
+          className="bg-white/10 backdrop-blur-md text-white px-4 py-2 rounded-xl text-xs font-semibold text-zinc-500 hover:bg-white/20 transition-colors flex items-center gap-2 shadow-lg border border-white/10"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
           Back
         </button>
         <button 
           onClick={handlePrint}
-          className="bg-orange-500 text-black px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-orange-600 transition-colors flex items-center gap-2 shadow-lg"
+          className="bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-semibold text-zinc-500 hover:bg-orange-600 transition-colors flex items-center gap-2 shadow-lg"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
           Download PDF
@@ -54,7 +54,7 @@ export default function ExportLabReport() {
         <div className="lab-report-container w-[1123px] min-h-[794px] bg-[#f5f4f0] p-16 relative flex flex-col justify-between shadow-2xl shrink-0 print:shadow-none print:w-full print:h-full print:min-h-0 print:bg-white origin-top">
            <div className="flex-1">
               {/* HEADER */}
-              <div className="flex justify-between items-start text-[10px] md:text-xs font-bold uppercase tracking-widest border-b-2 border-[#1a1a1a] pb-6 mb-12">
+              <div className="flex justify-between items-start text-xs md:text-xs font-semibold text-zinc-500 border-b-2 border-[#1a1a1a] pb-6 mb-12">
                  <div>(metamorph-lab)</div>
                  <div className="text-center">
                    +91 99986 28121<br/>
@@ -70,27 +70,27 @@ export default function ExportLabReport() {
               <div className="flex justify-between items-start mb-16">
                  <div className="grid grid-cols-2 gap-x-12 gap-y-6">
                     <div>
-                       <div className="text-[10px] font-bold uppercase tracking-widest mb-1">GENERATED ON:</div>
+                       <div className="text-xs font-semibold mb-1">GENERATED ON:</div>
                        <div className="text-sm font-medium">{format(new Date(), 'dd MMM yyyy, HH:mm')}</div>
                     </div>
                     <div>
-                       <div className="text-[10px] font-bold uppercase tracking-widest mb-1">RECORD RANGE:</div>
+                       <div className="text-xs font-semibold mb-1">RECORD RANGE:</div>
                        <div className="text-sm font-medium">
                           {range === '1d' ? 'Today' : range === '1w' ? 'Last 7 Days' : 'Last 30 Days'}
                        </div>
                     </div>
                     <div>
-                       <div className="text-[10px] font-bold uppercase tracking-widest mb-1">TOTAL RECORDS:</div>
+                       <div className="text-xs font-semibold mb-1">TOTAL RECORDS:</div>
                        <div className="text-sm font-medium">{filteredChecks.length} Routine Checks</div>
                     </div>
                     <div>
-                       <div className="text-[10px] font-bold uppercase tracking-widest mb-1">LAB MANAGER:</div>
+                       <div className="text-xs font-semibold mb-1">LAB MANAGER:</div>
                        <div className="text-sm font-medium">System Automated</div>
                     </div>
                  </div>
                  
                  <div className="text-right">
-                    <h1 className="text-[80px] font-black uppercase tracking-tighter leading-[0.85] text-[#1a1a1a]">
+                    <h1 className="text-[80px] font-semibold uppercase tracking-tighter leading-[0.85] text-[#1a1a1a]">
                       LAB<br/>REPORT
                     </h1>
                  </div>
@@ -100,7 +100,7 @@ export default function ExportLabReport() {
               <div className="mb-12">
                  <table className="w-full text-left border-collapse">
                     <thead>
-                       <tr className="border-b-2 border-[#1a1a1a] text-[10px] font-black uppercase tracking-widest">
+                       <tr className="border-b-2 border-[#1a1a1a] text-xs font-semibold">
                           <th className="py-4 px-2">Date</th>
                           <th className="py-4 px-2">Inspector</th>
                           <th className="py-4 px-2">Degrease<br/>(Alkali)</th>
@@ -113,18 +113,18 @@ export default function ExportLabReport() {
                     <tbody>
                        {filteredChecks.map((check, i) => (
                          <tr key={check.id} className="border-b border-[#1a1a1a]/20 text-sm font-medium">
-                            <td className="py-4 px-2 font-mono text-xs">{format(parseISO(check.date), 'MM/dd')}</td>
+                            <td className="py-4 px-2 text-xs">{format(parseISO(check.date), 'MM/dd')}</td>
                             <td className="py-4 px-2">{check.inspectorName}</td>
                             <td className="py-4 px-2">{check.degreaseAlkali} ml</td>
                             <td className="py-4 px-2">{check.desmutAcid} ml</td>
-                            <td className="py-4 px-2 font-bold text-orange-600 bg-orange-500/10">{check.alCoatingAcid} / {check.alCoatingFreeAcid}</td>
-                            <td className="py-4 px-2 font-bold text-orange-600 bg-orange-500/10">{check.alCoatingTime} min</td>
+                            <td className="py-4 px-2 font-semibold text-orange-600 bg-orange-500/10">{check.alCoatingAcid} / {check.alCoatingFreeAcid}</td>
+                            <td className="py-4 px-2 font-semibold text-orange-600 bg-orange-500/10">{check.alCoatingTime} min</td>
                             <td className="py-4 px-2">{check.rinse4pH} pH / {check.rinse4Cond} µS</td>
                          </tr>
                        ))}
                        {filteredChecks.length === 0 && (
                           <tr>
-                             <td colSpan={7} className="py-8 text-center text-zinc-500 text-sm uppercase tracking-widest font-bold">No records found for this period.</td>
+                             <td colSpan={7} className="py-8 text-center text-zinc-500 text-sm font-semibold">No records found for this period.</td>
                           </tr>
                        )}
                     </tbody>
@@ -134,7 +134,7 @@ export default function ExportLabReport() {
 
            {/* FOOTER GRAPHIC */}
            <div className="relative mt-auto border-t-2 border-[#1a1a1a] pt-12 overflow-hidden">
-              <div className="text-[10px] font-bold uppercase tracking-widest mb-12">
+              <div className="text-xs font-semibold mb-12">
                  End of report. Please maintain records for quality audits.
               </div>
               

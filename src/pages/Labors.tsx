@@ -1,21 +1,41 @@
 import React, { useState, useMemo } from 'react';
 import { useDataStore } from '../store/data';
-import { Users, UserPlus, Clock, IndianRupee, FileText, Download, CheckCircle } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { useRoleAccess } from '../hooks/useRoleAccess';
+import { usePin } from '../contexts/PinContext';
+import { Users, UserPlus, Clock, IndianRupee, FileText, Download, CheckCircle, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Modal from '../components/ui/Modal';
 import TimeWheelPicker from '../components/TimeWheelPicker';
 import { Labor, LaborAttendance } from '../types';
 import { cn } from '../lib/utils';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, parseISO } from 'date-fns';
+import { motion } from 'motion/react';
 
 export default function Labors() {
-  const { labors, setLabors, laborAttendances, setLaborAttendances, roles } = useDataStore();
+  const { labors, setLabors, laborAttendances, setLaborAttendances, roles, addActivityLog, activityLogs } = useDataStore();
+  const { currentUser } = useAuth();
+  const { hasPermission } = useRoleAccess();
+  const isAdmin = hasPermission(currentUser as any, 'manage', 'all');
+
   const [isAddLaborModalOpen, setIsAddLaborModalOpen] = useState(false);
   const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false);
+  const [isAuditLogOpen, setIsAuditLogOpen] = useState(false);
   
   const [newLabor, setNewLabor] = useState<Partial<Labor>>({
     name: '', dailySalary: 700, phone: '', status: 'Active', gender: 'Male'
   });
+
+  const [isPinVerified, setIsPinVerified] = useState(false);
+
+  const { requirePin } = usePin();
+
+  const handleUnlockEditing = () => {
+    requirePin(() => {
+      setIsPinVerified(true);
+      toast.success("Time editing unlocked for this session.");
+    }, "Enter Admin PIN to unlock time editing (hint: 0000)");
+  };
 
   const [attendanceDate, setAttendanceDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
@@ -170,6 +190,17 @@ export default function Labors() {
   }, [labors, laborAttendances, selectedMonth]);
 
   const handleMarkAttendance = (laborId: string, updates: Partial<LaborAttendance>) => {
+    // Log audit activity if manual hours or clock times are explicitly changed by an admin
+    if ('manualHours' in updates || 'manualMinutes' in updates || 'clockIn' in updates || 'clockOut' in updates) {
+       addActivityLog({
+          userId: currentUser?.id || 'sys',
+          userName: currentUser?.name || 'System',
+          action: 'Manual Attendance Override',
+          module: 'Labor',
+          details: `Admin updated attendance for ${labors.find(l=>l.id===laborId)?.name} on ${attendanceDate} (${Object.keys(updates).join(', ')})`,
+       });
+    }
+
     const existing = laborAttendances.find(a => a.laborId === laborId && a.date === attendanceDate);
     
     if (existing) {
@@ -194,98 +225,129 @@ export default function Labors() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-4 py-8 md:p-8">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6 max-w-7xl mx-auto px-4 py-8 md:p-8"
+    >
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
         <div>
-          <label className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] text-orange-500">Personnel</label>
-          <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight mt-1 text-zinc-900 dark:text-white">Labor Management</h1>
+          <label className="text-xs md:text-xs font-semibold text-orange-500">Personnel</label>
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight mt-1 text-zinc-900 dark:text-white">Labor Management</h1>
           <p className="text-zinc-600 dark:text-zinc-400 mt-2 font-medium text-sm">Manage daily wage workers, attendance, and overtime payments.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          <button 
+          {isAdmin && (
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setIsAuditLogOpen(true)}
+              className="inline-flex items-center justify-center bg-white/60 dark:bg-[#111] backdrop-blur-md border border-black/10 dark:border-white/10 text-zinc-900 dark:text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-white dark:hover:bg-black transition-colors shadow-sm"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Audit Logs
+            </motion.button>
+          )}
+          <motion.button 
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setIsAddLaborModalOpen(true)}
-            className="inline-flex items-center justify-center bg-white dark:bg-black px-6 py-3 md:py-4 rounded-xl text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors shadow-lg active:scale-95 border border-black/5 dark:border-white/10"
+            className="inline-flex items-center justify-center bg-orange-600 px-5 py-2.5 rounded-lg text-sm font-medium text-white hover:bg-orange-700 transition-colors shadow-sm"
           >
-            <UserPlus className="h-5 w-5 mr-2" />
+            <UserPlus className="h-5 w-5 mr-2 stroke-[2.5]" />
             Add Labor
-          </button>
+          </motion.button>
         </div>
       </div>
 
       {/* Attendance Quick Action Banner */}
-      <div className="bg-white dark:bg-[#111] rounded-2xl p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between shadow-sm border border-orange-500/20 mb-8 gap-4">
-        <div className="flex items-center gap-4">
-           <div className="h-12 w-12 rounded-full bg-orange-500/10 flex items-center justify-center shrink-0">
-             <Clock className="w-6 h-6 text-orange-500" />
+      <div className="bg-white/40 dark:bg-black/20 backdrop-blur-xl rounded-[32px] p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between shadow-2xl border border-black/5 dark:border-white/5 mb-8 gap-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+        <div className="flex items-center gap-5 relative z-10">
+           <div className="h-16 w-16 rounded-[20px] bg-white/60 dark:bg-black/40 border border-black/10 dark:border-white/10 flex items-center justify-center shrink-0 shadow-sm backdrop-blur-md">
+             <Clock className="w-8 h-8 text-orange-500" />
            </div>
            <div>
-             <h2 className="text-zinc-900 dark:text-white text-lg font-black uppercase tracking-tight">Today's Attendance</h2>
-             <p className="text-zinc-500 dark:text-zinc-400 font-medium text-xs max-w-sm mt-0.5">Manage clock-ins and entries for {format(new Date(), 'MMM do, yyyy')}</p>
+             <h2 className="text-zinc-900 dark:text-white text-xl font-semibold uppercase tracking-tight">Today's Attendance</h2>
+             <p className="text-zinc-600 dark:text-zinc-400 font-medium text-sm max-w-sm mt-1">Manage clock-ins and entries for {format(new Date(), 'MMM do, yyyy')}</p>
            </div>
         </div>
-        <button 
+        <motion.button 
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => setIsAttendanceModalOpen(true)}
-          className="w-full md:w-auto bg-black dark:bg-white text-white dark:text-black px-6 py-3 rounded-xl font-black uppercase tracking-widest text-xs hover:opacity-80 active:scale-95 transition-all flex justify-center items-center gap-2"
+          className="relative z-10 w-full md:w-auto bg-white/60 dark:bg-[#111] backdrop-blur-md border border-black/10 dark:border-white/10 text-zinc-900 dark:text-white px-8 py-5 rounded-xl font-semibold text-sm hover:bg-white dark:hover:bg-black transition-all flex justify-center items-center gap-3 shadow-sm hover:border-orange-500/50 hover:text-orange-500"
         >
           Review & Mark <Clock className="w-4 h-4"/>
-        </button>
+        </motion.button>
       </div>
 
       {/* Monthly Salary Report */}
-      <div className="bg-[#f4f4f5] dark:bg-[#111] border border-black/5 dark:border-white/10 rounded-2xl p-6">
+      <div className="bg-white/40 dark:bg-black/20 backdrop-blur-xl border border-black/5 dark:border-white/5 rounded-[32px] p-6 shadow-2xl">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
-              <FileText className="h-5 w-5 text-orange-500" />
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+              <FileText className="h-6 w-6 text-orange-500" />
             </div>
             <div>
-              <h2 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-white">Salary Report</h2>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Monthly Payouts</p>
+              <h2 className="text-xl font-semibold uppercase tracking-tight text-zinc-900 dark:text-white">Salary Report</h2>
+              <p className="text-xs font-semibold text-zinc-500 mt-0.5">Monthly Payouts</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             <input 
               type="month" 
               value={selectedMonth}
               onChange={e => setSelectedMonth(e.target.value)}
-              className="flex-1 sm:flex-none bg-white dark:bg-black border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500"
+              className="flex-1 sm:flex-none bg-white/60 dark:bg-[#111] backdrop-blur-md border border-black/10 dark:border-white/10 rounded-xl px-5 py-4 text-sm font-semibold text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors shadow-sm"
             />
-            <button
-              onClick={() => toast.success(`Exporting report for ${format(parseISO(selectedMonth + '-01'), 'MMMM yyyy')}...`)}
-              className="bg-white dark:bg-black border border-black/5 dark:border-white/10 text-zinc-900 dark:text-white p-3 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors shadow-sm"
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                toast.success(`Exporting report for ${format(parseISO(selectedMonth + '-01'), 'MMMM yyyy')}...`);
+                window.location.href = `/export-salary?month=${selectedMonth}`;
+              }}
+              className="bg-white/60 dark:bg-[#111] backdrop-blur-md border border-black/10 dark:border-white/10 text-zinc-900 dark:text-white p-4 rounded-xl hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-colors shadow-sm"
               title="Export Report"
             >
               <Download className="h-5 w-5" />
-            </button>
+            </motion.button>
           </div>
         </div>
 
-        <div className="overflow-x-auto w-full">
+        <div className="overflow-x-auto w-full custom-scrollbar">
           <table className="w-full text-sm text-left whitespace-nowrap min-w-[700px]">
-            <thead className="bg-white/50 dark:bg-black/50 text-zinc-500 font-bold uppercase tracking-widest text-[10px]">
+            <thead className="bg-black/5 dark:bg-white/5 text-zinc-500 font-semibold text-xs">
               <tr>
-                <th className="px-4 py-3 rounded-l-xl">Labor Name</th>
-                <th className="px-4 py-3">Daily Rate</th>
-                <th className="px-4 py-3">Present Days</th>
-                <th className="px-4 py-3">Worked Hrs</th>
-                <th className="px-4 py-3">Overtime Hrs</th>
-                <th className="px-4 py-3 text-right rounded-r-xl">Total Salary</th>
+                <th className="px-5 py-4 rounded-tl-[16px]">Labor Name</th>
+                <th className="px-5 py-4">Daily Rate</th>
+                <th className="px-5 py-4">Present Days</th>
+                <th className="px-5 py-4">Worked Hrs</th>
+                <th className="px-5 py-4">Overtime Hrs</th>
+                <th className="px-5 py-4 text-right rounded-tr-[16px]">Total Salary</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5 dark:divide-white/5">
-              {monthlySummary.map(({ labor, presentDays, totalWorkedHours, totalOvertimeHours, totalSalary }) => (
-                <tr key={labor.id}>
-                  <td className="px-4 py-4 font-bold text-zinc-900 dark:text-white">{labor.name}</td>
-                  <td className="px-4 py-4 text-zinc-600 dark:text-zinc-400 font-mono">₹{labor.dailySalary.toFixed(2)}</td>
-                  <td className="px-4 py-4 text-emerald-600 dark:text-emerald-400 font-bold">{presentDays}</td>
-                  <td className="px-4 py-4 text-orange-600 dark:text-orange-400 font-bold">{totalWorkedHours.toFixed(1)}h</td>
-                  <td className="px-4 py-4 text-blue-600 dark:text-blue-400 font-bold">{totalOvertimeHours.toFixed(1)}h</td>
-                  <td className="px-4 py-4 text-right font-black text-lg text-zinc-900 dark:text-white">₹{totalSalary.toFixed(2)}</td>
-                </tr>
+              {monthlySummary.map(({ labor, presentDays, totalWorkedHours, totalOvertimeHours, totalSalary }, idx) => (
+                <motion.tr 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  key={labor.id} 
+                  className="hover:bg-white/60 dark:hover:bg-white/5 transition-colors"
+                >
+                  <td className="px-5 py-4 font-semibold uppercase tracking-tight text-zinc-900 dark:text-white">{labor.name}</td>
+                  <td className="px-5 py-4 text-zinc-600 dark:text-zinc-400 font-semibold">₹{labor.dailySalary.toFixed(2)}</td>
+                  <td className="px-5 py-4 text-emerald-600 dark:text-emerald-400 font-semibold">{presentDays}</td>
+                  <td className="px-5 py-4 text-orange-600 dark:text-orange-400 font-semibold">{totalWorkedHours.toFixed(1)}h</td>
+                  <td className="px-5 py-4 text-blue-600 dark:text-blue-400 font-semibold">{totalOvertimeHours.toFixed(1)}h</td>
+                  <td className="px-5 py-4 text-right font-semibold text-lg text-zinc-900 dark:text-white">₹{totalSalary.toFixed(2)}</td>
+                </motion.tr>
               ))}
               {monthlySummary.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-zinc-500 font-medium">No labors found for this period.</td>
+                  <td colSpan={6} className="px-5 py-8 text-center text-zinc-500 font-medium">No labors found for this period.</td>
                 </tr>
               )}
             </tbody>
@@ -294,62 +356,85 @@ export default function Labors() {
       </div>
 
       {/* Labors List */}
-      <h2 className="text-xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mt-12 mb-6">Active Directory & Time Clock</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {labors.map((labor) => {
+      <h2 className="text-2xl font-semibold uppercase tracking-tight text-zinc-900 dark:text-white mt-16 mb-8">Active Directory & Time Clock</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {labors.map((labor, idx) => {
           const today = format(new Date(), 'yyyy-MM-dd');
           const todaysAttendance = laborAttendances.find(a => a.laborId === labor.id && a.date === today);
           const isClockedIn = !!(todaysAttendance && todaysAttendance.clockIn && !todaysAttendance.clockOut);
           const hasClockedOut = !!(todaysAttendance && todaysAttendance.clockOut);
 
           return (
-          <div key={labor.id} className="bg-[#f4f4f5] dark:bg-[#111] border border-black/5 dark:border-white/5 rounded-2xl p-5 flex flex-col gap-4">
-            <div className="flex justify-between items-start">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center font-black text-zinc-900 dark:text-white text-lg">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.05 }}
+            key={labor.id} 
+            className="bg-white/40 dark:bg-black/20 backdrop-blur-xl border border-black/5 dark:border-white/5 rounded-[32px] p-6 flex flex-col gap-5 shadow-2xl relative overflow-hidden group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-white/0 dark:from-white/5 dark:to-white/0 pointer-events-none" />
+            
+            <div className="flex justify-between items-start relative z-10">
+              <div className="flex items-center gap-4">
+                <div className="h-14 w-14 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center font-semibold text-orange-500 text-xl group-hover:bg-orange-500 group-hover:text-white transition-colors shrink-0">
                   {labor.name.charAt(0)}
                 </div>
                 <div>
-                  <div className="font-bold text-zinc-900 dark:text-white uppercase text-sm mb-0.5">{labor.name}</div>
-                  <div className="text-zinc-500 text-[10px] font-bold tracking-widest">{labor.phone || 'No Phone'}</div>
+                  <div className="font-semibold text-zinc-900 dark:text-white uppercase tracking-tight text-sm mb-0.5">{labor.name}</div>
+                  <div className="text-zinc-500 text-xs font-semibold tracking-[0.1em]">{labor.phone || 'No Phone'}</div>
                 </div>
               </div>
-              <button 
-                onClick={() => toggleLaborStatus(labor.id, labor.status)}
-                className={cn(
-                  "inline-flex items-center px-2 py-1 rounded-[6px] text-[9px] font-bold uppercase tracking-wider border mb-2",
-                  labor.status === 'Active' ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400" : "bg-black/10 dark:bg-white/10 border-black/10 dark:border-white/20 text-zinc-600 dark:text-zinc-400"
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => toggleLaborStatus(labor.id, labor.status)}
+                  className={cn(
+                    "inline-flex items-center px-3 py-1.5 rounded-md text-xs font-semibold border mb-2 backdrop-blur-md transition-all active:scale-95",
+                    labor.status === 'Active' ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20" : "bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/10 text-zinc-600 dark:text-zinc-400 hover:bg-black/10 dark:hover:bg-white/10"
+                  )}
+                >
+                  {labor.status}
+                </button>
+                {isAdmin && (
+                  <button 
+                    onClick={() => {
+                      if(window.confirm('Delete this personnel completely?')) {
+                        setLabors(prev => prev.filter(l => l.id !== labor.id));
+                      }
+                    }}
+                    className="p-1.5 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-md hover:bg-rose-500 hover:text-white transition-colors mb-2"
+                    title="Delete Labor"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 )}
-              >
-                {labor.status}
-              </button>
+              </div>
             </div>
                   
-            <div className="flex items-center justify-between mt-2 pt-4 border-t border-black/5 dark:border-white/5">
+            <div className="flex items-center justify-between mt-2 pt-5 border-t border-black/5 dark:border-white/5 relative z-10">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block mb-1">Daily Fixed Salary</span>
-                <span className="font-black text-zinc-900 dark:text-white">₹{labor.dailySalary}</span>
-                <span className="text-zinc-500 text-[10px] font-bold tracking-widest ml-1">/ day</span>
+                <span className="text-xs font-semibold text-zinc-500 text-zinc-500 block mb-1">Daily Fixed Salary</span>
+                <span className="font-semibold text-zinc-900 dark:text-white text-lg">₹{labor.dailySalary}</span>
+                <span className="text-zinc-500 text-xs font-semibold tracking-[0.1em] ml-1">/ day</span>
               </div>
               <div className="text-right">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block mb-1">Hourly Rate</span>
-                <span className="font-bold text-zinc-900 dark:text-white">₹{(labor.dailySalary / (labor.gender === 'Female' ? 9.5 : 12)).toFixed(2)}</span>
-                <span className="text-zinc-500 text-[10px] font-bold tracking-widest ml-1">/ hr</span>
+                <span className="text-xs font-semibold text-zinc-500 text-zinc-500 block mb-1">Hourly Rate</span>
+                <span className="font-semibold text-zinc-900 dark:text-white text-lg">₹{(labor.dailySalary / (labor.gender === 'Female' ? 9.5 : 12)).toFixed(2)}</span>
+                <span className="text-zinc-500 text-xs font-semibold tracking-[0.1em] ml-1">/ hr</span>
               </div>
             </div>
-            <div className="mt-2 pt-4 border-t border-black/5 dark:border-white/5 flex flex-col gap-3">
+            <div className="mt-2 pt-5 border-t border-black/5 dark:border-white/5 flex flex-col gap-4 relative z-10">
               {/* Timestamp display block */}
               {(isClockedIn || hasClockedOut) && (
-                <div className="flex justify-between items-center bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5">
+                <div className="flex justify-between items-center bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-black/5 dark:border-white/5 backdrop-blur-md">
                    <div className="flex flex-col">
-                     <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-0.5">Clock In</span>
-                     <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-sm">
+                     <span className="text-xs font-semibold text-zinc-500 mb-1">Clock In</span>
+                     <span className="font-semibold text-emerald-600 dark:text-emerald-400 text-sm">
                        {todaysAttendance?.clockIn ? format(parseISO(todaysAttendance.clockIn), 'hh:mm a') : '--:--'}
                      </span>
                    </div>
                    <div className="flex flex-col text-right">
-                     <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-0.5">Clock Out</span>
-                     <span className="font-mono font-bold text-rose-600 dark:text-rose-400 text-sm">
+                     <span className="text-xs font-semibold text-zinc-500 mb-1">Clock Out</span>
+                     <span className="font-semibold text-rose-600 dark:text-rose-400 text-sm">
                        {todaysAttendance?.clockOut ? format(parseISO(todaysAttendance.clockOut), 'hh:mm a') : '--:--'}
                      </span>
                    </div>
@@ -361,7 +446,7 @@ export default function Labors() {
                 {!isClockedIn && !hasClockedOut && (
                   <button
                     onClick={() => openTimeSelector(labor.id, 'in')}
-                    className="flex-1 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-2"
+                    className="flex-1 py-4 rounded-xl text-xs font-semibold transition-all bg-emerald-500 text-white hover:bg-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.3)] active:scale-95 flex items-center justify-center gap-2"
                   >
                     <Clock className="w-4 h-4"/> Clock In
                   </button>
@@ -369,19 +454,19 @@ export default function Labors() {
                 {isClockedIn && !hasClockedOut && (
                   <button
                     onClick={() => openTimeSelector(labor.id, 'out')}
-                    className="flex-1 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all bg-rose-500 text-white hover:bg-rose-600 shadow-lg shadow-rose-500/20 active:scale-95 flex items-center justify-center gap-2"
+                    className="flex-1 py-4 rounded-xl text-xs font-semibold transition-all bg-rose-500 text-white hover:bg-rose-400 shadow-[0_0_20px_rgba(244,63,94,0.3)] active:scale-95 flex items-center justify-center gap-2"
                   >
                     <Clock className="w-4 h-4"/> Clock Out
                   </button>
                 )}
                 {hasClockedOut && (
-                  <div className="flex-1 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest text-center text-zinc-500 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 flex items-center justify-center gap-2">
+                  <div className="flex-1 py-4 rounded-xl text-xs font-semibold text-center text-zinc-500 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 flex items-center justify-center gap-2 backdrop-blur-md">
                      <CheckCircle className="w-4 h-4 text-emerald-500"/> Shift Complete
                   </div>
                 )}
               </div>
             </div>
-          </div>
+          </motion.div>
         )})}
       </div>
 
@@ -395,15 +480,15 @@ export default function Labors() {
              />
            </div>
            
-           <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-8 text-center max-w-[280px]">
+           <p className="text-zinc-500 text-xs font-semibold mb-8 text-center max-w-[280px]">
              Swipe exactly to define arrival and departure time.
            </p>
 
            <div className="flex gap-4 w-full">
-             <button type="button" onClick={() => setTimeSelector(prev => ({ ...prev, isOpen: false }))} className="flex-1 bg-white dark:bg-black text-zinc-600 dark:text-zinc-400 font-black uppercase tracking-widest py-4 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-900 transition-colors border border-black/5 dark:border-white/10 shadow-sm active:scale-95">
+             <button type="button" onClick={() => setTimeSelector(prev => ({ ...prev, isOpen: false }))} className="flex-1 bg-white dark:bg-black text-zinc-600 dark:text-zinc-400 font-semibold py-4 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-900 transition-colors border border-black/5 dark:border-white/10 shadow-sm active:scale-95">
                Cancel
              </button>
-             <button type="submit" className={cn("flex-1 text-white font-black uppercase tracking-widest py-4 rounded-xl transition-colors shadow-lg active:scale-95", timeSelector.type === 'in' ? "bg-emerald-500 hover:bg-emerald-600" : "bg-orange-500 hover:bg-orange-600")}>
+             <button type="submit" className={cn("flex-1 text-white font-semibold py-4 rounded-xl transition-colors shadow-lg active:scale-95", timeSelector.type === 'in' ? "bg-emerald-500 hover:bg-emerald-600" : "bg-orange-500 hover:bg-orange-600")}>
                Confirm
              </button>
            </div>
@@ -412,73 +497,73 @@ export default function Labors() {
 
       {/* Add Labor Modal */}
       <Modal isOpen={isAddLaborModalOpen} onClose={() => setIsAddLaborModalOpen(false)} title="Register Labor">
-        <form onSubmit={handleAddLabor} className="space-y-5">
+        <form onSubmit={handleAddLabor} className="space-y-6 p-2 md:p-6">
           <div>
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Full Name</label>
-            <input type="text" required value={newLabor.name} onChange={e => setNewLabor({...newLabor, name: e.target.value})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium placeholder:text-zinc-600" placeholder="e.g. Ramesh Singh" />
+            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Full Name</label>
+            <input type="text" required value={newLabor.name} onChange={e => setNewLabor({...newLabor, name: e.target.value})} className="w-full px-4 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold placeholder:text-zinc-500 shadow-sm" placeholder="e.g. Ramesh Singh" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-6">
             <div>
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Daily Salary (₹)</label>
-              <input type="number" required value={newLabor.dailySalary} onChange={e => setNewLabor({...newLabor, dailySalary: Number(e.target.value)})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium" placeholder="700" />
+              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Daily Salary (₹)</label>
+              <input type="number" required value={newLabor.dailySalary} onChange={e => setNewLabor({...newLabor, dailySalary: Number(e.target.value)})} className="w-full px-4 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" placeholder="700" />
             </div>
             <div>
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Gender (Shift)</label>
-              <select value={newLabor.gender} onChange={e => setNewLabor({...newLabor, gender: e.target.value as 'Male'|'Female'})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium">
+              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Gender (Shift)</label>
+              <select value={newLabor.gender} onChange={e => setNewLabor({...newLabor, gender: e.target.value as 'Male'|'Female'})} className="w-full px-4 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm appearance-none">
                 <option value="Male">Male (12 hr shift)</option>
                 <option value="Female">Female (9.5 hr shift)</option>
               </select>
             </div>
           </div>
           <div>
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Phone Number</label>
-            <input type="tel" value={newLabor.phone} onChange={e => setNewLabor({...newLabor, phone: e.target.value})} className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-black text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium placeholder:text-zinc-600" placeholder="+91..." />
+            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Phone Number</label>
+            <input type="tel" value={newLabor.phone} onChange={e => setNewLabor({...newLabor, phone: e.target.value})} className="w-full px-4 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold placeholder:text-zinc-500 shadow-sm" placeholder="+91..." />
           </div>
-          <button type="submit" className="w-full bg-white text-black font-black uppercase tracking-widest py-4 rounded-xl mt-4 hover:bg-zinc-200 transition-colors shadow-lg active:scale-[0.98]">
+          <button type="submit" className="w-full bg-orange-500 text-white font-semibold py-5 rounded-xl mt-8 hover:bg-orange-400 transition-colors shadow-[0_0_20px_rgba(249,115,22,0.3)] active:scale-95 text-sm">
             Assign Labor
           </button>
         </form>
       </Modal>
 
       {/* Mark Attendance Modal */}
-      <Modal isOpen={isAttendanceModalOpen} onClose={() => setIsAttendanceModalOpen(false)} title="Daily Attendance">
-        <div className="space-y-6">
+      <Modal isOpen={isAttendanceModalOpen} onClose={() => setIsAttendanceModalOpen(false)} title="Daily Attendance" size="lg">
+        <div className="space-y-8 p-2 md:p-6">
           <div>
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2 px-1">Attendance Date</label>
+            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Attendance Date</label>
             <input 
               type="date" 
               required 
               value={attendanceDate} 
               onChange={e => setAttendanceDate(e.target.value)} 
               max={format(new Date(), 'yyyy-MM-dd')}
-              className="w-full px-4 py-4 rounded-xl border border-black/5 dark:border-white/10 bg-[#f4f4f5] dark:bg-[#111] text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-medium" 
+              className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" 
             />
           </div>
 
-          <div className="space-y-3">
-            <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-1">Labors List</h3>
+          <div className="space-y-4">
+            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] px-1">Labors List</h3>
              {labors.filter(l => l.status === 'Active').map(labor => {
                 const existingRec = laborAttendances.find(a => a.laborId === labor.id && a.date === attendanceDate);
                 const currentStatus = existingRec?.status || 'Absent';
 
                 return (
-                  <div key={labor.id} className="bg-white dark:bg-black border border-black/5 dark:border-white/10 rounded-xl p-4 flex flex-col gap-3">
+                  <div key={labor.id} className="bg-white/40 dark:bg-black/20 backdrop-blur-xl border border-black/5 dark:border-white/5 rounded-[24px] p-5 flex flex-col gap-4 shadow-sm">
                     <div className="flex justify-between items-center">
-                      <div className="font-bold text-sm text-zinc-900 dark:text-white uppercase">{labor.name}</div>
-                      <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                      <div className="font-semibold text-sm text-zinc-900 dark:text-white uppercase tracking-tight">{labor.name}</div>
+                      <div className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em]">
                          {labor.gender === 'Female' ? '9.5 hr shift' : '12 hr shift'}
                       </div>
                     </div>
                     
-                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                    <div className="flex flex-wrap items-center gap-3 mt-1">
                        <select 
                          value={currentStatus}
                          onChange={(e) => handleMarkAttendance(labor.id, { status: e.target.value as any })}
                          className={cn(
-                           "px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-widest border focus:outline-none appearance-none cursor-pointer",
-                           currentStatus === 'Present' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : 
-                           currentStatus === 'Half-Day' ? "bg-orange-500/10 text-orange-500 border-orange-500/20" : 
-                           "bg-zinc-100 dark:bg-zinc-900 text-zinc-500 border-zinc-200 dark:border-zinc-800"
+                           "px-4 py-3 rounded-lg text-xs font-semibold text-zinc-500 border focus:outline-none appearance-none cursor-pointer backdrop-blur-md transition-colors",
+                           currentStatus === 'Present' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/30" : 
+                           currentStatus === 'Half-Day' ? "bg-orange-500/10 text-orange-500 border-orange-500/30" : 
+                           "bg-white/60 dark:bg-black/40 text-zinc-500 border-black/10 dark:border-white/10"
                          )}
                        >
                          <option value="Present">Present (Default)</option>
@@ -486,36 +571,86 @@ export default function Labors() {
                          <option value="Absent">Absent</option>
                        </select>
 
-                       <div className="flex items-center gap-1 bg-zinc-50 dark:bg-zinc-900 border border-black/5 dark:border-white/5 rounded-lg px-2 h-9 flex-1">
-                         <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest pl-1 mr-auto">Manual</span>
+                       <div className="flex items-center gap-2 bg-white/60 dark:bg-black/40 backdrop-blur-md border border-black/10 dark:border-white/10 rounded-lg px-3 h-[42px] flex-1 min-w-[150px] relative">
+                         {!isPinVerified ? (
+                           <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/5 dark:bg-white/5 backdrop-blur-[2px] rounded-lg cursor-pointer" onClick={handleUnlockEditing}>
+                              <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300 flex items-center gap-2">
+                                🔒 Unlock
+                              </span>
+                           </div>
+                         ) : null}
+                         <span className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] pl-1 mr-auto">Manual</span>
                          <input 
                            type="number"
                            min="0"
                            value={existingRec?.manualHours ?? ''}
                            onChange={(e) => handleMarkAttendance(labor.id, { manualHours: parseInt(e.target.value) || 0 })}
-                           className="w-10 bg-transparent text-right font-bold text-sm text-zinc-900 dark:text-white focus:outline-none"
+                           className="w-10 bg-transparent text-right font-semibold text-sm text-zinc-900 dark:text-white focus:outline-none"
                            placeholder="0"
+                           disabled={!isPinVerified}
                          />
-                         <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">H</span>
+                         <span className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em]">H</span>
                          <input 
                            type="number"
                            min="0" max="59"
                            value={existingRec?.manualMinutes ?? ''}
                            onChange={(e) => handleMarkAttendance(labor.id, { manualMinutes: parseInt(e.target.value) || 0 })}
-                           className="w-8 bg-transparent text-right font-bold text-sm text-zinc-900 dark:text-white focus:outline-none"
+                           className="w-8 bg-transparent text-right font-semibold text-sm text-zinc-900 dark:text-white focus:outline-none"
                            placeholder="0"
+                           disabled={!isPinVerified}
                          />
-                         <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest pr-1">M</span>
+                         <span className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] pr-1">M</span>
                        </div>
                     </div>
 
-                    {(existingRec?.clockIn || existingRec?.clockOut) && (
-                      <div className="flex items-center gap-2 text-[10px] font-medium text-zinc-500 border-t border-black/5 dark:border-white/5 pt-2 mt-1">
-                        <Clock className="w-3 h-3" />
-                        Card Swipe: {existingRec.clockIn ? format(parseISO(existingRec.clockIn), 'HH:mm') : '--'} to {existingRec.clockOut ? format(parseISO(existingRec.clockOut), 'HH:mm') : '--'}
-                        {existingRec.clockIn && existingRec.clockOut && (
-                          <span className="ml-auto text-emerald-600 dark:text-emerald-400 font-bold">
-                            Total: {((new Date(existingRec.clockOut).getTime() - new Date(existingRec.clockIn).getTime()) / (1000 * 60 * 60)).toFixed(1)} hrs
+                    {(existingRec?.clockIn || existingRec?.clockOut || isAdmin) && (
+                      <div className="flex items-center gap-3 text-xs font-semibold text-zinc-500 border-t border-black/5 dark:border-white/5 pt-3 mt-1 flex-wrap">
+                        <Clock className="w-4 h-4 text-zinc-400" />
+                        
+                        {isAdmin ? (
+                          <div className="flex items-center gap-2 relative">
+                            {!isPinVerified ? (
+                              <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/5 dark:bg-white/5 backdrop-blur-[2px] rounded-lg cursor-pointer" onClick={handleUnlockEditing}>
+                                <span className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-300">🔒 Unlock</span>
+                              </div>
+                            ) : null}
+                            <input
+                              type="time"
+                              value={existingRec?.clockIn ? format(parseISO(existingRec.clockIn), 'HH:mm') : ''}
+                              onChange={(e) => {
+                                if(!e.target.value) return handleMarkAttendance(labor.id, { clockIn: undefined });
+                                const [h, m] = e.target.value.split(':');
+                                const d = new Date();
+                                d.setHours(parseInt(h), parseInt(m), 0, 0);
+                                handleMarkAttendance(labor.id, { clockIn: d.toISOString() });
+                              }}
+                              className="px-2 py-1 bg-white/60 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-md text-zinc-900 dark:text-white"
+                              disabled={!isPinVerified}
+                            />
+                            <span>→</span>
+                            <input
+                              type="time"
+                              value={existingRec?.clockOut ? format(parseISO(existingRec.clockOut), 'HH:mm') : ''}
+                              onChange={(e) => {
+                                if(!e.target.value) return handleMarkAttendance(labor.id, { clockOut: undefined });
+                                const [h, m] = e.target.value.split(':');
+                                const d = new Date();
+                                d.setHours(parseInt(h), parseInt(m), 0, 0);
+                                handleMarkAttendance(labor.id, { clockOut: d.toISOString() });
+                              }}
+                              className="px-2 py-1 bg-white/60 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-md text-zinc-900 dark:text-white"
+                              disabled={!isPinVerified}
+                            />
+                          </div>
+                        ) : (
+                          <span className="font-mono">
+                            {existingRec?.clockIn ? format(parseISO(existingRec.clockIn), 'HH:mm') : '--'} → {existingRec?.clockOut ? format(parseISO(existingRec.clockOut), 'HH:mm') : '--'}
+                          </span>
+                        )}
+
+                        {existingRec?.clockIn && existingRec?.clockOut && (
+                          <span className="ml-auto text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-1 rounded-[6px]">
+                            {((new Date(existingRec.clockOut).getTime() - new Date(existingRec.clockIn).getTime()) / (1000 * 60 * 60)).toFixed(1)}h
                           </span>
                         )}
                       </div>
@@ -529,6 +664,31 @@ export default function Labors() {
           </div>
         </div>
       </Modal>
-    </div>
+      {/* Admin Audit Logs Modal */}
+      {isAdmin && (
+        <Modal isOpen={isAuditLogOpen} onClose={() => setIsAuditLogOpen(false)} title="Labor Audit Logs" size="xl">
+          <div className="p-2 md:p-6 space-y-4">
+            <p className="text-sm font-medium text-zinc-500 mb-4 px-1">Transparent history of all manual edits and overrides made by administrators in the Labor module.</p>
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+               {activityLogs.filter(log => log.module === 'Labor').reverse().map(log => (
+                 <div key={log.id} className="bg-white/40 dark:bg-black/20 backdrop-blur-md border border-black/5 dark:border-white/5 rounded-2xl p-4 flex flex-col gap-2">
+                   <div className="flex justify-between items-start gap-4">
+                     <span className="font-semibold text-zinc-900 dark:text-white text-sm">{log.action}</span>
+                     <span className="text-xs font-semibold text-zinc-400 shrink-0">{format(parseISO(log.timestamp), 'MMM do, h:mm a')}</span>
+                   </div>
+                   <p className="text-sm text-zinc-600 dark:text-zinc-300 font-medium">{log.details}</p>
+                   <div className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mt-1">By: {log.userName}</div>
+                 </div>
+               ))}
+               {activityLogs.filter(log => log.module === 'Labor').length === 0 && (
+                 <div className="text-center py-8 text-zinc-500 font-medium text-sm border border-dashed border-black/10 dark:border-white/10 rounded-2xl">
+                    No manual overrides or edits recorded yet.
+                 </div>
+               )}
+            </div>
+          </div>
+        </Modal>
+      )}
+    </motion.div>
   );
 }

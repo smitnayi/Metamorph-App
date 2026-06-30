@@ -30,8 +30,9 @@ export interface InventoryItem {
   sku: string;
   name: string;
   colorCode: string;
-  finish: 'Gloss' | 'Matte' | 'Texture' | 'Satin';
+  finish: 'Gloss' | 'Matte' | 'Texture' | 'Satin' | 'Structure';
   weightKg: number;
+  perKgRate?: number; // Added for costing
   lowStockThreshold: number;
   supplier: string;
   location: string;
@@ -52,7 +53,8 @@ export interface Order {
 }
 
 export interface OrderCostEstimation {
-  powderKg: number;
+  powders?: { inventoryId: string; amountKg: number; rate: number; name: string }[]; // New multi-powder support
+  powderKg?: number; // Legacy or fallback
   materialKg: number;
 
   labourAllocation: number;
@@ -199,4 +201,5 @@ export interface QualityCheck {
   overallResult: 'Pass' | 'Fail' | 'Rework';
   notes: string;
   photos?: string[];
+  powderUsages?: { inventoryId: string; amountKg: number; name?: string }[];
 }

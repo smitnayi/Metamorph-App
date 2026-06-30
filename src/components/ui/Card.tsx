@@ -25,11 +25,11 @@ export function CardHeader({ className, ...props }: CustomCardProps) {
 }
 
 export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn("text-xl md:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white", className)} {...props} />;
+  return <h3 className={cn("text-xl md:text-2xl font-semibold uppercase tracking-tight text-zinc-900 dark:text-white", className)} {...props} />;
 }
 
 export function CardDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cn("text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 leading-relaxed", className)} {...props} />;
+  return <p className={cn("text-xs font-semibold text-zinc-500 text-zinc-500 dark:text-zinc-400 leading-relaxed", className)} {...props} />;
 }
 
 export function CardContent({ className, ...props }: CustomCardProps) {

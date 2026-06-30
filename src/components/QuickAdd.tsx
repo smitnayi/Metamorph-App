@@ -49,7 +49,7 @@ export default function QuickAdd() {
                 className="flex items-center gap-3 w-full px-4 py-3 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-colors text-left group"
               >
                 <action.icon className="w-4 h-4 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors" />
-                <span className="text-xs font-black tracking-widest text-zinc-900 dark:text-white uppercase mt-0.5">{action.label}</span>
+                <span className="text-xs font-semibold tracking-widest text-zinc-900 dark:text-white uppercase mt-0.5">{action.label}</span>
               </button>
             ))}
           </motion.div>
@@ -68,7 +68,7 @@ export default function QuickAdd() {
             : "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 md:hover:-translate-y-0.5 border-transparent"
         )}
       >
-        <span className="hidden md:inline mr-2 text-xs font-black tracking-widest uppercase pointer-events-none">Create</span>
+        <span className="hidden md:inline mr-2 text-xs font-semibold tracking-widest uppercase pointer-events-none">Create</span>
         <Plus strokeWidth={3} className={cn("w-5 h-5 md:w-4 md:h-4 transition-transform duration-300 pointer-events-none", isOpen && "rotate-45")} />
       </button>
     </div>

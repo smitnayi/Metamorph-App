@@ -84,10 +84,6 @@
     overflow: visible !important;
     background: #fff !important;
   }
-
-  #root {
-    display: none !important;
-  }
   
   body {
     background: #fff;
@@ -103,6 +99,23 @@
   body.pdf-rendering::before,
   body.pdf-rendering::after {
     display: none !important;
+  }
+  
+  table {
+    page-break-inside: auto;
+  }
+  
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+  
+  thead {
+    display: table-header-group;
+  }
+  
+  tfoot {
+    display: table-footer-group;
   }
   
   .print-container {

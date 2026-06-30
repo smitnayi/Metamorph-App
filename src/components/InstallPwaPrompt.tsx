@@ -72,7 +72,7 @@ export default function InstallPwaPrompt() {
               <div className="bg-orange-500/10 text-orange-600 dark:text-orange-400 p-2 rounded-xl">
                  <Download className="h-5 w-5" />
               </div>
-              <h3 className="font-bold text-sm text-zinc-900 dark:text-white">Install App</h3>
+              <h3 className="font-semibold text-sm text-zinc-900 dark:text-white">Install App</h3>
             </div>
              <button onClick={handleDismiss} className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
                <X className="h-4 w-4" />
@@ -94,7 +94,7 @@ export default function InstallPwaPrompt() {
           {!isIOS && (
             <button 
               onClick={handleInstallClick}
-              className="mt-4 w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold uppercase tracking-widest text-[10px] py-3 rounded-xl hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors shadow-lg active:scale-95"
+              className="mt-4 w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-semibold text-xs py-3 rounded-xl hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors shadow-lg active:scale-95"
             >
               Add to Home Screen
             </button>

@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, signInWithCredential, GoogleAuthProvider, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, signInWithCredential, GoogleAuthProvider, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
@@ -59,7 +59,7 @@ export async function handleRedirectLogin() {
   }
 }
 
-async function processAuthResult(user: any) {
+async function processAuthResult(user: any, providedName?: string) {
     // Check if user exists in the database
     const userRef = doc(db, 'users', user.uid);
     const userSnap = await getDoc(userRef);
@@ -76,12 +76,14 @@ async function processAuthResult(user: any) {
       // Create new user defaulted to Employee (or Admin if match)
       await setDoc(userRef, {
         uid: user.uid,
-        name: user.displayName || 'Unknown Operator',
+        name: providedName || user.displayName || 'Unknown Operator',
         email: user.email || '',
         roleId: roleId,
         status: status,
         department: 'Production'
       });
+    } else if (providedName || (user.displayName && userSnap.data().name === 'Unknown')) {
+      await setDoc(userRef, { name: providedName || user.displayName }, { merge: true });
     }
     
     return user;
@@ -96,7 +98,11 @@ export async function loginWithEmail(email: string, pass: string) {
   return await processAuthResult(result.user);
 }
 
-export async function signupWithEmail(email: string, pass: string) {
+export async function signupWithEmail(email: string, pass: string, name: string) {
   const result = await createUserWithEmailAndPassword(auth, email, pass);
-  return await processAuthResult(result.user);
+  await updateProfile(result.user, { displayName: name });
+  // Reload the user so the new displayName is available
+  await result.user.reload();
+  const updatedUser = auth.currentUser || result.user;
+  return await processAuthResult(updatedUser, name);
 }

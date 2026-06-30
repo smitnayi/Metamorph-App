@@ -17,7 +17,9 @@ import Costing from "./pages/Costing";
 import Login from "./pages/Login";
 import ExportInvoice from "./pages/ExportInvoice";
 import ExportLabReport from "./pages/ExportLabReport";
+import ExportSalaryReport from "./pages/ExportSalaryReport";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { PinProvider } from "./contexts/PinContext";
 import { initStoreSync, cleanupStoreSync } from "./store/data";
 
 import { Toaster } from "sonner";
@@ -47,11 +49,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
         <div className="w-16 h-16 bg-orange-500/10 text-orange-500 rounded-2xl flex items-center justify-center mb-6">
           <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
         </div>
-        <h2 className="text-2xl font-black text-zinc-900 dark:text-white mb-2">Account Pending Approval</h2>
+        <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-2">Account Pending Approval</h2>
         <p className="text-zinc-600 dark:text-zinc-400 max-w-md mx-auto">
           Your account has been created successfully but is currently waiting for administrator approval. Please contact management to verify your access.
         </p>
-        <button onClick={() => window.location.reload()} className="mt-8 px-6 py-3 bg-zinc-900 dark:bg-white text-white dark:text-black font-bold uppercase tracking-widest text-sm rounded-xl">Refresh Status</button>
+        <button onClick={() => window.location.reload()} className="mt-8 px-6 py-3 bg-zinc-900 dark:bg-white text-white dark:text-black font-semibold text-sm rounded-xl">Refresh Status</button>
       </div>
     );
   }
@@ -99,13 +101,15 @@ function NavigationHandler() {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <NavigationHandler />
-        <Toaster theme="dark" position="top-right" />
-        <Routes>
+      <PinProvider>
+        <BrowserRouter>
+          <NavigationHandler />
+          <Toaster theme="dark" position="top-right" />
+          <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/export/:orderId" element={<ProtectedRoute><ExportInvoice /></ProtectedRoute>} />
           <Route path="/export-lab" element={<ProtectedRoute><ExportLabReport /></ProtectedRoute>} />
+          <Route path="/export-salary" element={<ProtectedRoute><ExportSalaryReport /></ProtectedRoute>} />
           <Route
             path="/"
             element={
@@ -129,7 +133,8 @@ export default function App() {
             <Route path="costing" element={<Costing />} />
           </Route>
         </Routes>
-      </BrowserRouter>
+        </BrowserRouter>
+      </PinProvider>
     </AuthProvider>
   );
 }

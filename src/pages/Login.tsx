@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
-import { Mail, Lock, ArrowRight, Github } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Github, User } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export default function Login() {
@@ -12,6 +12,7 @@ export default function Login() {
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
 
   useEffect(() => {
     if (currentUser) {
@@ -40,8 +41,8 @@ export default function Login() {
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      toast.error('Please enter email and password.');
+    if (!email || !password || (!isLoginMode && !name)) {
+      toast.error('Please fill all required fields.');
       return;
     }
     
@@ -51,7 +52,7 @@ export default function Login() {
         await loginEmail(email, password);
         toast.success('System Linked & Verified.');
       } else {
-        await signupEmail(email, password);
+        await signupEmail(email, password, name);
         toast.success('Operator Registered & Verified.');
       }
     } catch (err: any) {
@@ -134,6 +135,25 @@ export default function Login() {
             </div>
 
             <form onSubmit={handleEmailAuth} className="flex flex-col gap-5">
+              {!isLoginMode && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-1.5">
+                  <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400 ml-1">Full Name</label>
+                  <motion.div whileTap={{ scale: 0.995 }} className="relative z-10 transition-shadow focus-within:shadow-[0_0_0_4px_rgba(234,88,12,0.1)] rounded-xl">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <User className="h-4 w-4 text-zinc-500" />
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder="John Doe"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full bg-[#f4f4f5] dark:bg-[#111] border border-black/5 dark:border-white/10 pl-11 pr-4 py-3.5 text-sm focus:outline-none focus:border-orange-500/50 text-zinc-900 dark:text-white rounded-xl transition-colors"
+                      required={!isLoginMode}
+                    />
+                  </motion.div>
+                </motion.div>
+              )}
+
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="space-y-1.5">
                 <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400 ml-1">Email Adddress</label>
                 <motion.div whileTap={{ scale: 0.995 }} className="relative z-10 transition-shadow focus-within:shadow-[0_0_0_4px_rgba(234,88,12,0.1)] rounded-xl">
@@ -199,7 +219,7 @@ export default function Login() {
 
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="flex items-center gap-4 my-8">
               <div className="h-px bg-black/10 dark:bg-white/10 flex-1"></div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">or continue with</span>
+              <span className="text-xs font-semibold text-zinc-500">or continue with</span>
               <div className="h-px bg-black/10 dark:bg-white/10 flex-1"></div>
             </motion.div>
 

@@ -90,7 +90,7 @@ const NavItemLink: React.FC<NavItemLinkProps> = ({ item, mobile = false, collaps
           opacity: collapsed ? 0 : 1,
           marginLeft: collapsed ? 0 : "12px"
         }}
-        className={cn("relative z-10 text-[13px] tracking-wide overflow-hidden whitespace-nowrap", isActive ? "font-bold" : "font-medium")}
+        className={cn("relative z-10 text-[13px] tracking-wide overflow-hidden whitespace-nowrap", isActive ? "font-semibold" : "font-medium")}
       >
         {item.label}
       </motion.span>
@@ -196,7 +196,7 @@ export default function Layout() {
         initial={false}
         animate={{ width: isSidebarCollapsed ? 80 : 256 }}
         transition={{ type: "spring", stiffness: 400, damping: 30 }}
-        className="hidden md:flex flex-col border-r border-black/5 dark:border-white/5 bg-white/70 dark:bg-[#0a0a0a]/70 backdrop-blur-2xl shrink-0 z-20 shadow-[0_0_40px_rgba(0,0,0,0.02)] dark:shadow-[0_0_40px_rgba(0,0,0,0.2)] pt-6 whitespace-nowrap overflow-hidden relative"
+        className="hidden md:flex flex-col border-r border-black/5 dark:border-white/5 bg-white/70 dark:bg-[#0a0a0a]/70 backdrop-blur-2xl shrink-0 z-20 shadow-[0_0_40px_rgba(0,0,0,0.02)] dark:shadow-[0_0_40px_rgba(0,0,0,0.2)] pt-6 whitespace-nowrap overflow-hidden relative print:hidden"
       >
         <div className={cn("px-6 mb-8 flex flex-col gap-1 items-center md:items-start", isSidebarCollapsed && "items-center px-0")}>
           <div className={cn("flex items-center gap-3", isSidebarCollapsed ? "justify-center w-full" : "")}>
@@ -229,13 +229,13 @@ export default function Layout() {
            </div>
            
            <div className={cn("flex items-center bg-black/5 dark:bg-white/5 p-3 rounded-xl cursor-default transition-all duration-300", isSidebarCollapsed ? "justify-center px-0 bg-transparent" : "gap-3")}>
-             <div className="h-10 w-10 bg-white dark:bg-[#222] shadow-sm rounded-lg flex items-center justify-center text-zinc-900 dark:text-white font-black text-lg border border-black/5 dark:border-transparent shrink-0">
+             <div className="h-10 w-10 bg-white dark:bg-[#222] shadow-sm rounded-lg flex items-center justify-center text-zinc-900 dark:text-white font-semibold text-lg border border-black/5 dark:border-transparent shrink-0">
                 {currentUser.name.charAt(0)}
              </div>
              {!isSidebarCollapsed && (
                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col truncate pr-2">
-                  <span className="text-[10px] font-bold text-orange-600 dark:text-orange-500 uppercase tracking-widest leading-none mb-1">{currentRoleName}</span>
-                  <span className="text-sm font-bold truncate leading-none">{currentUser.name}</span>
+                  <span className="text-xs font-semibold text-orange-600 dark:text-orange-500 leading-none mb-1">{currentRoleName}</span>
+                  <span className="text-sm font-semibold truncate leading-none">{currentUser.name}</span>
                </motion.div>
              )}
            </div>
@@ -243,51 +243,57 @@ export default function Layout() {
       </motion.aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col relative h-full overflow-hidden bg-transparent">
+      <main className="flex-1 flex flex-col relative h-full overflow-hidden bg-transparent print:overflow-visible">
         
         {/* Desktop Header */}
-        <header className="hidden md:flex items-center justify-end px-8 py-4 shrink-0 z-30">
-           <div className="flex items-center gap-4">
-              {/* Global Search Hint */}
-              <button 
+        <header className="hidden md:flex items-center justify-between px-8 py-4 shrink-0 z-30 print:hidden">
+           <div className="flex-1 max-w-xl">
+             <button
                 onClick={() => document.dispatchEvent(new CustomEvent('open-global-search'))}
-                className="flex items-center gap-2 bg-white/60 dark:bg-[#111]/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-black/5 dark:border-white/5 shadow-sm text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
-              >
-                <Search className="h-3.5 w-3.5" />
-                <span className="hidden lg:inline">Search</span>
-                <kbd className="font-sans font-bold bg-black/5 dark:bg-white/10 px-1.5 py-0.5 rounded text-[10px]">⌘K</kbd>
-              </button>
+                className="w-full flex items-center justify-between px-4 py-3 bg-white/40 dark:bg-black/20 backdrop-blur-xl border border-black/5 dark:border-white/5 rounded-xl text-zinc-500 hover:bg-white/60 dark:hover:bg-black/40 transition-colors group"
+             >
+               <div className="flex items-center gap-3">
+                 <Search className="h-4 w-4 group-hover:text-orange-500 transition-colors" />
+                 <span className="text-xs font-semibold">Global Search...</span>
+               </div>
+               <div className="flex items-center gap-1">
+                 <span className="text-xs font-semibold bg-black/5 dark:bg-white/5 px-2 py-1 rounded-md">⌘ K</span>
+               </div>
+             </button>
+           </div>
+           
+           <div className="flex items-center gap-4">
               
               {/* Connectivity Indicator */}
-              <div className={cn("flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-sm text-xs font-bold uppercase tracking-widest backdrop-blur-md", 
+              <div className={cn("flex items-center gap-2 px-4 py-2 rounded-lg border shadow-sm text-xs font-semibold text-zinc-500 backdrop-blur-md", 
                   isOnline ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
               )}>
-                {isOnline ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
+                {isOnline ? <Wifi className="h-3 w-3 stroke-[2.5]" /> : <WifiOff className="h-3 w-3 stroke-[2.5]" />}
                 {isOnline ? <span>Live</span> : <span>Offline</span>}
               </div>
            </div>
         </header>
 
         {/* Mobile Header */}
-        <header className="md:hidden flex items-center justify-between h-16 px-4 bg-white/80 dark:bg-[#111]/80 backdrop-blur-md border-b border-black/5 dark:border-white/5 z-30 shrink-0">
-          <div className="flex items-center gap-2">
-             <div className="h-8 w-8 rounded-[10px] bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/20 overflow-hidden">
+        <header className="md:hidden flex items-center justify-between h-16 px-4 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-black/5 dark:border-white/5 z-30 shrink-0 print:hidden">
+          <div className="flex items-center gap-3">
+             <div className="h-8 w-8 rounded-lg bg-orange-500 flex items-center justify-center shadow-[0_0_15px_rgba(249,115,22,0.3)] overflow-hidden">
                 <img src="/logo.png" alt="Metamorph Logo" className="h-4 w-4 object-contain filter brightness-0 invert" />
              </div>
-             <img src="/wordmark.png" alt="Metamorph" className="h-3 object-contain dark:invert" />
+             <img src="/wordmark.png" alt="Metamorph" className="h-[10px] object-contain dark:invert" />
           </div>
-          <div className="flex items-center gap-3">
-             <button onClick={() => document.dispatchEvent(new CustomEvent('open-global-search'))} className="flex h-9 w-9 items-center justify-center rounded-full bg-black/5 dark:bg-white/5">
-                <Search className="h-[18px] w-[18px] text-zinc-600 dark:text-zinc-400" />
+          <div className="flex items-center gap-4">
+             <button 
+               onClick={() => document.dispatchEvent(new CustomEvent('open-global-search'))}
+               className="flex h-9 w-9 items-center justify-center rounded-lg bg-black/5 dark:bg-white/5 text-zinc-600 dark:text-zinc-400 hover:text-orange-500 transition-colors"
+             >
+               <Search className="h-4 w-4" />
              </button>
-             <div className={cn("flex h-2 w-2 rounded-full", isOnline ? "bg-emerald-500" : "bg-rose-500 animate-pulse")} title={isOnline ? "Online" : "Offline"} />
-             <button onClick={toggleTheme} className="flex h-9 w-9 items-center justify-center rounded-full bg-black/5 dark:bg-white/5">
-                {isDark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px] text-zinc-600" />}
-             </button>
+             <div className={cn("flex h-2 w-2 rounded-full", isOnline ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "bg-rose-500 animate-pulse shadow-[0_0_10px_rgba(244,63,94,0.5)]")} title={isOnline ? "Online" : "Offline"} />
           </div>
         </header>
 
-        <div className="flex-1 overflow-auto relative">
+        <div className="flex-1 overflow-auto relative print:overflow-visible">
           <AnimatePresence mode="popLayout">
             <motion.div
               key={location.pathname}
@@ -295,7 +301,7 @@ export default function Layout() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -15, scale: 0.99 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="min-h-full pb-24 md:pb-0"
+              className="min-h-full pb-24 md:pb-0 print:pb-0"
             >
               <Outlet />
             </motion.div>
@@ -304,20 +310,12 @@ export default function Layout() {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-4 left-4 right-4 rounded-[20px] bg-white/90 dark:bg-[#1a1a1a]/90 flex items-center justify-between px-2 h-[68px] z-50 shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-xl border border-white/50 dark:border-white/10">
+      <div className="md:hidden fixed bottom-4 left-4 right-4 rounded-[20px] bg-white/90 dark:bg-[#1a1a1a]/90 flex items-center justify-between px-2 h-[68px] z-50 shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-xl border border-white/50 dark:border-white/10 print:hidden">
         {navItems.slice(0, 3).map(item => {
           const today = new Date().toISOString().split('T')[0];
           const isLabAlert = item.path === '/lab' && !labRoutineChecks.some(c => c.date === today);
           return <NavItemLink key={item.path} item={item} mobile hasAlert={isLabAlert} />
         })}
-        <button
-          onClick={() => document.dispatchEvent(new CustomEvent('open-global-search'))}
-          className="flex flex-col items-center justify-center min-w-[56px] px-1 py-1 transition-colors rounded-xl text-zinc-500 hover:text-zinc-700 dark:text-zinc-300 relative group"
-        >
-          <div className="flex items-center justify-center h-8 w-8 rounded-full mb-1 transition-all bg-transparent group-hover:bg-orange-500/10 group-active:scale-95">
-            <Search className="h-[22px] w-[22px] stroke-2 group-hover:text-orange-500" />
-          </div>
-        </button>
         <button
           onClick={() => setMobileMenuOpen(true)}
           className="flex flex-col items-center justify-center min-w-[56px] px-1 py-1 transition-colors rounded-xl text-zinc-500 hover:text-zinc-700 dark:text-zinc-300 group"
@@ -338,7 +336,7 @@ export default function Layout() {
             className="md:hidden fixed inset-0 z-[60] bg-white/95 dark:bg-[#111]/95 backdrop-blur-xl flex flex-col"
           >
             <div className="flex items-center justify-between px-6 py-5 border-b border-black/5 dark:border-white/5">
-               <span className="font-black text-xl tracking-tighter uppercase italic">Menu</span>
+               <span className="font-semibold text-xl tracking-tighter uppercase italic">Menu</span>
                <button onClick={() => setMobileMenuOpen(false)} className="h-10 w-10 flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-full">
                   <X className="h-5 w-5" />
                </button>
@@ -368,7 +366,7 @@ export default function Layout() {
                         <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white dark:border-[#111]" />
                       )}
                     </div>
-                    <span className="font-bold tracking-wide text-[15px]">{item.label}</span>
+                    <span className="font-semibold tracking-wide text-[15px]">{item.label}</span>
                   </NavLink>
                 </motion.div>
               ))}
@@ -376,12 +374,12 @@ export default function Layout() {
             
             <div className="p-6 pb-12 border-t border-black/5 dark:border-white/5 flex gap-4">
                <div className="flex-1 flex items-center gap-3">
-                 <div className="h-12 w-12 bg-black/5 dark:bg-white/5 rounded-xl flex items-center justify-center font-black text-xl">
+                 <div className="h-12 w-12 bg-black/5 dark:bg-white/5 rounded-xl flex items-center justify-center font-semibold text-xl">
                     {currentUser.name.charAt(0)}
                  </div>
                  <div className="flex flex-col flex-1 truncate">
-                    <span className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">{currentRoleName}</span>
-                    <span className="text-base font-bold truncate">{currentUser.name}</span>
+                    <span className="text-xs font-semibold text-orange-500">{currentRoleName}</span>
+                    <span className="text-base font-semibold truncate">{currentUser.name}</span>
                  </div>
                </div>
                <button onClick={handleLogout} className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-500 shrink-0">

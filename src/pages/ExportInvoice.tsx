@@ -16,7 +16,7 @@ export default function ExportInvoice() {
   }, []);
 
   if (!order || !estimation) {
-    return <div className="p-10 font-bold">Invoice data not found for this order. Please save an estimation first.</div>;
+    return <div className="p-10 font-semibold">Cost sheet data not found for this order. Please save an estimation first.</div>;
   }
 
   const powderRate = estimation.materialKg ? estimation.powderKg / estimation.materialKg : 0;
@@ -42,14 +42,14 @@ export default function ExportInvoice() {
       <div className="print:hidden fixed top-4 right-4 md:top-8 md:right-8 z-50 flex gap-3">
         <button 
           onClick={() => navigate(-1)} 
-          className="bg-white/10 backdrop-blur-md text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white/20 transition-colors flex items-center gap-2 shadow-lg border border-white/10"
+          className="bg-white/10 backdrop-blur-md text-white px-4 py-2 rounded-xl text-xs font-semibold text-zinc-500 hover:bg-white/20 transition-colors flex items-center gap-2 shadow-lg border border-white/10"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
           Back
         </button>
         <button 
           onClick={handlePrint}
-          className="bg-orange-600 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-orange-700 transition-colors flex items-center gap-2 shadow-lg"
+          className="bg-orange-600 text-white px-4 py-2 rounded-xl text-xs font-semibold text-zinc-500 hover:bg-orange-700 transition-colors flex items-center gap-2 shadow-lg"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
           Download PDF
@@ -60,7 +60,7 @@ export default function ExportInvoice() {
         <div className="invoice-container w-[794px] min-h-[1123px] mx-auto bg-[#f0ece1] p-12 md:p-16 relative flex flex-col justify-between shadow-2xl shrink-0 print:shadow-none print:w-[100%] print:min-h-auto">
           <div className="flex-1">
            {/* Top Header */}
-           <div className="flex justify-between items-start mb-20 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed border-b-2 border-black pb-6">
+           <div className="flex justify-between items-start mb-20 text-xs md:text-xs font-semibold text-zinc-500 leading-relaxed border-b-2 border-black pb-6">
              <div>(metamorphmetal.com)</div>
              <div className="text-center">
                 +91 99986 28121<br/>
@@ -75,16 +75,16 @@ export default function ExportInvoice() {
            {/* Invoice Title & Meta */}
            <div className="grid grid-cols-4 gap-4 mb-20 w-full items-end">
               <div className="col-span-1">
-                <div className="font-bold mb-1 uppercase tracking-widest text-[10px]">BILLED TO:</div>
+                <div className="font-semibold mb-1 text-xs">BILLED TO:</div>
                 <div className="font-medium text-sm">{order.customerName}</div>
               </div>
               <div className="col-span-1">
-                <div className="font-bold mb-1 uppercase tracking-widest text-[10px]">PAY TO:</div>
+                <div className="font-semibold mb-1 text-xs">PAY TO:</div>
                 <div className="font-medium text-sm leading-tight">Metamorph<br/>B-24, Atmiya 2 Ind. Park</div>
               </div>
               
               <div className="col-span-2 text-right">
-                 <h1 className="text-[60px] font-black uppercase tracking-tighter leading-none text-zinc-900 mb-4">INVOICE</h1>
+                 <h1 className="text-[60px] font-semibold uppercase tracking-tighter leading-none text-zinc-900 mb-4">COST SHEET</h1>
                  <div className="text-xs font-medium space-y-1">
                     <div>No.. {order.orderNumber}</div>
                     <div>{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
@@ -102,7 +102,7 @@ export default function ExportInvoice() {
 
            {/* Table */}
            <div className="mb-20">
-              <div className="grid grid-cols-4 border-b-2 border-black pb-4 mb-4 text-[10px] font-bold uppercase tracking-widest">
+              <div className="grid grid-cols-4 border-b-2 border-black pb-4 mb-4 text-xs font-semibold">
                  <div>DESCRIPTION</div>
                  <div className="text-right">RATE</div>
                  <div className="text-right">QTY/HRS</div>
@@ -160,19 +160,19 @@ export default function ExportInvoice() {
                  </div>
               </div>
 
-              <div className="mt-8 pt-4 border-t-2 border-black grid grid-cols-4 text-sm font-bold">
+              <div className="mt-8 pt-4 border-t-2 border-black grid grid-cols-4 text-sm font-semibold">
                  <div>Sub-Total Cost</div>
                  <div className="col-span-2"></div>
                  <div className="text-right tracking-tight">₹{totalCost.toFixed(2)}</div>
               </div>
               
-              <div className="mt-4 pt-4 border-t-2 border-black grid grid-cols-4 text-sm font-black">
+              <div className="mt-4 pt-4 border-t-2 border-black grid grid-cols-4 text-sm font-semibold">
                  <div>TOTAL BUYER COST</div>
                  <div className="col-span-2"></div>
                  <div className="text-right text-emerald-600 tracking-tight">₹{order.totalValue.toFixed(2)}</div>
               </div>
               
-              <div className="mt-4 pt-4 border-t-2 border-black grid grid-cols-4 text-sm font-black">
+              <div className="mt-4 pt-4 border-t-2 border-black grid grid-cols-4 text-sm font-semibold">
                  <div>ESTIMATED PROFIT</div>
                  <div className="col-span-2"></div>
                  <div className="text-right text-orange-600 tracking-tight">₹{profit.toFixed(2)}</div>
@@ -182,8 +182,8 @@ export default function ExportInvoice() {
 
          {/* Footer Graphic */}
          <div className="relative border-t-2 border-black pt-12 mt-12 overflow-hidden">
-           <div className="text-[10px] font-bold uppercase tracking-widest leading-relaxed max-w-sm mb-12">
-             Payment is required within 14 business days of invoice date.<br/>
+           <div className="text-xs font-semibold leading-relaxed max-w-sm mb-12">
+             Payment is required within 14 business days of cost sheet date.<br/>
              Please send remittance to sales@metamorphmetal.com
            </div>
 

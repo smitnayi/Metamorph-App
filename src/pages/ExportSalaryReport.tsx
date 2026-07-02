@@ -3,13 +3,22 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useDataStore } from '../store/data';
 import { startOfMonth, endOfMonth, parseISO, format } from 'date-fns';
 
+const formatHM = (decimalHours: number) => {
+  const h = Math.floor(decimalHours);
+  const m = Math.round((decimalHours - h) * 60);
+  if (h > 0 && m > 0) return `${h}h ${m}m`;
+  if (h > 0) return `${h}h`;
+  if (decimalHours === 0) return `0h`;
+  return `${m}m`;
+};
+
 export default function ExportSalaryReport() {
   const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const selectedMonth = searchParams.get('month') || format(new Date(), 'yyyy-MM');
 
-  const { labors, laborAttendances } = useDataStore();
+  const { labors, laborAttendances, laborRoles } = useDataStore();
   
   const monthlySummary = useMemo(() => {
     return labors.map(labor => {
@@ -18,8 +27,9 @@ export default function ExportSalaryReport() {
         a.date.startsWith(selectedMonth)
       );
 
-      const threshold = labor.gender === 'Female' ? 9.5 : 12;
-      const hourlyRate = labor.dailySalary / threshold;
+      const role = laborRoles.find(r => r.id === labor.roleId);
+      const shiftHours = role ? role.shiftHours : 12; // Fallback to 12 if unknown
+      const hourlyRate = labor.dailySalary / shiftHours;
       
       let presentDays = 0;
       let totalWorkedHours = 0;
@@ -34,24 +44,29 @@ export default function ExportSalaryReport() {
            dailyHours = (a.manualHours || 0) + ((a.manualMinutes || 0) / 60);
            if (dailyHours > 0) isPresent = true;
         } else if (a.clockIn && a.clockOut) {
-           const inDate = new Date(a.clockIn);
-           const outDate = new Date(a.clockOut);
-           dailyHours = (outDate.getTime() - inDate.getTime()) / (1000 * 60 * 60);
+           const inDate = new Date(a.clockIn).getTime();
+           const outDate = new Date(a.clockOut).getTime();
+           if (!isNaN(inDate) && !isNaN(outDate)) {
+              dailyHours = (outDate - inDate) / (1000 * 60 * 60);
+              if (dailyHours < 0) dailyHours += 24; // Handle overnight shifts
+           }
            if (dailyHours > 0) isPresent = true;
+        } else if (a.clockIn && !a.clockOut) {
+           isPresent = true;
         } else if (a.status === 'Present') {
-           dailyHours = threshold;
+           dailyHours = shiftHours;
            if (a.overtimeHours) dailyHours += a.overtimeHours;
            isPresent = true;
         } else if (a.status === 'Half-Day') {
-           dailyHours = threshold / 2;
+           dailyHours = shiftHours / 2;
         }
 
         if (isPresent) presentDays++;
         
         totalWorkedHours += dailyHours;
         
-        if (dailyHours > threshold) {
-          totalOvertimeHours += (dailyHours - threshold);
+        if (dailyHours > shiftHours) {
+          totalOvertimeHours += (dailyHours - shiftHours);
         }
         
         totalSalary += dailyHours * hourlyRate;
@@ -65,7 +80,7 @@ export default function ExportSalaryReport() {
         totalSalary
       };
     }).filter(s => s.presentDays > 0 || s.labor.status === 'Active');
-  }, [labors, laborAttendances, selectedMonth]);
+  }, [labors, laborAttendances, laborRoles, selectedMonth]);
 
   const handlePrint = () => {
     window.print();
@@ -134,7 +149,7 @@ export default function ExportSalaryReport() {
                   <div className="col-span-2 font-semibold uppercase">{labor.name} {labor.status !== 'Active' && <span className="text-[10px] text-zinc-400 bg-black/5 px-1 py-0.5 rounded ml-1">INACTIVE</span>}</div>
                   <div className="text-right text-zinc-600">₹{labor.dailySalary}</div>
                   <div className="text-right">{presentDays}</div>
-                  <div className="text-right">{totalWorkedHours.toFixed(1)} <span className="text-[10px] text-zinc-500">({totalOvertimeHours.toFixed(1)})</span></div>
+                  <div className="text-right">{formatHM(totalWorkedHours)} <span className="text-[10px] text-zinc-500">({formatHM(totalOvertimeHours)})</span></div>
                   <div className="text-right font-bold tracking-tight">₹{totalSalary.toFixed(2)}</div>
                 </div>
               ))}

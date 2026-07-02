@@ -14,6 +14,7 @@ import Labors from "./pages/Labors";
 import Lab from "./pages/Lab";
 import AdminDashboard from "./pages/AdminDashboard";
 import Costing from "./pages/Costing";
+import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import ExportInvoice from "./pages/ExportInvoice";
 import ExportLabReport from "./pages/ExportLabReport";
@@ -129,6 +130,7 @@ export default function App() {
             <Route path="labors" element={<Labors />} />
             <Route path="lab" element={<Lab />} />
             <Route path="roles" element={<Roles />} />
+            <Route path="settings" element={<Settings />} />
             <Route path="admin" element={<AdminDashboard />} />
             <Route path="costing" element={<Costing />} />
           </Route>

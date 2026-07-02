@@ -19,7 +19,7 @@ const sizeClasses = {
   lg: 'max-w-lg',
   xl: 'max-w-2xl',
   '2xl': 'max-w-4xl',
-  full: 'max-w-[90vw]'
+  full: 'w-full sm:w-[95vw] max-w-[1400px]'
 };
 
 export default function Modal({ isOpen, onClose, title, children, className, size = 'md' }: ModalProps) {

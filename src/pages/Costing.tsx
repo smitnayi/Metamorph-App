@@ -13,7 +13,7 @@ import { cn } from '../lib/utils';
 export default function Costing() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const { orders, setOrders, costSettings, setCostSettings, qualityChecks, inventory } = useDataStore();
+  const { orders, setOrders, costSettings, setCostSettings, qualityChecks, inventory, laborRoles, setLaborRoles } = useDataStore();
   
   if (currentUser?.roleId !== 'role-admin' && currentUser?.roleId !== 'role-manager') {
     return <Navigate to="/" replace />;
@@ -259,8 +259,66 @@ export default function Costing() {
               className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 font-semibold transition-colors shadow-sm"
             />
           </div>
+
+          <div className="pt-6 border-t border-black/10 dark:border-white/10">
+            <div className="flex justify-between items-center mb-4">
+              <label className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-[0.05em] px-1">Labor Roles & Shifts</label>
+              <button 
+                type="button" 
+                onClick={() => setLaborRoles([...laborRoles, { id: 'role-' + Date.now(), name: 'New Role', shiftHours: 8 }])}
+                className="text-xs font-semibold text-orange-500 hover:text-orange-600 transition-colors bg-orange-500/10 px-3 py-1.5 rounded-lg border border-orange-500/20 active:scale-95"
+              >
+                + Add Role
+              </button>
+            </div>
+            <div className="space-y-3">
+              {laborRoles.map((role, idx) => (
+                <div key={role.id} className="flex gap-3 items-center">
+                  <div className="flex-1">
+                    <input 
+                      type="text" 
+                      value={role.name}
+                      placeholder="Role Name (e.g., Male)"
+                      onChange={e => {
+                        const newRoles = [...laborRoles];
+                        newRoles[idx].name = e.target.value;
+                        setLaborRoles(newRoles);
+                      }}
+                      className="w-full px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 font-semibold transition-colors shadow-sm text-sm"
+                    />
+                  </div>
+                  <div className="w-32 relative">
+                    <input 
+                      type="number" 
+                      min="0" step="0.5" 
+                      value={role.shiftHours || 0}
+                      onChange={e => {
+                        const newRoles = [...laborRoles];
+                        newRoles[idx].shiftHours = Number(e.target.value);
+                        setLaborRoles(newRoles);
+                      }}
+                      className="w-full px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 font-semibold transition-colors shadow-sm text-sm pr-10"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-400">HRS</span>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      if (confirm('Delete this role?')) {
+                        setLaborRoles(laborRoles.filter(r => r.id !== role.id));
+                      }
+                    }}
+                    className="p-3 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <button type="submit" className="w-full bg-orange-500 text-white font-semibold py-5 rounded-xl mt-8 hover:bg-orange-400 transition-colors flex justify-center shadow-[0_0_20px_rgba(249,115,22,0.3)] active:scale-[0.98] text-sm">
-            Save Rates
+            Save Configuration
           </button>
         </form>
       </Modal>

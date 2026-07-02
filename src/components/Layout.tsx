@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, Outlet, useLocation, useNavigate, useResolvedPath, useMatch } from "react-router-dom";
-import { ShieldCheck, LogOut, Home, BarChart2, Package, LayoutList, Shield, Users, Briefcase, CheckSquare, Key, LucideIcon, ShieldAlert, Moon, Sun, Menu, X, PanelLeftClose, PanelLeftOpen, Wifi, WifiOff, RefreshCw, Search, Clock, Beaker, Calculator } from "lucide-react";
+import { Settings, ShieldCheck, LogOut, Home, BarChart2, Package, LayoutList, Shield, Users, Briefcase, CheckSquare, Key, LucideIcon, ShieldAlert, Moon, Sun, Menu, X, PanelLeftClose, PanelLeftOpen, Wifi, WifiOff, RefreshCw, Search, Clock, Beaker, Calculator } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "../contexts/AuthContext";
 import { useDataStore } from "../store/data";
@@ -33,6 +33,7 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { path: "/employees", label: "Staff", icon: Briefcase, subject: "employees" },
   { path: "/labors", label: "Labors", icon: Clock, subject: "employees" },
   { path: "/roles", label: "Roles", icon: Key, subject: "settings" },
+  { path: "/settings", label: "Settings", icon: Settings, subject: "all" },
 ];
 
 interface NavItemLinkProps {
@@ -384,6 +385,9 @@ export default function Layout() {
                     <span className="text-base font-semibold truncate">{currentUser.name}</span>
                  </div>
                </div>
+               <button onClick={toggleTheme} className="flex h-12 w-12 items-center justify-center rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 shrink-0">
+                  {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5 text-zinc-600" />}
+               </button>
                <button onClick={handleLogout} className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-500 shrink-0">
                   <LogOut className="h-5 w-5" />
                </button>

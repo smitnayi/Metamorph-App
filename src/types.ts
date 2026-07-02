@@ -39,17 +39,54 @@ export interface InventoryItem {
   lastUpdated: string;
 }
 
+export type OrderStatus = 'Quoted' | 'Received At Company' | 'Preprocessing' | 'Powder Coating' | 'Quality Check' | 'Ready to Ship' | 'Shipped' | 'Completed';
+
 export interface Order {
   id: string;
   orderNumber: string;
   customerId: string;
   customerName: string;
-  status: 'Quoted' | 'Received at Company' | 'Preprocessing' | 'Powder Coating' | 'Quality Check' | 'Shipped' | 'Completed';
+  status: OrderStatus;
   items: number;
   dueDate: string;
-  totalValue: number; // This is the Revenue
+  totalValue?: number; // Made optional as it's no longer required at creation
   priority?: 'High' | 'Medium' | 'Low';
   costEstimation?: OrderCostEstimation;
+  history?: { stage: string; timestamp: string; note?: string }[];
+
+  // New fields
+  projectName?: string;
+  shadeName?: string;
+  shadeColorHex?: string;
+  specialRequirements?: string;
+  hasDamage?: boolean;
+
+  // Stage specific data
+  receivedData?: {
+    date?: string;
+    piecesCount?: number;
+    bundlesCount?: number;
+    totalKgs?: number;
+    damagedPieces?: number;
+  };
+  preprocessingData?: {
+    date?: string;
+    processingTimeHours?: number;
+  };
+  powderCoatingData?: {
+    date?: string;
+    runningTimeHours?: number;
+  };
+  qualityCheckData?: {
+    samplePanelDone?: boolean;
+    rejectionsCount?: number;
+  };
+  readyToShipData?: {
+    date?: string;
+  };
+  shippedData?: {
+    date?: string;
+  };
 }
 
 export interface OrderCostEstimation {
@@ -105,6 +142,12 @@ export interface Task {
   dueDate: string;
 }
 
+export interface LaborRole {
+  id: string;
+  name: string;
+  shiftHours: number;
+}
+
 export interface Labor {
   id: string;
   name: string;
@@ -112,7 +155,7 @@ export interface Labor {
   phone?: string;
   status: 'Active' | 'Inactive';
   joinDate: string;
-  gender: 'Male' | 'Female';
+  roleId: string;
 }
 
 export interface LaborAttendance {

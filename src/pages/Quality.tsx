@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Card, CardContent } from '../components/ui/Card';
 import { useDataStore } from '../store/data';
 import { ShieldAlert, CheckCircle, XCircle, Search, ClipboardSignature, ArrowLeft, Image as ImageIcon, Printer, Tag, Plus, Camera, Mail, Trash2 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
 import { QualityCheck, Order } from '../types';
 import Modal from '../components/ui/Modal';
@@ -11,6 +12,7 @@ import { downloadPdf } from '../lib/pdf';
 import { motion } from 'motion/react';
 
 export default function Quality() {
+  const { currentUser } = useAuth();
   const [isAddingMode, setIsAddingMode] = useState(false);
   const { qualityChecks: checks, setQualityChecks: setChecks, orders, inventory, addActivityLog, setInventoryUsages, setInventory } = useDataStore();
   const [searchTerm, setSearchTerm] = useState('');
@@ -70,11 +72,41 @@ export default function Quality() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Auto-evaluate tolerances
+    let computedResult: 'Pass' | 'Fail' | 'Rework' = 'Pass';
+    let computedNotes = newCheck.notes || '';
+    const flags: string[] = [];
+
+    if (newCheck.adhesionScore && newCheck.adhesionScore < 8) {
+      computedResult = 'Fail';
+      flags.push('Poor Adhesion (< 8)');
+    }
+    if (newCheck.thicknessMils) {
+      if (newCheck.thicknessMils < 2.0) {
+        computedResult = 'Fail';
+        flags.push('Thickness too low (< 2.0 mils)');
+      } else if (newCheck.thicknessMils > 4.0) {
+        computedResult = 'Rework';
+        flags.push('Thickness too high (> 4.0 mils)');
+      }
+    }
+    if (newCheck.visualDefects && newCheck.visualDefects.length > 0) {
+      computedResult = computedResult === 'Fail' ? 'Fail' : 'Rework';
+      flags.push('Visual Defects present');
+    }
+
+    if (flags.length > 0) {
+      computedNotes = `Flagged for review: ${flags.join(', ')}. ` + computedNotes;
+    }
+
     const check: QualityCheck = {
       ...(newCheck as QualityCheck),
+      overallResult: computedResult,
+      notes: computedNotes,
       id: `qa${Date.now()}`,
       date: new Date().toISOString(),
-      inspectorId: 'u1'
+      inspectorId: currentUser?.id || 'u1'
     };
     
     // Log powder usages and reduce inventory
@@ -508,24 +540,7 @@ Quality Control Team`;
 
               <div className="bg-white/40 dark:bg-black/20 backdrop-blur-xl p-5 sm:p-8 rounded-[24px] border border-black/10 dark:border-white/10 flex flex-col gap-8 mt-10">
                  <div>
-                   <label className="block text-xs font-semibold text-zinc-500 mb-4 text-center">Overall Result</label>
-                   <div className="flex gap-3 sm:gap-6 overflow-x-auto pb-2 scrollbar-hide snap-x justify-center">
-                     {['Pass', 'Rework', 'Fail'].map(res => (
-                       <button
-                         key={res}
-                         type="button"
-                         onClick={() => setNewCheck({...newCheck, overallResult: res as any})}
-                         className={cn(
-                           "flex-1 min-w-[120px] max-w-[200px] snap-center px-4 py-5 text-xs font-semibold border-2 transition-all rounded-xl shadow-lg active:scale-95 backdrop-blur-md",
-                           newCheck.overallResult === res 
-                             ? (res === 'Pass' ? 'bg-emerald-500 text-black border-emerald-500' : res === 'Fail' ? 'bg-rose-500 text-black border-rose-500' : 'bg-amber-500 text-black border-amber-500')
-                             : "bg-white/60 dark:bg-black/60 border-transparent text-zinc-500 hover:border-black/10 dark:hover:border-white/10"
-                         )}
-                       >
-                         {res}
-                       </button>
-                     ))}
-                   </div>
+                   <p className="text-xs font-semibold text-zinc-500 text-center uppercase tracking-[0.1em]">Overall Result is automatically calculated based on Adhesion and Thickness Tolerances.</p>
                  </div>
                  <motion.button 
                    whileHover={{ scale: 1.01 }}
@@ -622,14 +637,21 @@ Quality Control Team`;
                         <div className="font-semibold text-zinc-900 dark:text-white text-sm">{qa.id}</div> 
                         <div className="text-zinc-500 text-xs mt-1">{new Date(qa.date).toLocaleString()}</div>
                       </div>
-                      <span className={cn(
-                        "inline-flex items-center px-3 py-1.5 rounded-md text-xs font-semibold border backdrop-blur-md",
-                        qa.overallResult === 'Pass' && "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
-                        qa.overallResult === 'Fail' && "bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/30",
-                        qa.overallResult === 'Rework' && "bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/30"
-                      )}>
-                        {qa.overallResult}
-                      </span>
+                      <div className="flex flex-col items-end">
+                        <span className={cn(
+                          "inline-flex items-center px-3 py-1.5 rounded-md text-xs font-semibold border backdrop-blur-md",
+                          qa.overallResult === 'Pass' && "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
+                          qa.overallResult === 'Fail' && "bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/30",
+                          qa.overallResult === 'Rework' && "bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/30"
+                        )}>
+                          {qa.overallResult}
+                        </span>
+                        {qa.overallResult !== 'Pass' && qa.notes?.includes('Flagged') && (
+                          <div className="text-[10px] text-rose-500 font-medium mt-2 whitespace-normal max-w-[120px] text-right leading-tight">
+                            {qa.notes.split('. ')[0]}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="bg-white/60 dark:bg-black/40 p-4 rounded-xl border border-black/5 dark:border-white/5 grid grid-cols-2 gap-4">
@@ -729,6 +751,11 @@ Quality Control Team`;
                             )}>
                               {qa.overallResult}
                             </span>
+                            {qa.overallResult !== 'Pass' && qa.notes?.includes('Flagged') && (
+                              <div className="text-[10px] text-rose-500 font-medium mt-2 whitespace-normal max-w-[200px]">
+                                {qa.notes.split('. ')[0]}
+                              </div>
+                            )}
                           </td>
                           <td className="px-6 py-6 text-right">
                             <button 

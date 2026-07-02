@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { InventoryItem, Order, Customer, Task, User, QualityCheck, Role, CostSettings, Labor, LaborAttendance, ActivityLog, InventoryUsage, LabRoutineCheck, LabSpecialMeasure, UtilityMetric } from '../types';
+import { InventoryItem, Order, Customer, Task, User, QualityCheck, Role, CostSettings, LaborRole, Labor, LaborAttendance, ActivityLog, InventoryUsage, LabRoutineCheck, LabSpecialMeasure, UtilityMetric } from '../types';
 import { db } from '../lib/firebase';
 import { collection, onSnapshot, writeBatch, doc } from 'firebase/firestore';
 
@@ -61,6 +61,7 @@ interface AppState {
   tasks: Task[];
   qualityChecks: QualityCheck[];
   costSettings: CostSettings;
+  laborRoles: LaborRole[];
   labors: Labor[];
   laborAttendances: LaborAttendance[];
   activityLogs: ActivityLog[];
@@ -76,6 +77,7 @@ interface AppState {
   setTasks: (val: Task[] | ((prev: Task[]) => Task[])) => void;
   setQualityChecks: (val: QualityCheck[] | ((prev: QualityCheck[]) => QualityCheck[])) => void;
   setCostSettings: (val: CostSettings | ((prev: CostSettings) => CostSettings)) => void;
+  setLaborRoles: (val: LaborRole[] | ((prev: LaborRole[]) => LaborRole[])) => void;
   setLabors: (val: Labor[] | ((prev: Labor[]) => Labor[])) => void;
   setLaborAttendances: (val: LaborAttendance[] | ((prev: LaborAttendance[]) => LaborAttendance[])) => void;
   setActivityLogs: (val: ActivityLog[] | ((prev: ActivityLog[]) => ActivityLog[])) => void;
@@ -120,6 +122,10 @@ export const useDataStore = create<AppState>((set, get) => ({
   tasks: [],
   qualityChecks: [],
   labors: [],
+  laborRoles: [
+    { id: 'role-male', name: 'Male', shiftHours: 12 },
+    { id: 'role-female', name: 'Female', shiftHours: 8.5 }
+  ],
   laborAttendances: [],
   activityLogs: [],
   inventoryUsages: [],
@@ -166,6 +172,11 @@ export const useDataStore = create<AppState>((set, get) => ({
   setCostSettings: (val) => {
     const next = typeof val === 'function' ? val(get().costSettings) : val;
     set({ costSettings: next });
+  },
+  setLaborRoles: (val) => {
+    const next = typeof val === 'function' ? val(get().laborRoles) : val;
+    syncToFirebase('laborRoles', get().laborRoles, next);
+    set({ laborRoles: next });
   },
   setLabors: (val) => {
     const next = typeof val === 'function' ? val(get().labors) : val;
@@ -232,7 +243,7 @@ let unsubscribers: (() => void)[] = [];
 export function initStoreSync() {
   if (unsubscribers.length > 0) return;
 
-  const collections = ['users', 'roles', 'inventory', 'orders', 'customers', 'tasks', 'qualityChecks', 'labors', 'laborAttendances', 'activityLogs', 'inventoryUsages', 'labRoutineChecks', 'labSpecialMeasures', 'utilityMetrics'];
+  const collections = ['users', 'roles', 'inventory', 'orders', 'customers', 'tasks', 'qualityChecks', 'laborRoles', 'labors', 'laborAttendances', 'activityLogs', 'inventoryUsages', 'labRoutineChecks', 'labSpecialMeasures', 'utilityMetrics'];
   
   unsubscribers = collections.map(col => {
      return onSnapshot(collection(db, col), { includeMetadataChanges: true }, (snap) => {

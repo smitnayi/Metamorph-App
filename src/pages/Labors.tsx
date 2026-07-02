@@ -3,7 +3,7 @@ import { useDataStore } from '../store/data';
 import { useAuth } from '../contexts/AuthContext';
 import { useRoleAccess } from '../hooks/useRoleAccess';
 import { usePin } from '../contexts/PinContext';
-import { Users, UserPlus, Clock, IndianRupee, FileText, Download, CheckCircle, Trash2 } from 'lucide-react';
+import { Users, UserPlus, Clock, IndianRupee, FileText, Download, CheckCircle, Trash2, X, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import Modal from '../components/ui/Modal';
 import TimeWheelPicker from '../components/TimeWheelPicker';
@@ -12,19 +12,115 @@ import { cn } from '../lib/utils';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, parseISO } from 'date-fns';
 import { motion } from 'motion/react';
 
+const formatHM = (decimalHours: number) => {
+  const h = Math.floor(decimalHours);
+  const m = Math.round((decimalHours - h) * 60);
+  if (h > 0 && m > 0) return `${h}h ${m}m`;
+  if (h > 0) return `${h}h`;
+  if (decimalHours === 0) return `0h`;
+  return `${m}m`;
+};
+
+function TimePicker12({ value, onChange, disabled }: { value?: string, onChange: (iso?: string) => void, disabled?: boolean }) {
+  const d = value ? parseISO(value) : null;
+  const hours24 = d ? d.getHours() : 0;
+  const minutes = d ? d.getMinutes() : 0;
+  
+  const isPM = hours24 >= 12;
+  const hours12 = d ? (hours24 % 12 || 12) : '';
+  const minsStr = d ? minutes.toString().padStart(2, '0') : '';
+
+  const updateTime = (h12: string | number, m: string | number, pm: boolean) => {
+    if (h12 === '' || m === '') return;
+    let h24 = Number(h12);
+    if (pm && h24 < 12) h24 += 12;
+    if (!pm && h24 === 12) h24 = 0;
+    
+    const newD = new Date();
+    newD.setHours(h24, Number(m), 0, 0);
+    onChange(newD.toISOString());
+  };
+
+  return (
+    <div className={cn("flex items-center bg-white/80 dark:bg-[#1a1a1a] border border-black/10 dark:border-white/10 rounded-xl px-2 py-1.5 shadow-sm transition-all focus-within:border-orange-500", disabled && "opacity-50 pointer-events-none")}>
+      <input 
+        type="number" 
+        min="1" max="12" 
+        value={hours12} 
+        onChange={e => updateTime(e.target.value, minsStr || 0, isPM)}
+        className="w-8 bg-transparent text-center font-bold text-zinc-900 dark:text-white focus:outline-none placeholder:text-zinc-400 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        placeholder="12"
+        disabled={disabled}
+      />
+      <span className="text-zinc-400 font-bold">:</span>
+      <input 
+        type="number" 
+        min="0" max="59" 
+        value={minsStr} 
+        onChange={e => updateTime(hours12 || 12, e.target.value, isPM)}
+        className="w-8 bg-transparent text-center font-bold text-zinc-900 dark:text-white focus:outline-none placeholder:text-zinc-400 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        placeholder="00"
+        disabled={disabled}
+      />
+      <button 
+        type="button"
+        onClick={() => updateTime(hours12 || 12, minsStr || 0, !isPM)}
+        disabled={disabled}
+        className={cn(
+          "ml-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors active:scale-95",
+          value ? (isPM ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" : "bg-orange-500/10 text-orange-600 dark:text-orange-400") : "bg-black/5 dark:bg-white/5 text-zinc-500"
+        )}
+      >
+        {value ? (isPM ? 'PM' : 'AM') : 'AM'}
+      </button>
+      {value && (
+         <button type="button" onClick={() => onChange(undefined)} disabled={disabled} className="ml-1 p-1.5 text-zinc-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors"><X className="w-3.5 h-3.5" /></button>
+      )}
+    </div>
+  )
+}
+
 export default function Labors() {
-  const { labors, setLabors, laborAttendances, setLaborAttendances, roles, addActivityLog, activityLogs } = useDataStore();
+  const { labors, setLabors, laborAttendances, setLaborAttendances, roles, laborRoles, setLaborRoles, addActivityLog, activityLogs } = useDataStore();
   const { currentUser } = useAuth();
   const { hasPermission } = useRoleAccess();
   const isAdmin = hasPermission(currentUser as any, 'manage', 'all');
 
   const [isAddLaborModalOpen, setIsAddLaborModalOpen] = useState(false);
   const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false);
+  const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
+  const [attendanceSearchQuery, setAttendanceSearchQuery] = useState('');
   const [isAuditLogOpen, setIsAuditLogOpen] = useState(false);
   
+  const [newShift, setNewShift] = useState({ name: '', shiftHours: 8 });
+
+  const handleAddShift = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newShift.name || newShift.shiftHours <= 0) return;
+    const shift = {
+      id: `role-${Date.now()}`,
+      name: newShift.name,
+      shiftHours: newShift.shiftHours
+    };
+    setLaborRoles([...laborRoles, shift]);
+    setNewShift({ name: '', shiftHours: 8 });
+    toast.success('Shift role added');
+  };
+
+  const handleDeleteShift = (id: string) => {
+    if (labors.some(l => l.roleId === id)) {
+      toast.error('Cannot delete shift role that is assigned to labors');
+      return;
+    }
+    setLaborRoles(laborRoles.filter(r => r.id !== id));
+    toast.success('Shift role deleted');
+  };
+
   const [newLabor, setNewLabor] = useState<Partial<Labor>>({
-    name: '', dailySalary: 700, phone: '', status: 'Active', gender: 'Male'
+    name: '', dailySalary: 700, phone: '', status: 'Active', roleId: laborRoles[0]?.id || ''
   });
+  const [editingLabor, setEditingLabor] = useState<Labor | null>(null);
+  const [isEditLaborModalOpen, setIsEditLaborModalOpen] = useState(false);
 
   const [isPinVerified, setIsPinVerified] = useState(false);
 
@@ -108,6 +204,10 @@ export default function Labors() {
     e.preventDefault();
     if (!newLabor.name || !newLabor.dailySalary) return;
     
+    const finalRoleId = newLabor.roleId && laborRoles.find(r => r.id === newLabor.roleId) 
+      ? newLabor.roleId 
+      : laborRoles[0]?.id;
+
     const labor: Labor = {
       id: Math.random().toString(),
       name: newLabor.name,
@@ -115,13 +215,27 @@ export default function Labors() {
       phone: newLabor.phone || '',
       status: 'Active',
       joinDate: new Date().toISOString(),
-      gender: newLabor.gender || 'Male'
+      roleId: finalRoleId
     };
     
     setLabors(prev => [...prev, labor]);
     toast.success(`Labor ${labor.name} added successfully.`);
     setIsAddLaborModalOpen(false);
-    setNewLabor({ name: '', dailySalary: 700, phone: '', status: 'Active', gender: 'Male' });
+    setNewLabor({ name: '', dailySalary: 700, phone: '', status: 'Active', roleId: laborRoles[0]?.id || '' });
+  };
+
+  const handleEditLaborSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingLabor || !editingLabor.name || !editingLabor.dailySalary) return;
+    
+    const finalRoleId = editingLabor.roleId && laborRoles.find(r => r.id === editingLabor.roleId)
+      ? editingLabor.roleId
+      : laborRoles[0]?.id;
+
+    setLabors(labors.map(l => l.id === editingLabor.id ? { ...editingLabor, roleId: finalRoleId } : l));
+    setIsEditLaborModalOpen(false);
+    setEditingLabor(null);
+    toast.success('Labor details updated');
   };
 
   const toggleLaborStatus = (id: string, currentStatus: string) => {
@@ -140,8 +254,9 @@ export default function Labors() {
         a.date.startsWith(selectedMonth)
       );
 
-      const threshold = labor.gender === 'Female' ? 9.5 : 12;
-      const hourlyRate = labor.dailySalary / threshold;
+      const role = laborRoles.find(r => r.id === labor.roleId);
+      const shiftHours = role ? role.shiftHours : 12; // Fallback to 12 if unknown
+      const hourlyRate = labor.dailySalary / shiftHours;
       
       let presentDays = 0;
       let totalWorkedHours = 0;
@@ -156,24 +271,30 @@ export default function Labors() {
            dailyHours = (a.manualHours || 0) + ((a.manualMinutes || 0) / 60);
            if (dailyHours > 0) isPresent = true;
         } else if (a.clockIn && a.clockOut) {
-           const inDate = new Date(a.clockIn);
-           const outDate = new Date(a.clockOut);
-           dailyHours = (outDate.getTime() - inDate.getTime()) / (1000 * 60 * 60);
+           const inTime = new Date(a.clockIn).getTime();
+           const outTime = new Date(a.clockOut).getTime();
+           if (!isNaN(inTime) && !isNaN(outTime)) {
+              dailyHours = (outTime - inTime) / (1000 * 60 * 60);
+              if (dailyHours < 0) dailyHours += 24; // Handle overnight shifts
+           }
            if (dailyHours > 0) isPresent = true;
+        } else if (a.clockIn && !a.clockOut) {
+           // Clocked in but not out yet, count as 0 hours for total calculation until clocked out.
+           isPresent = true;
         } else if (a.status === 'Present') {
-           dailyHours = threshold;
+           dailyHours = shiftHours;
            if (a.overtimeHours) dailyHours += a.overtimeHours;
            isPresent = true;
         } else if (a.status === 'Half-Day') {
-           dailyHours = threshold / 2;
+           dailyHours = shiftHours / 2;
         }
 
         if (isPresent) presentDays++;
         
         totalWorkedHours += dailyHours;
         
-        if (dailyHours > threshold) {
-          totalOvertimeHours += (dailyHours - threshold);
+        if (dailyHours > shiftHours) {
+          totalOvertimeHours += (dailyHours - shiftHours);
         }
         
         totalSalary += dailyHours * hourlyRate;
@@ -237,6 +358,17 @@ export default function Labors() {
           <p className="text-zinc-600 dark:text-zinc-400 mt-2 font-medium text-sm">Manage daily wage workers, attendance, and overtime payments.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
+          {isAdmin && (
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setIsShiftModalOpen(true)}
+              className="inline-flex items-center justify-center bg-white/60 dark:bg-[#111] backdrop-blur-md border border-black/10 dark:border-white/10 text-zinc-900 dark:text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-white dark:hover:bg-black transition-colors shadow-sm"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Manage Shifts
+            </motion.button>
+          )}
           {isAdmin && (
             <motion.button 
               whileHover={{ scale: 1.02 }}
@@ -340,8 +472,8 @@ export default function Labors() {
                   <td className="px-5 py-4 font-semibold uppercase tracking-tight text-zinc-900 dark:text-white">{labor.name}</td>
                   <td className="px-5 py-4 text-zinc-600 dark:text-zinc-400 font-semibold">₹{labor.dailySalary.toFixed(2)}</td>
                   <td className="px-5 py-4 text-emerald-600 dark:text-emerald-400 font-semibold">{presentDays}</td>
-                  <td className="px-5 py-4 text-orange-600 dark:text-orange-400 font-semibold">{totalWorkedHours.toFixed(1)}h</td>
-                  <td className="px-5 py-4 text-blue-600 dark:text-blue-400 font-semibold">{totalOvertimeHours.toFixed(1)}h</td>
+                  <td className="px-5 py-4 text-orange-600 dark:text-orange-400 font-semibold">{formatHM(totalWorkedHours)}</td>
+                  <td className="px-5 py-4 text-blue-600 dark:text-blue-400 font-semibold">{formatHM(totalOvertimeHours)}</td>
                   <td className="px-5 py-4 text-right font-semibold text-lg text-zinc-900 dark:text-white">₹{totalSalary.toFixed(2)}</td>
                 </motion.tr>
               ))}
@@ -363,6 +495,8 @@ export default function Labors() {
           const todaysAttendance = laborAttendances.find(a => a.laborId === labor.id && a.date === today);
           const isClockedIn = !!(todaysAttendance && todaysAttendance.clockIn && !todaysAttendance.clockOut);
           const hasClockedOut = !!(todaysAttendance && todaysAttendance.clockOut);
+          const role = laborRoles.find(r => r.id === labor.roleId);
+          const shiftHours = role?.shiftHours || 12;
 
           return (
           <motion.div 
@@ -381,7 +515,7 @@ export default function Labors() {
                 </div>
                 <div>
                   <div className="font-semibold text-zinc-900 dark:text-white uppercase tracking-tight text-sm mb-0.5">{labor.name}</div>
-                  <div className="text-zinc-500 text-xs font-semibold tracking-[0.1em]">{labor.phone || 'No Phone'}</div>
+                  <div className="text-zinc-500 text-xs font-semibold tracking-[0.1em]">{role ? role.name : 'Unknown Role'} • {labor.phone || 'No Phone'}</div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -395,17 +529,29 @@ export default function Labors() {
                   {labor.status}
                 </button>
                 {isAdmin && (
-                  <button 
-                    onClick={() => {
-                      if(window.confirm('Delete this personnel completely?')) {
-                        setLabors(prev => prev.filter(l => l.id !== labor.id));
-                      }
-                    }}
-                    className="p-1.5 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-md hover:bg-rose-500 hover:text-white transition-colors mb-2"
-                    title="Delete Labor"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-1 mb-2">
+                    <button
+                      onClick={() => {
+                        setEditingLabor(labor);
+                        setIsEditLaborModalOpen(true);
+                      }}
+                      className="p-1.5 bg-blue-500/10 text-blue-500 border border-blue-500/20 rounded-md hover:bg-blue-500 hover:text-white transition-colors"
+                      title="Edit Labor"
+                    >
+                      <FileText className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => {
+                        if(window.confirm('Delete this personnel completely?')) {
+                          setLabors(prev => prev.filter(l => l.id !== labor.id));
+                        }
+                      }}
+                      className="p-1.5 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-md hover:bg-rose-500 hover:text-white transition-colors"
+                      title="Delete Labor"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -418,7 +564,7 @@ export default function Labors() {
               </div>
               <div className="text-right">
                 <span className="text-xs font-semibold text-zinc-500 text-zinc-500 block mb-1">Hourly Rate</span>
-                <span className="font-semibold text-zinc-900 dark:text-white text-lg">₹{(labor.dailySalary / (labor.gender === 'Female' ? 9.5 : 12)).toFixed(2)}</span>
+                <span className="font-semibold text-zinc-900 dark:text-white text-lg">₹{(labor.dailySalary / shiftHours).toFixed(2)}</span>
                 <span className="text-zinc-500 text-xs font-semibold tracking-[0.1em] ml-1">/ hr</span>
               </div>
             </div>
@@ -508,10 +654,11 @@ export default function Labors() {
               <input type="number" required value={newLabor.dailySalary} onChange={e => setNewLabor({...newLabor, dailySalary: Number(e.target.value)})} className="w-full px-4 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" placeholder="700" />
             </div>
             <div>
-              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Gender (Shift)</label>
-              <select value={newLabor.gender} onChange={e => setNewLabor({...newLabor, gender: e.target.value as 'Male'|'Female'})} className="w-full px-4 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm appearance-none">
-                <option value="Male">Male (12 hr shift)</option>
-                <option value="Female">Female (9.5 hr shift)</option>
+              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Role & Shift</label>
+              <select value={newLabor.roleId} onChange={e => setNewLabor({...newLabor, roleId: e.target.value})} className="w-full px-4 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm appearance-none">
+                {laborRoles.map(role => (
+                  <option key={role.id} value={role.id}>{role.name} ({role.shiftHours} hr shift)</option>
+                ))}
               </select>
             </div>
           </div>
@@ -525,44 +672,91 @@ export default function Labors() {
         </form>
       </Modal>
 
+      {/* Edit Labor Modal */}
+      <Modal isOpen={isEditLaborModalOpen} onClose={() => { setIsEditLaborModalOpen(false); setEditingLabor(null); }} title="Edit Labor">
+        {editingLabor && (
+          <form onSubmit={handleEditLaborSubmit} className="space-y-6 p-2 md:p-6">
+            <div>
+              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Full Name</label>
+              <input type="text" required value={editingLabor.name} onChange={e => setEditingLabor({...editingLabor, name: e.target.value})} className="w-full px-4 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" />
+            </div>
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Daily Salary (₹)</label>
+                <input type="number" required value={editingLabor.dailySalary} onChange={e => setEditingLabor({...editingLabor, dailySalary: Number(e.target.value)})} className="w-full px-4 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Role & Shift</label>
+                <select value={editingLabor.roleId} onChange={e => setEditingLabor({...editingLabor, roleId: e.target.value})} className="w-full px-4 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm appearance-none">
+                  {laborRoles.map(role => (
+                    <option key={role.id} value={role.id}>{role.name} ({role.shiftHours} hr shift)</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Phone Number</label>
+              <input type="tel" value={editingLabor.phone || ''} onChange={e => setEditingLabor({...editingLabor, phone: e.target.value})} className="w-full px-4 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" />
+            </div>
+            <button type="submit" className="w-full bg-blue-500 text-white font-semibold py-5 rounded-xl mt-8 hover:bg-blue-400 transition-colors shadow-[0_0_20px_rgba(59,130,246,0.3)] active:scale-95 text-sm">
+              Save Changes
+            </button>
+          </form>
+        )}
+      </Modal>
+
       {/* Mark Attendance Modal */}
-      <Modal isOpen={isAttendanceModalOpen} onClose={() => setIsAttendanceModalOpen(false)} title="Daily Attendance" size="lg">
-        <div className="space-y-8 p-2 md:p-6">
-          <div>
-            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Attendance Date</label>
-            <input 
-              type="date" 
-              required 
-              value={attendanceDate} 
-              onChange={e => setAttendanceDate(e.target.value)} 
-              max={format(new Date(), 'yyyy-MM-dd')}
-              className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" 
-            />
+      <Modal isOpen={isAttendanceModalOpen} onClose={() => setIsAttendanceModalOpen(false)} title="Daily Attendance" size="full">
+        <div className="space-y-6 p-0 md:p-2 bg-transparent">
+          <div className="flex flex-col md:flex-row gap-4 w-full md:w-[600px] max-w-full">
+            <div className="flex-1">
+              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Search Labor</label>
+              <input 
+                type="text" 
+                value={attendanceSearchQuery}
+                onChange={e => setAttendanceSearchQuery(e.target.value)}
+                placeholder="Search by name..."
+                className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" 
+              />
+            </div>
+            <div className="w-48">
+              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Date</label>
+              <input 
+                type="date" 
+                required 
+                value={attendanceDate} 
+                onChange={e => setAttendanceDate(e.target.value)} 
+                max={format(new Date(), 'yyyy-MM-dd')}
+                className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" 
+              />
+            </div>
           </div>
 
-          <div className="space-y-4">
-            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] px-1">Labors List</h3>
-             {labors.filter(l => l.status === 'Active').map(labor => {
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[70vh] overflow-y-auto custom-scrollbar pr-2 pb-10">
+             {labors
+                .filter(l => l.status === 'Active')
+                .filter(l => l.name.toLowerCase().includes(attendanceSearchQuery.toLowerCase()))
+                .map(labor => {
                 const existingRec = laborAttendances.find(a => a.laborId === labor.id && a.date === attendanceDate);
                 const currentStatus = existingRec?.status || 'Absent';
+                const role = laborRoles.find(r => r.id === labor.roleId);
 
                 return (
-                  <div key={labor.id} className="bg-white/40 dark:bg-black/20 backdrop-blur-xl border border-black/5 dark:border-white/5 rounded-[24px] p-5 flex flex-col gap-4 shadow-sm">
-                    <div className="flex justify-between items-center">
-                      <div className="font-semibold text-sm text-zinc-900 dark:text-white uppercase tracking-tight">{labor.name}</div>
-                      <div className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em]">
-                         {labor.gender === 'Female' ? '9.5 hr shift' : '12 hr shift'}
+                  <div key={labor.id} className="bg-white/70 dark:bg-[#1a1a1a] backdrop-blur-xl border border-black/5 dark:border-white/5 rounded-[24px] p-5 flex flex-col gap-4 shadow-sm hover:border-black/10 dark:hover:border-white/10 transition-colors">
+                    <div className="flex justify-between items-start gap-4">
+                      <div>
+                        <div className="font-semibold text-sm text-zinc-900 dark:text-white uppercase tracking-tight mb-0.5">{labor.name}</div>
+                        <div className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em]">
+                           {role ? `${role.name} (${role.shiftHours} hr shift)` : 'Unknown Role'}
+                        </div>
                       </div>
-                    </div>
-                    
-                    <div className="flex flex-wrap items-center gap-3 mt-1">
                        <select 
                          value={currentStatus}
                          onChange={(e) => handleMarkAttendance(labor.id, { status: e.target.value as any })}
                          className={cn(
-                           "px-4 py-3 rounded-lg text-xs font-semibold text-zinc-500 border focus:outline-none appearance-none cursor-pointer backdrop-blur-md transition-colors",
-                           currentStatus === 'Present' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/30" : 
-                           currentStatus === 'Half-Day' ? "bg-orange-500/10 text-orange-500 border-orange-500/30" : 
+                           "px-3 py-2 rounded-lg text-xs font-semibold text-zinc-500 border focus:outline-none appearance-none cursor-pointer backdrop-blur-md transition-colors shadow-sm",
+                           currentStatus === 'Present' ? "bg-emerald-500 text-white border-emerald-500" : 
+                           currentStatus === 'Half-Day' ? "bg-orange-500 text-white border-orange-500" : 
                            "bg-white/60 dark:bg-black/40 text-zinc-500 border-black/10 dark:border-white/10"
                          )}
                        >
@@ -570,7 +764,9 @@ export default function Labors() {
                          <option value="Half-Day">Half-Day</option>
                          <option value="Absent">Absent</option>
                        </select>
-
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-3">
                        <div className="flex items-center gap-2 bg-white/60 dark:bg-black/40 backdrop-blur-md border border-black/10 dark:border-white/10 rounded-lg px-3 h-[42px] flex-1 min-w-[150px] relative">
                          {!isPinVerified ? (
                            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/5 dark:bg-white/5 backdrop-blur-[2px] rounded-lg cursor-pointer" onClick={handleUnlockEditing}>
@@ -579,7 +775,7 @@ export default function Labors() {
                               </span>
                            </div>
                          ) : null}
-                         <span className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] pl-1 mr-auto">Manual</span>
+                         <span className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] pl-1 mr-auto">Manual Edit</span>
                          <input 
                            type="number"
                            min="0"
@@ -604,66 +800,136 @@ export default function Labors() {
                     </div>
 
                     {(existingRec?.clockIn || existingRec?.clockOut || isAdmin) && (
-                      <div className="flex items-center gap-3 text-xs font-semibold text-zinc-500 border-t border-black/5 dark:border-white/5 pt-3 mt-1 flex-wrap">
-                        <Clock className="w-4 h-4 text-zinc-400" />
+                      <div className="flex flex-col gap-3 text-xs font-semibold text-zinc-500 border-t border-black/5 dark:border-white/5 pt-4">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-zinc-400" />
+                          <span className="uppercase tracking-widest text-[10px]">Clock Settings</span>
+                        </div>
                         
                         {isAdmin ? (
-                          <div className="flex items-center gap-2 relative">
+                          <div className="flex items-center gap-2 relative flex-wrap">
                             {!isPinVerified ? (
                               <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/5 dark:bg-white/5 backdrop-blur-[2px] rounded-lg cursor-pointer" onClick={handleUnlockEditing}>
                                 <span className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-300">🔒 Unlock</span>
                               </div>
                             ) : null}
-                            <input
-                              type="time"
-                              value={existingRec?.clockIn ? format(parseISO(existingRec.clockIn), 'HH:mm') : ''}
-                              onChange={(e) => {
-                                if(!e.target.value) return handleMarkAttendance(labor.id, { clockIn: undefined });
-                                const [h, m] = e.target.value.split(':');
-                                const d = new Date();
-                                d.setHours(parseInt(h), parseInt(m), 0, 0);
-                                handleMarkAttendance(labor.id, { clockIn: d.toISOString() });
-                              }}
-                              className="px-2 py-1 bg-white/60 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-md text-zinc-900 dark:text-white"
-                              disabled={!isPinVerified}
+                            <TimePicker12 
+                               value={existingRec?.clockIn} 
+                               onChange={(val) => handleMarkAttendance(labor.id, { clockIn: val })} 
+                               disabled={!isPinVerified}
                             />
-                            <span>→</span>
-                            <input
-                              type="time"
-                              value={existingRec?.clockOut ? format(parseISO(existingRec.clockOut), 'HH:mm') : ''}
-                              onChange={(e) => {
-                                if(!e.target.value) return handleMarkAttendance(labor.id, { clockOut: undefined });
-                                const [h, m] = e.target.value.split(':');
-                                const d = new Date();
-                                d.setHours(parseInt(h), parseInt(m), 0, 0);
-                                handleMarkAttendance(labor.id, { clockOut: d.toISOString() });
-                              }}
-                              className="px-2 py-1 bg-white/60 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-md text-zinc-900 dark:text-white"
-                              disabled={!isPinVerified}
+                            <span className="text-zinc-400">→</span>
+                            <TimePicker12 
+                               value={existingRec?.clockOut} 
+                               onChange={(val) => handleMarkAttendance(labor.id, { clockOut: val })} 
+                               disabled={!isPinVerified}
                             />
                           </div>
                         ) : (
                           <span className="font-mono">
-                            {existingRec?.clockIn ? format(parseISO(existingRec.clockIn), 'HH:mm') : '--'} → {existingRec?.clockOut ? format(parseISO(existingRec.clockOut), 'HH:mm') : '--'}
+                            {existingRec?.clockIn ? format(parseISO(existingRec.clockIn), 'hh:mm a') : '--'} → {existingRec?.clockOut ? format(parseISO(existingRec.clockOut), 'hh:mm a') : '--'}
                           </span>
                         )}
 
-                        {existingRec?.clockIn && existingRec?.clockOut && (
-                          <span className="ml-auto text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-1 rounded-[6px]">
-                            {((new Date(existingRec.clockOut).getTime() - new Date(existingRec.clockIn).getTime()) / (1000 * 60 * 60)).toFixed(1)}h
-                          </span>
-                        )}
+                        {(existingRec?.clockIn && existingRec?.clockOut) || (existingRec?.manualHours !== undefined) ? (() => {
+                          const shiftHours = role?.shiftHours || 12;
+                          let diff = 0;
+                          
+                          if (existingRec?.manualHours !== undefined || existingRec?.manualMinutes !== undefined) {
+                             diff = (existingRec.manualHours || 0) + ((existingRec.manualMinutes || 0) / 60);
+                          } else if (existingRec?.clockIn && existingRec?.clockOut) {
+                             const inTime = new Date(existingRec.clockIn).getTime();
+                             const outTime = new Date(existingRec.clockOut).getTime();
+                             if (!isNaN(inTime) && !isNaN(outTime)) {
+                                diff = (outTime - inTime) / (1000 * 60 * 60);
+                                if (diff < 0) diff += 24;
+                             }
+                          }
+                          
+                          if (diff <= 0) return null;
+                          
+                          const isOvertime = diff > shiftHours;
+                          const overtimeHours = isOvertime ? (diff - shiftHours) : 0;
+                          const workingHours = isOvertime ? shiftHours : diff;
+                          
+                          const formatHM_local = (decimalHours: number) => {
+                            const h = Math.floor(decimalHours);
+                            const m = Math.round((decimalHours - h) * 60);
+                            if (h > 0 && m > 0) return `${h}h ${m}m`;
+                            if (h > 0) return `${h}h`;
+                            if (decimalHours === 0) return `0h`;
+                            return `${m}m`;
+                          };
+                          
+                          return (
+                            <div className="mt-2 flex items-center gap-2 flex-wrap bg-black/5 dark:bg-white/5 p-2 rounded-xl">
+                               <span className="text-zinc-600 dark:text-zinc-400 font-bold px-2 py-1 text-xs uppercase tracking-wider">
+                                 Work: {formatHM_local(workingHours)}
+                               </span>
+                               {isOvertime && (
+                                 <span className="text-orange-500 font-bold bg-orange-500/10 px-2 py-1 rounded-[6px] text-xs tracking-wider uppercase">
+                                   OT: + {formatHM_local(overtimeHours)}
+                                 </span>
+                               )}
+                               <span className="ml-auto font-bold px-2 py-1 text-xs uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 rounded-[6px]">
+                                 Tot: {formatHM_local(diff)}
+                               </span>
+                            </div>
+                          );
+                        })() : null}
                       </div>
                     )}
                   </div>
                 )
              })}
              {labors.filter(l => l.status === 'Active').length === 0 && (
-               <p className="text-sm text-zinc-500 font-medium px-1">No active labors found. Add labors first.</p>
+               <p className="text-sm text-zinc-500 font-medium px-1 col-span-full">No active labors found. Add labors first.</p>
              )}
           </div>
         </div>
       </Modal>
+
+      {/* Manage Shifts Modal */}
+      <Modal isOpen={isShiftModalOpen} onClose={() => setIsShiftModalOpen(false)} title="Manage Shifts" size="lg">
+        <div className="p-2 md:p-6 space-y-6">
+          <form onSubmit={handleAddShift} className="bg-white/40 dark:bg-black/20 p-4 rounded-[24px] border border-black/5 dark:border-white/5 space-y-4">
+            <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-tight">Create New Shift</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Shift Name</label>
+                <input type="text" required value={newShift.name} onChange={e => setNewShift({...newShift, name: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 font-semibold text-sm" placeholder="e.g. Contract Worker" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Shift Hours</label>
+                <input type="number" step="0.5" min="1" required value={newShift.shiftHours} onChange={e => setNewShift({...newShift, shiftHours: Number(e.target.value)})} className="w-full px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 font-semibold text-sm" placeholder="e.g. 9" />
+              </div>
+            </div>
+            <button type="submit" className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm py-3 rounded-xl transition-colors">
+              Add Shift Role
+            </button>
+          </form>
+
+          <div className="space-y-3 max-h-[40vh] overflow-y-auto custom-scrollbar pr-2">
+            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest px-1">Active Shifts</h3>
+            {laborRoles.map(role => (
+              <div key={role.id} className="flex justify-between items-center bg-white/60 dark:bg-[#111] backdrop-blur-md border border-black/5 dark:border-white/5 rounded-2xl p-4 shadow-sm">
+                <div>
+                  <div className="font-semibold text-zinc-900 dark:text-white text-sm">{role.name}</div>
+                  <div className="text-xs font-semibold text-zinc-500 mt-1 uppercase tracking-wider">{role.shiftHours} Hours / Shift</div>
+                </div>
+                <button
+                  onClick={() => handleDeleteShift(role.id)}
+                  className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors"
+                  title="Delete Shift"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Modal>
+
       {/* Admin Audit Logs Modal */}
       {isAdmin && (
         <Modal isOpen={isAuditLogOpen} onClose={() => setIsAuditLogOpen(false)} title="Labor Audit Logs" size="xl">

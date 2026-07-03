@@ -9,7 +9,7 @@ import { DndContext, useDraggable, useDroppable, DragEndEvent, DragOverlay, clos
 import Modal from '../components/ui/Modal';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
-import { getHexFromRal } from '../lib/ral';
+import { getHexFromRal } from '../lib/ralToHex';
 
 const STAGES = ['Quoted', 'Received At Company', 'Preprocessing', 'Powder Coating', 'Quality Check', 'Ready to Ship', 'Shipped', 'Completed'] as const;
 type Stage = typeof STAGES[number];
@@ -257,7 +257,7 @@ export default function Orders() {
     customerName: '',
     projectName: '',
     shadeName: '',
-    shadeColorHex: '#ff0000',
+    shadeColorHex: '#ffffff',
     specialRequirements: '',
     dueDate: new Date().toISOString().split('T')[0]
   });
@@ -304,7 +304,7 @@ export default function Orders() {
     setOrders([...orders, order]);
     setIsCreateModalOpen(false);
     toast.success(`Order ${order.orderNumber} created`);
-    setNewOrder({ status: 'Quoted', items: 100, customerName: '', projectName: '', shadeName: '', shadeColorHex: '#ff0000', specialRequirements: '', dueDate: new Date().toISOString().split('T')[0] });
+    setNewOrder({ status: 'Quoted', items: 100, customerName: '', projectName: '', shadeName: '', shadeColorHex: '#ffffff', specialRequirements: '', dueDate: new Date().toISOString().split('T')[0] });
   };
 
   const handleUpdateOrder = (order: Order, updates: Partial<Order>) => {
@@ -649,11 +649,14 @@ export default function Orders() {
                    value={newOrder.shadeName}
                    onChange={e => {
                      const val = e.target.value;
-                     const match = val.match(/\d{4}/);
                      let hex = newOrder.shadeColorHex;
-                     if (match) {
+                     if (val.startsWith('#') && (val.length === 4 || val.length === 7)) {
+                        hex = val;
+                     } else {
                         const ralHex = getHexFromRal(val);
-                        if (ralHex !== '#ff0000') hex = ralHex;
+                        if (ralHex) {
+                           hex = ralHex;
+                        }
                      }
                      setNewOrder({...newOrder, shadeName: val, shadeColorHex: hex})
                    }}
@@ -875,7 +878,7 @@ export default function Orders() {
              </div>
              <div>
                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Powder Amount (kg)</label>
-               <input required type="number" min="0.1" step="0.1" value={powderAmountKg || ''} onChange={e => setPowderAmountKg(Number(e.target.value))} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 font-semibold shadow-sm transition-colors" />
+               <input required type="number" min="0.001" step="0.001" value={powderAmountKg || ''} onChange={e => setPowderAmountKg(Number(e.target.value))} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 font-semibold shadow-sm transition-colors" />
              </div>
           </div>
           

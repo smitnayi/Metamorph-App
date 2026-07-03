@@ -248,7 +248,7 @@ export function initStoreSync() {
   unsubscribers = collections.map(col => {
      return onSnapshot(collection(db, col), { includeMetadataChanges: true }, (snap) => {
         let data = snap.docs.map(d => {
-           return { ...d.data(), _hasPendingWrites: d.metadata.hasPendingWrites } as any;
+           return { id: d.id, ...d.data(), _hasPendingWrites: d.metadata.hasPendingWrites } as any;
         });
         if (col === 'roles' && data.length === 0) {
           data = defaultRoles;

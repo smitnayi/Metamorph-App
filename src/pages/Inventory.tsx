@@ -267,7 +267,7 @@ export default function Inventory() {
                       "text-3xl font-semibold tracking-tight",
                       item.weightKg <= item.lowStockThreshold ? 'text-rose-500' : 'text-emerald-500'
                     )}>
-                      {item.weightKg.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 })}<span className="text-sm text-zinc-400 ml-1">kg</span>
+                      {(item.weightKg || 0).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 })}<span className="text-sm text-zinc-400 ml-1">kg</span>
                     </div>
                   </div>
                   
@@ -345,7 +345,7 @@ export default function Inventory() {
                         <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">{item.sku}</span>
                         <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
                         <span className={cn("text-[13px] font-bold tracking-tight", item.weightKg <= item.lowStockThreshold ? 'text-rose-500' : 'text-emerald-500')}>
-                          {item.weightKg.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 })}kg
+                          {(item.weightKg || 0).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 })}kg
                         </span>
                       </div>
                     </div>
@@ -403,11 +403,11 @@ export default function Inventory() {
            <div className="grid grid-cols-2 gap-4">
              <div>
                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Initial Stock (Kg)</label>
-               <input type="number" step="0.1" required min="0" value={newItem.weightKg} onFocus={e => e.target.select()} onChange={e => setNewItem({...newItem, weightKg: e.target.value as any})} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" />
+               <input type="number" step="0.001" required min="0" value={newItem.weightKg} onFocus={e => e.target.select()} onChange={e => setNewItem({...newItem, weightKg: e.target.value as any})} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" />
              </div>
              <div>
                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Low Alert (Kg)</label>
-               <input type="number" step="0.1" required min="0" value={newItem.lowStockThreshold} onFocus={e => e.target.select()} onChange={e => setNewItem({...newItem, lowStockThreshold: e.target.value as any})} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" />
+               <input type="number" step="0.001" required min="0" value={newItem.lowStockThreshold} onFocus={e => e.target.select()} onChange={e => setNewItem({...newItem, lowStockThreshold: e.target.value as any})} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" />
              </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -447,7 +447,7 @@ export default function Inventory() {
             </div>
             <div>
                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Amount (Kg)</label>
-               <input type="number" required min="0.1" step="0.1" value={adjustAmount} onFocus={e => e.target.select()} onChange={e => setAdjustAmount(e.target.value)} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold text-lg shadow-sm" />
+               <input type="number" required min="0.001" step="0.001" value={adjustAmount} onFocus={e => e.target.select()} onChange={e => setAdjustAmount(e.target.value)} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold text-lg shadow-sm" />
              </div>
              <div>
                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Reason / Reference (Optional)</label>
@@ -486,7 +486,7 @@ export default function Inventory() {
             <div className="grid grid-cols-2 gap-4">
                <div>
                  <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Low Alert (Kg)</label>
-                 <input type="number" step="0.1" required min="0" value={editingItem?.lowStockThreshold === undefined ? '' : editingItem.lowStockThreshold} onFocus={e => e.target.select()} onChange={e => setEditingItem(prev => prev ? {...prev, lowStockThreshold: Number(e.target.value) || 0} : null)} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" />
+                 <input type="number" step="0.001" required min="0" value={editingItem?.lowStockThreshold === undefined ? '' : editingItem.lowStockThreshold} onFocus={e => e.target.select()} onChange={e => setEditingItem(prev => prev ? {...prev, lowStockThreshold: Number(e.target.value) || 0} : null)} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors font-semibold shadow-sm" />
                </div>
                <div>
                  <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-2 px-1">Finish</label>

@@ -24,6 +24,7 @@ export default function Costing() {
 
   const [estimationData, setEstimationData] = useState<OrderCostEstimation>({
     powderKg: 0,
+    calculatedPowderRate: 0,
     materialKg: 0,
     labourAllocation: 0,
     officeStaffAllocation: 0,
@@ -75,6 +76,7 @@ export default function Costing() {
 
     setEstimationData(order.costEstimation || {
       powderKg: 0,
+      calculatedPowderRate: 0,
       materialKg: 0,
       powders: initialPowders,
       labourAllocation: 0,
@@ -99,12 +101,14 @@ export default function Costing() {
     
     // Calculate total powder cost from powders array
     const totalPowderCost = (estimationData.powders || []).reduce((acc, p) => acc + (p.amountKg * (p.rate || 0)), 0);
-    const fallbackPowderCost = estimationData.powderKg || 0; // Legacy / Fallback
+    const fallbackPowderCost = (estimationData.calculatedPowderRate || 0) * (estimationData.materialKg || 0); // Legacy / Fallback
     
     const finalPowderCost = totalPowderCost > 0 ? totalPowderCost : fallbackPowderCost;
     
     // Material cost per kg is calculated differently now if using arrays, but let's just keep calculatedPowderRate logic
-    const powderRate = estimationData.materialKg ? finalPowderCost / estimationData.materialKg : 0;
+    const powderRate = totalPowderCost > 0 
+      ? (estimationData.materialKg ? finalPowderCost / estimationData.materialKg : 0)
+      : (estimationData.calculatedPowderRate || 0);
     const electricityCost = estimationData.electricityUsage * costSettings.electricityRate;
     const gasCost = estimationData.gasUsage * costSettings.gasRate;
     const processCharge = estimationData.materialKg * costSettings.processChargeRate;
@@ -190,7 +194,7 @@ export default function Costing() {
                     <span className="text-xs font-semibold tracking-widest uppercase bg-black/5 dark:bg-white/10 px-2.5 py-1.5 rounded-md border border-black/5 dark:border-white/5">{order.status}</span>
                   </td>
                   <td className="px-6 py-6 font-semibold text-emerald-500 text-sm tracking-tight">
-                    ₹{order.totalValue.toLocaleString()}
+                    ₹{(order.totalValue || 0).toLocaleString()}
                   </td>
                   <td className="px-6 py-6 font-semibold text-zinc-600 dark:text-zinc-400 text-sm">
                     {isCalculated ? `₹${order.costEstimation?.calculatedTotalCost?.toLocaleString()}` : '-'}
@@ -201,7 +205,7 @@ export default function Costing() {
                         "font-semibold tracking-tight text-sm",
                         order.costEstimation.calculatedProfit > 0 ? 'text-emerald-500' : 'text-rose-500'
                       )}>
-                        ₹{order.costEstimation.calculatedProfit.toLocaleString()}
+                        ₹{(order.costEstimation.calculatedProfit || 0).toLocaleString()}
                       </span>
                     ) : '-'}
                   </td>
@@ -378,7 +382,7 @@ export default function Costing() {
                     </div>
                     <div className="relative flex-1 sm:flex-none">
                       <input
-                        type="number" step="0.01" min="0" placeholder="Qty"
+                        type="number" step="0.001" min="0" placeholder="Qty"
                         value={powder.amountKg || ''}
                         disabled={costingMode === 'Automatic'}
                         onChange={(e) => {
@@ -411,8 +415,8 @@ export default function Costing() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
              <div>
-               <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-3 px-1">Powder Fallback (₹)</label>
-               <input type="number" min="0" step="0.0001" onFocus={e => e.target.select()} value={estimationData.powderKg || ''} onChange={e => setEstimationData({...estimationData, powderKg: Number(e.target.value)})} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 text-sm transition-colors shadow-sm" placeholder="Used if no powders listed" />
+               <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-3 px-1">Powder Rate (₹/kg)</label>
+               <input type="number" min="0" step="0.0001" onFocus={e => e.target.select()} value={estimationData.calculatedPowderRate || ''} onChange={e => setEstimationData({...estimationData, calculatedPowderRate: Number(e.target.value)})} className="w-full px-5 py-4 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 dark:bg-[#111] backdrop-blur-md text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 text-sm transition-colors shadow-sm" placeholder="Used if no powders listed" />
              </div>
              <div>
                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] block mb-3 px-1">Material (kg)</label>
@@ -454,11 +458,18 @@ export default function Costing() {
                  <Calculator className="h-5 w-5 mr-3 text-orange-500" /> Estimation Summary
                </h3>
              </div>
-             <div className="flex justify-between text-sm items-center"><span className="text-zinc-500 font-semibold text-xs">Powder Rate</span><span className="font-semibold text-zinc-900 dark:text-white">{estimationData.materialKg ? (estimationData.powderKg / estimationData.materialKg).toFixed(4) : 0}</span></div>
+             <div className="flex justify-between text-sm items-center">
+               <span className="text-zinc-500 font-semibold text-xs">Powder Rate</span>
+               <span className="font-semibold text-zinc-900 dark:text-white">
+                 {(estimationData.powders && estimationData.powders.length > 0)
+                   ? (estimationData.materialKg ? (estimationData.powders.reduce((acc, p) => acc + (p.amountKg * (p.rate || 0)), 0) / estimationData.materialKg).toFixed(4) : 0)
+                   : (estimationData.calculatedPowderRate || 0).toFixed(4)}
+               </span>
+             </div>
              <div className="flex justify-between text-sm items-center"><span className="text-zinc-500 font-semibold text-xs">Electricity (₹{costSettings.electricityRate})</span><span className="font-semibold text-zinc-900 dark:text-white">₹{((estimationData.electricityUsage || 0) * costSettings.electricityRate).toFixed(0)}</span></div>
              <div className="flex justify-between text-sm items-center"><span className="text-zinc-500 font-semibold text-xs">Gas (₹{costSettings.gasRate})</span><span className="font-semibold text-zinc-900 dark:text-white">₹{((estimationData.gasUsage || 0) * costSettings.gasRate).toFixed(0)}</span></div>
              <div className="flex justify-between text-sm items-center"><span className="text-zinc-500 font-semibold text-xs">Process Charge</span><span className="font-semibold text-zinc-900 dark:text-white">₹{((estimationData.materialKg || 0) * costSettings.processChargeRate).toFixed(0)}</span></div>
-             <div className="flex justify-between text-sm items-center"><span className="text-zinc-500 font-semibold text-xs">Revenue (Buyer Cost)</span><span className="font-semibold text-emerald-500">₹{costingOrder?.totalValue.toLocaleString()}</span></div>
+             <div className="flex justify-between text-sm items-center"><span className="text-zinc-500 font-semibold text-xs">Revenue (Buyer Cost)</span><span className="font-semibold text-emerald-500">₹{(costingOrder?.totalValue || 0).toLocaleString()}</span></div>
              
              <div className="pt-6 mt-6 border-t border-black/5 dark:border-white/5 flex justify-between items-end">
                <span className="text-xs font-semibold text-zinc-500">Calculated Profit</span>

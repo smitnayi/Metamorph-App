@@ -182,7 +182,7 @@ export default function CRM() {
                     <div className="flex items-center justify-between mt-6 bg-white/60 dark:bg-black/40 backdrop-blur-md p-5 rounded-[20px] border border-black/5 dark:border-white/5 relative z-10">
                       <div>
                         <div className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] mb-1">Lifetime Value</div>
-                        <div className="font-semibold text-zinc-900 dark:text-white text-xl">₹{customer.lifetimeValue.toLocaleString()}</div>
+                        <div className="font-semibold text-zinc-900 dark:text-white text-xl">₹{(customer.lifetimeValue || 0).toLocaleString()}</div>
                       </div>
                       <div>
                         <div className="text-xs font-semibold text-zinc-500 uppercase tracking-[0.1em] text-right mb-1">Orders</div>

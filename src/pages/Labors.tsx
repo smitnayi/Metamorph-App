@@ -254,7 +254,7 @@ export default function Labors() {
         a.date.startsWith(selectedMonth)
       );
 
-      const role = laborRoles.find(r => r.id === labor.roleId);
+      const role = laborRoles.find(r => r.id === labor.roleId) || laborRoles[0];
       const shiftHours = role ? role.shiftHours : 12; // Fallback to 12 if unknown
       const hourlyRate = labor.dailySalary / shiftHours;
       

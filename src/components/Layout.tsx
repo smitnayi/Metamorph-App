@@ -165,8 +165,6 @@ export default function Layout() {
             status: 'Active' 
           }
         ]);
-      } else if (exists.name !== currentUser.name || (currentUser.roleId === 'role-admin' && exists.roleId !== 'role-admin')) {
-         setUsers(prev => prev.map(u => u.id === currentUser.uid || u.email === currentUser.email ? { ...u, name: currentUser.name, roleId: currentUser.roleId } : u));
       }
     }
   }, [currentUser, users, setUsers]);
